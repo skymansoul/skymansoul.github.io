@@ -2,10 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://127.0.0.1:1313/post/hello/</loc>
-    <lastmod>2026-04-28T12:00:00-07:00</lastmod>
-  </url><url>
     <loc>http://127.0.0.1:1313/</loc>
+    <lastmod>2026-06-28T20:00:00+08:00</lastmod>
+  </url><url>
+    <loc>http://127.0.0.1:1313/friend/</loc>
+    <lastmod>2026-06-28T20:00:00+08:00</lastmod>
+  </url><url>
+    <loc>http://127.0.0.1:1313/post/hello/</loc>
     <lastmod>2026-04-28T12:00:00-07:00</lastmod>
   </url><url>
     <loc>http://127.0.0.1:1313/about/</loc>
@@ -16,9 +19,6 @@
   </url><url>
     <loc>http://127.0.0.1:1313/post/</loc>
     <lastmod>2022-07-26T21:46:25+08:00</lastmod>
-  </url><url>
-    <loc>http://127.0.0.1:1313/friend/</loc>
-    <lastmod>2022-06-09T20:12:52+08:00</lastmod>
   </url><url>
     <loc>http://127.0.0.1:1313/categories/</loc>
   </url><url>
