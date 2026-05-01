@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>M15tak3のBlog</title>
-    <link>http://127.0.0.1:1313/</link>
+    <link>http://127.0.0.1:1313/algolia.json</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>en-us</language>
