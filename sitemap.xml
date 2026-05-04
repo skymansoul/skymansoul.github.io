@@ -1,47 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
-
-<url>
-  <loc>https://blog.m15tak3.com/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/archives/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/about/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/friend/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/categories/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/tags/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/post/hello/</loc>
-  <lastmod>2026-05-04T17:09:22+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-
-
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>http://localhost:1313/</loc>
+    <lastmod>2026-05-03T20:00:00+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/friend/</loc>
+    <lastmod>2026-05-03T20:00:00+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/post/hello/</loc>
+    <lastmod>2026-04-28T12:00:00-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/about/</loc>
+    <lastmod>2026-04-28T12:00:00+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/archives/</loc>
+    <lastmod>2022-07-26T21:46:25+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/categories/</loc>
+  </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+  </url>
 </urlset>
