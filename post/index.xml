@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>M15tak3のBlog</title>
-    <link>http://127.0.0.1:1313/post/</link>
+    <link>https://blog.m15tak3.com/post/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>zh-CN</language>
@@ -15,18 +15,19 @@
     <lastBuildDate>Tue, 28 Apr 2026 12:00:00 -0700</lastBuildDate>
     
     
-    <atom:link href="http://127.0.0.1:1313/post/index.xml" rel="self" type="application/rss&#43;xml" />
+    <atom:link href="https://blog.m15tak3.com/post/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
     
+      
     
 
     <item>
       <title>Hello World</title>
-      <link>http://127.0.0.1:1313/post/hello/</link>
+      <link>https://blog.m15tak3.com/post/hello/</link>
       <pubDate>Mon, 27 Apr 2026 23:59:59 -0700</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://127.0.0.1:1313/post/hello/</guid>
+      <guid>https://blog.m15tak3.com/post/hello/</guid>
       <description>
         <![CDATA[<h1>Hello World</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -34,8 +35,9 @@
 <a class="header-anchor" href="#first-blog"></a>
 <strong>First BLOG</strong>
 </h1><p>Blog建成，这是M15tak3的第一个Blog</p>
+
         
-        <hr><p>本文2026-04-27首发于<a href='http://127.0.0.1:1313/'>M15tak3のBlog</a>，最后修改于2026-04-28</p>]]>
+        <hr><p>本文2026-04-27首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-04-28</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
     </item>

@@ -2,23 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://blog.m15tak3.com/</loc>
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/friend/</loc>
+    <loc>https://blog.m15tak3.com/friend/</loc>
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/hello/</loc>
+    <loc>https://blog.m15tak3.com/post/hello/</loc>
     <lastmod>2026-04-28T12:00:00-07:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://blog.m15tak3.com/about/</loc>
     <lastmod>2026-04-28T12:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/archives/</loc>
+    <loc>https://blog.m15tak3.com/archives/</loc>
     <lastmod>2022-07-26T21:46:25+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://blog.m15tak3.com/post/</loc>
+    <lastmod>2022-07-26T21:46:25+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://blog.m15tak3.com/categories/</loc>
+  </url><url>
+    <loc>https://blog.m15tak3.com/tags/</loc>
   </url>
 </urlset>
