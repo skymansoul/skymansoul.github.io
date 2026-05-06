@@ -47,7 +47,7 @@ wsl的安装
 环境配置与安装
 </h3><p>​	打开windows设置-系统-可选功能-更多Windows功能</p>
 <p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
-<p>​	将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。<img src="images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<p>​	将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。<img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
 <h2 id="安装wsl-ubuntu">
 <a class="header-anchor" href="#%e5%ae%89%e8%a3%85wsl-ubuntu"></a>
 安装WSL-Ubuntu
