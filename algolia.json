@@ -1,5 +1,11 @@
 [
   {
+    "objectID": "94f593407a43058d677845422c896b97b2aefa65",
+    "permalink": "/post/wsl1/",
+    "title": "从零安装WSL2--Ubuntu","content": " 从零安装WSL2\u0026ndash;Ubuntu 写在前面 ​\twsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。 注意：在安装玩子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。\nwsl的安装 环境配置与安装 ​\t打开windows设置-系统-可选功能-更多Windows功能\n​\t将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。\n安装WSL-Ubuntu ​\t打开命令行终端，输入指令\nwsl --install -d Ubuntu-22.04 ​\t系统会自动拉取Ubuntu24.04，我们等待进度条结束即可\n​\t安装完成后，会自动打开该子系统，进行用户名的设置。不同的linux系统对于用户名的要求略有不同，所以如果发现提示用户名不合法，大家按要求修改即可。 将子系统转移到其他位置 ​\tWSL自行拉取的linux系统会自动安装在C盘，有因此我们需要将它转移。我们在命令行中输入exit退出系统。\n接着输入下方命令，关闭所有虚拟机。接着我们先导出刚才安装好的Ubuntu22.04,export命令是用来导出子系统的，可用于备份。\nwsl --shutdown wsl --export Ubuntu-22.04 E:\\WSL\\ubuntu2204.tar ​\t最后的路径大家可自行选择但文件名字结尾必须为.tar结尾\n​\t然后我们注销掉当前的子系统，并导入刚才我们导出的文件，引导它安装到我们想让他安装的位置。同样的路径可自行选择。\nwsl --unregister Ubuntu-22.04 wsl --import Ubuntu-22.04 E:\\WSL\\Ubuntu2204 E:\\WSL\\ubuntu2204.tar wsl -d Ubuntu-22.04 我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。\n","date": "2026-05-06 09:00:00",
+    "updated": "2026-05-06 09:00:00"
+  }, 
+  {
     "objectID": "5f98474743e52347613b2e0c682fa859935c78fa",
     "permalink": "/post/hello/",
     "title": "Hello World","content": " First BLOG Blog建成，这是M15tak3的第一个Blog\n","date": "2026-04-27 23:59:59",

@@ -2,83 +2,79 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2026-05-03T20:00:00+08:00</lastmod>
+    <loc>https://blog.m15tak3.com/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="http://localhost:1313/zh-tw/"
+                href="https://blog.m15tak3.com/zh-tw/"
                 />
     <xhtml:link
                 rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/en/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="ja"
-                href="http://localhost:1313/ja/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="http://localhost:1313/"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/"
                 />
   </url><url>
-    <loc>http://localhost:1313/friend/</loc>
+    <loc>https://blog.m15tak3.com/post/wsl1/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.m15tak3.com/friend/</loc>
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/post/hello/</loc>
-    <lastmod>2026-04-28T12:00:00-07:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://blog.m15tak3.com/about/</loc>
     <lastmod>2026-04-28T12:00:00+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/archives/</loc>
+    <loc>https://blog.m15tak3.com/post/hello/</loc>
+    <lastmod>2026-04-28T12:00:00+07:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-TW"
+                href="https://blog.m15tak3.com/zh-tw/post/hello/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/post/hello/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/archives/</loc>
     <lastmod>2022-07-26T21:46:25+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://blog.m15tak3.com/post/</loc>
+    <lastmod>2022-07-26T21:46:25+08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="http://localhost:1313/zh-tw/categories/"
+                href="https://blog.m15tak3.com/zh-tw/post/"
                 />
     <xhtml:link
                 rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/en/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="ja"
-                href="http://localhost:1313/ja/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="http://localhost:1313/categories/"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/post/"
                 />
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://blog.m15tak3.com/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="http://localhost:1313/zh-tw/tags/"
+                href="https://blog.m15tak3.com/zh-tw/categories/"
                 />
     <xhtml:link
                 rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/en/tags/"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/categories/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/tags/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-TW"
+                href="https://blog.m15tak3.com/zh-tw/tags/"
                 />
     <xhtml:link
                 rel="alternate"
-                hreflang="ja"
-                href="http://localhost:1313/ja/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en-us"
-                href="http://localhost:1313/tags/"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/"
                 />
   </url>
 </urlset>

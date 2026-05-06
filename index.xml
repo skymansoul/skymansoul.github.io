@@ -12,7 +12,7 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Tue, 28 Apr 2026 12:00:00 -0700</lastBuildDate>
+    <lastBuildDate>Wed, 06 May 2026 09:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/index.xml" rel="self" type="application/rss&#43;xml" />
@@ -23,9 +23,69 @@
     
 
     <item>
+      <title>从零安装WSL2--Ubuntu</title>
+      <link>https://blog.m15tak3.com/post/wsl1/</link>
+      <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/wsl1/</guid>
+      <description>
+        <![CDATA[<h1>从零安装WSL2--Ubuntu</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="从零安装wsl2ubuntu">
+<a class="header-anchor" href="#%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85wsl2ubuntu"></a>
+从零安装WSL2&ndash;Ubuntu
+</h1><h2 id="写在前面">
+<a class="header-anchor" href="#%e5%86%99%e5%9c%a8%e5%89%8d%e9%9d%a2"></a>
+写在前面
+</h2><p>​	wsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。
+<strong>注意</strong>：在安装玩子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。</p>
+<h2 id="wsl的安装">
+<a class="header-anchor" href="#wsl%e7%9a%84%e5%ae%89%e8%a3%85"></a>
+wsl的安装
+</h2><h3 id="环境配置与安装">
+<a class="header-anchor" href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae%e4%b8%8e%e5%ae%89%e8%a3%85"></a>
+环境配置与安装
+</h3><p>​	打开windows设置-系统-可选功能-更多Windows功能</p>
+<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
+<p>​	将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。<img src="images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<h2 id="安装wsl-ubuntu">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85wsl-ubuntu"></a>
+安装WSL-Ubuntu
+</h2><p>​	打开命令行终端，输入指令</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p>​	系统会自动拉取Ubuntu24.04，我们等待进度条结束即可</p>
+<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
+<p>​	安装完成后，会自动打开该子系统，进行用户名的设置。不同的linux系统对于用户名的要求略有不同，所以如果发现提示用户名不合法，大家按要求修改即可。
+<img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
+<h2 id="将子系统转移到其他位置">
+<a class="header-anchor" href="#%e5%b0%86%e5%ad%90%e7%b3%bb%e7%bb%9f%e8%bd%ac%e7%a7%bb%e5%88%b0%e5%85%b6%e4%bb%96%e4%bd%8d%e7%bd%ae"></a>
+将子系统转移到其他位置
+</h2><p>​	WSL自行拉取的linux系统会自动安装在C盘，有因此我们需要将它转移。我们在命令行中输入<code>exit</code>退出系统。</p>
+<p>接着输入下方命令，关闭所有虚拟机。接着我们先导出刚才安装好的Ubuntu22.04,<code>export</code>命令是用来导出子系统的，可用于备份。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
+<p>​	最后的路径大家可自行选择但文件名字结尾必须为.tar结尾</p>
+<p>​	然后我们注销掉当前的子系统，并导入刚才我们导出的文件，引导它安装到我们想让他安装的位置。同样的路径可自行选择。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
+<p>我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。</p>
+
+        
+        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+    </item>
+    
+      
+    
+
+    <item>
       <title>Hello World</title>
       <link>https://blog.m15tak3.com/post/hello/</link>
-      <pubDate>Mon, 27 Apr 2026 23:59:59 -0700</pubDate>
+      <pubDate>Mon, 27 Apr 2026 23:59:59 &#43;0700</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
       <guid>https://blog.m15tak3.com/post/hello/</guid>
       <description>
