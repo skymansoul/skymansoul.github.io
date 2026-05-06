@@ -38,7 +38,7 @@
 <a class="header-anchor" href="#%e5%86%99%e5%9c%a8%e5%89%8d%e9%9d%a2"></a>
 写在前面
 </h2><p>​	wsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。
-<strong>注意</strong>：在安装玩子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。</p>
+<strong>注意</strong>：在安装完子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。</p>
 <h2 id="wsl的安装">
 <a class="header-anchor" href="#wsl%e7%9a%84%e5%ae%89%e8%a3%85"></a>
 wsl的安装
@@ -76,6 +76,8 @@ wsl的安装
         
         <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
+      
+        <category>技术</category><category>CTF</category>
       
     </item>
     

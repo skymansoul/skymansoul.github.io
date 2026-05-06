@@ -2,6 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://blog.m15tak3.com/categories/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-TW"
+                href="https://blog.m15tak3.com/zh-tw/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/categories/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/categories/ctf/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+  </url><url>
     <loc>https://blog.m15tak3.com/</loc>
     <lastmod>2026-05-06T09:00:00+08:00</lastmod>
     <xhtml:link
@@ -16,6 +32,9 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/post/wsl1/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/</loc>
     <lastmod>2026-05-06T09:00:00+08:00</lastmod>
   </url><url>
     <loc>https://blog.m15tak3.com/friend/</loc>
@@ -51,18 +70,6 @@
                 rel="alternate"
                 hreflang="zh-CN"
                 href="https://blog.m15tak3.com/post/"
-                />
-  </url><url>
-    <loc>https://blog.m15tak3.com/categories/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/categories/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-CN"
-                href="https://blog.m15tak3.com/categories/"
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/tags/</loc>
