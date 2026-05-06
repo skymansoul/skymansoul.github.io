@@ -1,72 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
-
-<url>
-  <loc>https://blog.m15tak3.com/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/archives/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/about/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/friend/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/categories/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/tags/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/categories/ctf/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/categories/%E9%9A%8F%E7%AC%94/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/post/wsl1/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://blog.m15tak3.com/post/hello/</loc>
-  <lastmod>2026-05-06T09:36:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-
-
-</urlset>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <sitemap>
+    <loc>https://blog.m15tak3.com/zh-cn/sitemap.xml</loc>
+    
+      <lastmod>2026-05-06T17:00:00+08:00</lastmod>
+    
+  </sitemap>
+  
+  <sitemap>
+    <loc>https://blog.m15tak3.com/zh-tw/sitemap.xml</loc>
+    
+      <lastmod>2026-04-28T12:00:00+07:00</lastmod>
+    
+  </sitemap>
+  
+</sitemapindex>
