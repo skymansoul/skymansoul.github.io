@@ -12,7 +12,7 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Wed, 06 May 2026 17:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 07 May 2026 17:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/index.xml" rel="self" type="application/rss&#43;xml" />
@@ -25,7 +25,7 @@
     <item>
       <title>当AI开始替我们靠近伊萨卡...</title>
       <link>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
-      <pubDate>Wed, 06 May 2026 17:00:00 &#43;0800</pubDate>
+      <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
       <guid>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
       <description>
@@ -54,10 +54,86 @@
 <p>​	但我更想知道，在抵达之前，我们有没有真正见过海。</p>
 
         
-        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-07首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-07</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>随笔</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>linux-python管理（pyenv的安装与使用）</title>
+      <link>https://blog.m15tak3.com/post/pyenv/</link>
+      <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/pyenv/</guid>
+      <description>
+        <![CDATA[<h1>linux-python管理（pyenv的安装与使用）</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="linux-python管理pyenv的安装与使用">
+<a class="header-anchor" href="#linux-python%e7%ae%a1%e7%90%86pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8"></a>
+linux-python管理（pyenv的安装与使用）
+</h1><p>由于在高版本的Linux（例如Ubuntu 24.04）在使用pip管理时会出现<code>externally-managed-environment</code>的问题，即系统不允许直接使用<code>pip</code>安装全局包。我们为了避免对系统的python环境破环以及方便管理python版本，这里我推荐使用pyenv来管理python与虚拟环境。</p>
+<h2 id="安装编译依赖项">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85%e7%bc%96%e8%af%91%e4%be%9d%e8%b5%96%e9%a1%b9"></a>
+安装编译依赖项
+</h2><p><strong>对于Ubuntu/Debian系统</strong>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+</span></span></code></pre></div><p><strong>对于Centos等系统</strong>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
+</span></span></code></pre></div><h2 id="安装pyenv">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85pyenv"></a>
+安装pyenv
+</h2><p>​	我们使用官方脚本安装</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
+</span></span></code></pre></div><h2 id="配置shell并应用">
+<a class="header-anchor" href="#%e9%85%8d%e7%bd%aeshell%e5%b9%b6%e5%ba%94%e7%94%a8"></a>
+配置shell并应用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#验证</span>
+</span></span><span class="line"><span class="cl">pyenv --version
+</span></span></code></pre></div><h2 id="pyenv基本使用">
+<a class="header-anchor" href="#pyenv%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8"></a>
+pyenv基本使用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1">#pyenv install python-version 例如安装3.13.3 </span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv global python-version 例如设置全局python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv local python-version 例如设置当前本地python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
+</span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv shell python-version 例如对当前shell设置python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv shell python-version
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv virtualenv python-version myproject-env 例如创建ctf虚拟环境python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv activate myproject-env 例如激活ctf虚拟环境</span>
+</span></span><span class="line"><span class="cl">pyenv activate ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv deactivate 退出虚拟环境</span>
+</span></span><span class="line"><span class="cl">pyenv deactivate
+</span></span></code></pre></div>
+        
+        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>技术</category><category>CTF</category>
       
     </item>
     
