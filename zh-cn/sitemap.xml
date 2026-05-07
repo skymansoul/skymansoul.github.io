@@ -4,6 +4,8 @@
   <url>
     <loc>https://blog.m15tak3.com/categories/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
@@ -17,9 +19,13 @@
   </url><url>
     <loc>https://blog.m15tak3.com/categories/ctf/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
@@ -33,27 +39,43 @@
   </url><url>
     <loc>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/categories/%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/post/pyenv/</loc>
     <lastmod>2026-05-06T11:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/</loc>
     <lastmod>2026-05-06T11:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/post/wsl1/</loc>
     <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/friend/</loc>
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/about/</loc>
     <lastmod>2026-04-28T12:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/post/hello/</loc>
     <lastmod>2026-04-28T12:00:00+07:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
@@ -67,9 +89,13 @@
   </url><url>
     <loc>https://blog.m15tak3.com/archives/</loc>
     <lastmod>2022-07-26T21:46:25+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/post/</loc>
     <lastmod>2022-07-26T21:46:25+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
@@ -82,6 +108,8 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/tags/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
