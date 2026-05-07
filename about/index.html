@@ -179,7 +179,7 @@
 
         selectOptions.forEach((item) => {
           item.addEventListener("click", () => {
-            const langMap = {};selectedLang.textContent = item.textContent;
+            const langMap = {};langMap['zh-tw'] = '\/zh-tw\/about\/';selectedLang.textContent = item.textContent;
             selectItems.classList.remove("show");
             selectOptions.forEach((option) => {
               option.classList.remove("selected");

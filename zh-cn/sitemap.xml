@@ -66,11 +66,31 @@
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-TW"
+                href="https://blog.m15tak3.com/zh-tw/friend/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/friend/"
+                />
   </url><url>
     <loc>https://blog.m15tak3.com/about/</loc>
     <lastmod>2026-04-28T12:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-TW"
+                href="https://blog.m15tak3.com/zh-tw/about/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/about/"
+                />
   </url><url>
     <loc>https://blog.m15tak3.com/post/hello/</loc>
     <lastmod>2026-04-28T12:00:00+07:00</lastmod>
