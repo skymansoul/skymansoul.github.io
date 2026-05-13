@@ -3,9 +3,9 @@
   --footer-icon: url(../images/taichi.png);
   --top-icon: url(../images/taichi.png);
   --sponsor-icon: url(../images/taichi.png);
-  --cursor-default: auto;
-  --cursor-pointer: pointer;
-  --cursor-text: text;
+  --cursor-default: url(../images/cursor/default.png), auto;
+  --cursor-pointer: url(../images/cursor/link.png), pointer;
+  --cursor-text: url(../images/cursor/text.png), text;
 }
 
 :root {
