@@ -1,0 +1,1460 @@
+<!doctype html>
+<html
+  lang="ja" 
+  data-theme-mode="auto"
+  >
+  <head><meta charset="utf-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, shrink-to-fit=no"
+/><title>
+  CTF分野の詳細ガイド | M15tak3
+</title>
+<meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
+<script data-pjax>
+  var _hmt = _hmt || [];
+  _hmt.push(["_trackPageview", location.pathname]);
+</script><script>
+  (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "true");
+</script>
+<script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+<script data-pjax>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+
+  gtag('js', new Date());
+
+  gtag('config', 'true');
+</script>
+<script>
+  window.siteConfig = JSON.parse("{\"anchor\":{\"auto\":{\"enable\":false,\"length\":60},\"explicit\":{\"enable\":false,\"marker\":\"{#anchor-\",\"prefix\":\"anchor-\"}},\"anchor_icon\":null,\"base\":\"https://blog.m15tak3.com/\",\"clipboard\":{\"copyright\":{\"count\":50,\"enable\":false,\"license_type\":\"by-nc-sa\"},\"fail\":{\"en\":\"Copy failed (ﾟ⊿ﾟ)ﾂ\",\"ja\":\"コピー失敗 (ﾟ⊿ﾟ)ﾂ\",\"pt-br\":\"Falha ao copiar (ﾟ⊿ﾟ)ﾂ\",\"zh-cn\":\"复制失败 (ﾟ⊿ﾟ)ﾂ\",\"zh-tw\":\"複製失敗 (ﾟ⊿ﾟ)ﾂ\"},\"success\":{\"en\":\"Copy successfully (*^▽^*)\",\"ja\":\"コピー成功 (*^▽^*)\",\"pt-br\":\"Copiado com sucesso (*^▽^*)\",\"zh-cn\":\"复制成功 (*^▽^*)\",\"zh-tw\":\"複製成功 (*^▽^*)\"}},\"code_block\":{\"expand\":true},\"i18n_languages\":[{\"label\":\"简体中文\",\"lang\":\"zh-cn\"},{\"label\":\"English\",\"lang\":\"en\"},{\"label\":\"日本語\",\"lang\":\"ja\"}],\"icon_font\":\"4552607_ex15nbittbh\",\"outdate\":{\"daysago\":365,\"enable\":true,\"message\":{\"en\":\"This article was last updated on {time}. Please note that the content may no longer be applicable.\",\"ja\":\"この記事は最終更新日：{time}。記載内容が現在有効でない可能性がありますのでご注意ください。\",\"pt-br\":\"Este artigo foi atualizado pela última vez em {time}. Observe que o conteúdo pode não ser mais aplicável.\",\"zh-cn\":\"本文最后更新于 {time}，请注意文中内容可能已不适用。\",\"zh-tw\":\"本文最後更新於 {time}，請注意文中內容可能已不適用。\"}}}");
+  
+</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="preload"
+  as="style"
+  href="https://fonts.googleapis.com/css?family=Satisfy:400,400italic,700,700italic%7cYuji%20Boku:400,400italic,700,700italic%7cMa%20Shan%20Zheng:400,400italic,700,700italic%7c&amp;display=swap"
+/>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css?family=Satisfy:400,400italic,700,700italic%7cYuji%20Boku:400,400italic,700,700italic%7cMa%20Shan%20Zheng:400,400italic,700,700italic%7c&amp;display=swap"
+  media="print"
+  onload="this.media='all'"
+/>
+<link
+    rel="preload"
+    href="//at.alicdn.com/t/c/font_4552607_ex15nbittbh.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin="anonymous"
+  /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
+  <meta property="og:title" content="CTF分野の詳細ガイド | M15tak3" />
+  <meta
+    property="og:description"
+    content="挖不出漏洞的菜鸡pwn_ctfer"
+  />
+  <meta property="og:url" content="https://blog.m15tak3.com/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/" />
+  <meta
+    property="og:site_name"
+    content="M15tak3のBlog"
+  />
+  <meta property="og:image" content="https://blog.m15tak3.com/images/CTF.png" />
+  <meta property="article:author" content="M15tak3" />
+  <meta property="article:published_time" content="2026-05-14T17:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-05-14T17:00:00&#43;08:00" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/CTF.png" />
+<link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.57876414f2b60ef30ccc3136d98201d83857e432b6fa4c623b3541362c5ab383.css" /><link
+    rel="preload"
+    as="style"
+    href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css"
+    integrity="sha384-IfxC36XL/toUyJ939C73PcgMuRzAZuIzZxE38drsmO5p6jD7ei&#43;Zx/1oA/0l8ysE" crossorigin="anonymous"
+    onload="this.onload=null;this.rel='stylesheet'"
+  /><link
+    rel="preload"
+    as="style"
+    href="https://npm.webcache.cn/katex@0.16.24/dist/katex.min.css"
+    integrity="sha384-tTgKLjMYmJr94v8qu2PE5MUGSMbyN2xiH266JUB3gpm8vnnJywd1dWSOEfrFz&#43;YI" crossorigin="anonymous"
+    onload="this.onload=null;this.rel='stylesheet'"
+  /><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/@waline/client@2.15.8/dist/waline.css"
+    integrity="sha384-vltfZtesCdl6NYVcFVcjEaIi5RpNvZe9t7fXvq8twVtcoy&#43;Ub9QgnxUYJmwOhYCK" crossorigin="anonymous"/><script
+    src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"
+    
+    
+    
+    
+    integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/@reimujs/aos@0.1.2/dist/aos.css"
+    integrity="sha384-GMRP93c6Hkz9JVKGAuRR3nTS7M07RwPgTFenXiosjq2VbVgvdDNcz1g6Mkj8AONa" crossorigin="anonymous"/><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/aplayer@1.10.1/dist/APlayer.min.css"
+    integrity="sha384-tLMkTWh2pfXNWGFlUS0w1TFtRG5xZ9lPWFOooj&#43;vDDLIL&#43;xBGQU/voDBY5XE2lVh" crossorigin="anonymous"/><style>
+  .pace .pace-progress {
+    background: #3f8fb6 !important;
+  }
+  .pace .pace-activity {
+    border-top-color: #3f8fb6 !important;
+    border-left-color: #3f8fb6 !important;
+  }
+</style></head>
+  <body><div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi rotate"><svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+            <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="var(--red-1, #ff5252)" />
+            <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+          M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="var(--red-1, #ff5252)" />
+          </svg></div><div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var loaderEl = document.getElementById('loader');
+    var startLoading = () => {
+      time = Date.now();
+      loaderEl.classList.remove("loading");
+    }
+    var hideLoader = () => {
+      document.body.style.overflow = 'auto';
+      loader.classList.add('loading');
+    };
+
+    var endLoading = () => {
+      if (!time) {
+        hideLoader();
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          hideLoader();
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    loaderEl.addEventListener('click', endLoading);
+  </script><div id="copy-tooltip"></div>
+<div id="lang-tooltip">
+本文書は対応する言語バージョンが見つかりません
+</div>
+<div id="heatmap-tooltip"></div><div id="container">
+      <div id="wrap"><div id="header-nav">
+  <nav id="main-nav" aria-label="Primary navigation"><a class="main-nav-link-wrap" href="/ja/"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">ホーム</span>
+      </a><a class="main-nav-link-wrap" href="/ja/archives"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">アーカイブ</span>
+      </a><a class="main-nav-link-wrap" href="/ja/about"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">プロフィール</span>
+      </a><a class="main-nav-link-wrap" href="/ja/friend"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">フレンド</span>
+      </a><a id="main-nav-toggle" class="nav-icon" aria-label="Toggle navigation" role="button"></a>
+  </nav>
+  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-search-btn" class="nav-icon popup-trigger" title="検索" aria-label="検索"></a></nav><nav id="i18n-nav" aria-label="Language selection">
+      <div class="custom-dropdown">
+        <div class="select-selected" id="select-selected" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language menu">
+          <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
+          <span id="selected-lang">日本語</span>
+        </div>
+        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" aria-selected="false" >简体中文</li><li data-value="en" role="option" aria-selected="false" >English</li><li data-value="ja" role="option" class="selected" aria-selected="true" >日本語</li></ul>
+      </div>
+      <script>
+        var selectSelected = document.getElementById("select-selected");
+        var selectedLang = document.getElementById("selected-lang");
+        var selectItems = document.getElementById("select-items");
+        var selectOptions = selectItems.querySelectorAll("li");
+
+        selectSelected.addEventListener("click", () => {
+          selectItems.classList.toggle("show");
+          var expanded = selectSelected.getAttribute("aria-expanded") === "true";
+          selectSelected.setAttribute("aria-expanded", (!expanded).toString());
+        });
+
+        selectOptions.forEach((item) => {
+          item.addEventListener("click", () => {
+            const langMap = {};langMap['zh-cn'] = '\/zh-cn\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/';langMap['en'] = '\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/';selectedLang.textContent = item.textContent;
+            selectItems.classList.remove("show");
+            selectOptions.forEach((option) => {
+              option.classList.remove("selected");
+            });
+            item.classList.add("selected");
+            if (item.dataset.value === 'ja') {
+              return;
+            }
+            if (!langMap[item.dataset.value]) {
+              _$("#lang-tooltip").style.opacity = "1";
+              setTimeout(() => {
+                _$("#lang-tooltip").style.opacity = "0";
+              }, 1000);
+              return;
+            }
+            window.location = langMap[item.dataset.value];
+          });
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!event.target.closest(".custom-dropdown")) {
+            selectItems.classList.remove("show");
+            selectSelected.setAttribute("aria-expanded", "false");
+          }
+        });
+      </script>
+    </nav></div>
+<header id="header" aria-label="Site header"><picture></picture>
+    <img crossorigin="anonymous" fetchpriority="high" src="/images/CTF.png" alt="CTF分野の詳細ガイド"><div id="header-outer">
+    <div id="header-title"><span id="logo">
+            <h1 data-aos="slide-up">CTF分野の詳細ガイド</h1>
+          </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
+  </div>
+</header><div id="content"
+          aria-label="Page content"
+          class="sidebar-left"
+            ><aside id="sidebar" aria-label="Sidebar"><div class="sidebar-wrapper-container sticky"><div id="aplayer" theme="var(--color-link)" data-aos="fade-up"></div><div class="sidebar-wrapper">
+    <div
+      class="sidebar-wrap"
+      data-aos="fade-up"
+    ><div class="sidebar-toc-sidebar"><h3 class="toc-title">見出し</h3>
+<div class="sidebar-toc-wrapper toc-div-class">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-ctfとは">1. CTFとは</a>
+      <ul>
+        <li><a href="#11-よくある大会形式">1.1 よくある大会形式</a></li>
+        <li><a href="#12-ctfの価値">1.2 CTFの価値</a></li>
+        <li><a href="#13-問題の特徴">1.3 問題の特徴</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-web分野">2. Web分野</a>
+      <ul>
+        <li><a href="#21-コア">2.1 コア</a></li>
+        <li><a href="#22-代表的な問題">2.2 代表的な問題</a></li>
+        <li><a href="#23-必要知識">2.3 必要知識</a></li>
+        <li><a href="#24-よく使うツール">2.4 よく使うツール</a></li>
+        <li><a href="#25-解法の基本フロー">2.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-misc分野">3. Misc分野</a>
+      <ul>
+        <li><a href="#31-コア">3.1 コア</a></li>
+        <li><a href="#32-代表的な問題">3.2 代表的な問題</a></li>
+        <li><a href="#33-必要知識">3.3 必要知識</a></li>
+        <li><a href="#34-よく使うツール">3.4 よく使うツール</a></li>
+        <li><a href="#35-解法の基本フロー">3.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-crypto分野">4. Crypto分野</a>
+      <ul>
+        <li><a href="#41-コア">4.1 コア</a></li>
+        <li><a href="#42-代表的な問題">4.2 代表的な問題</a></li>
+        <li><a href="#43-必要知識">4.3 必要知識</a></li>
+        <li><a href="#44-よく使うツール">4.4 よく使うツール</a></li>
+        <li><a href="#45-解法の基本フロー">4.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#5-pwn分野">5. Pwn分野</a>
+      <ul>
+        <li><a href="#51-コア">5.1 コア</a></li>
+        <li><a href="#52-代表的な問題">5.2 代表的な問題</a></li>
+        <li><a href="#53-必要知識">5.3 必要知識</a></li>
+        <li><a href="#54-よく使うツール">5.4 よく使うツール</a></li>
+        <li><a href="#55-解法の基本フロー">5.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#6-reverse分野">6. Reverse分野</a>
+      <ul>
+        <li><a href="#61-コア">6.1 コア</a></li>
+        <li><a href="#62-代表的な問題">6.2 代表的な問題</a></li>
+        <li><a href="#63-必要知識">6.3 必要知識</a></li>
+        <li><a href="#64-よく使うツール">6.4 よく使うツール</a></li>
+        <li><a href="#65-解法の基本フロー">6.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#7-aiセキュリティ分野">7. AIセキュリティ分野</a>
+      <ul>
+        <li><a href="#71-コア">7.1 コア</a></li>
+        <li><a href="#72-代表的な問題">7.2 代表的な問題</a></li>
+        <li><a href="#73-必要知識">7.3 必要知識</a></li>
+        <li><a href="#74-よく使う方法">7.4 よく使う方法</a></li>
+        <li><a href="#75-解法の基本フロー">7.5 解法の基本フロー</a></li>
+        <li><a href="#76-防御チェックリスト">7.6 防御チェックリスト</a></li>
+      </ul>
+    </li>
+    <li><a href="#8-チーム分業の提案">8. チーム分業の提案</a></li>
+    <li><a href="#9-まとめ">9. まとめ</a></li>
+  </ul>
+</nav>
+</div></div>
+          <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img
+    data-src="/avatar/soul.jpg"
+    data-sizes="auto"
+    alt="M15tak3"
+    class="lazyload"
+  />
+  <div class="sidebar-author-name">M15tak3</div>
+  <div class="sidebar-description">挖不出漏洞的菜鸡pwn_ctfer</div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>投稿</div><div class="sidebar-state-number">4</div>
+  </div>
+  <a class="sidebar-state-category" href="/ja/categories/" aria-label="sidebar-state-category-link">
+    <div>カテゴリー</div>
+    <div class="sidebar-state-number">
+      3
+    </div>
+  </a>
+  <a class="sidebar-state-tag" href="/ja/tags/" aria-label="sidebar-state-tag-link">
+    <div>タグ</div>
+    <div class="sidebar-state-number">0</div>
+  </a>
+</div>
+<div class="sidebar-social" ><div class="icon-email sidebar-social-icon">
+        <a
+          href="mailto:skyman.soul@gmail.com"
+          itemprop="url"
+          target="_blank"
+          aria-label="email"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-github sidebar-social-icon">
+        <a
+          href="https://github.com/skymansoul"
+          itemprop="url"
+          target="_blank"
+          aria-label="github"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-qq sidebar-social-icon">
+        <a
+          href="https://user.qzone.qq.com/3294922898/main"
+          itemprop="url"
+          target="_blank"
+          aria-label="qq"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div></div><div class="sidebar-menu"><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/"
+        aria-label="ホーム"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">ホーム</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/archives"
+        aria-label="アーカイブ"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">アーカイブ</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/about"
+        aria-label="プロフィール"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">プロフィール</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/friend"
+        aria-label="フレンド"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">フレンド</div>
+    </div></div></div><div class="sidebar-btn-wrapper" style="position:static">
+            <div class="sidebar-toc-btn current"></div>
+            <div class="sidebar-common-btn"></div>
+          </div></div>
+  </div><div class="sidebar-widget"></div></div></aside>
+<section id="main" aria-label="Main content"><article
+  class="h-entry article"
+  itemscope
+  itemtype="https://schema.org/BlogPosting"
+>
+  <div
+    class="article-inner"
+    data-aos="fade-up"
+  >
+    <div class="article-meta"><div class="article-date">
+  <span
+    class="article-date-link icon-calendar"
+    data-aos="zoom-in"
+  >
+    <time datetime="2026-05-14 17:00:00 &#43;0800 CST" itemprop="datePublished"
+      >2026-05-14</time
+    >
+    <time style="display: none;" id="post-update-time"
+      >2026-05-14</time
+    >
+  </span></div>
+</div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
+          class="alert-blockquote warning"
+          id="outdate-blockquote"
+          style="display: none;"
+        >
+          <p class="alert-heading">WARNING</p>
+          <p></p>
+        </blockquote><h1 id="ctf分野の詳細ガイド">
+<a class="header-anchor" href="#ctf%e5%88%86%e9%87%8e%e3%81%ae%e8%a9%b3%e7%b4%b0%e3%82%ac%e3%82%a4%e3%83%89"></a>
+CTF分野の詳細ガイド
+</h1><h2 id="1-ctfとは">
+<a class="header-anchor" href="#1-ctf%e3%81%a8%e3%81%af"></a>
+1. CTFとは
+</h2><p>CTF（Capture The Flag）は情報セキュリティ競技の形式です。参加者は解析、脆弱性利用、復号、リバース、フォレンジックなどを通じて <code>flag</code>（通常は特定形式の文字列）を取得し、得点します。</p>
+<p>CTFの本質はツールコマンドの暗記ではなく、システム原理・安全機構・攻防思考を総合的に理解することにあります。</p>
+<h3 id="11-よくある大会形式">
+<a class="header-anchor" href="#11-%e3%82%88%e3%81%8f%e3%81%82%e3%82%8b%e5%a4%a7%e4%bc%9a%e5%bd%a2%e5%bc%8f"></a>
+1.1 よくある大会形式
+</h3><ul>
+<li>Jeopardy: 分野別問題（Web、Pwn、Reverse、Crypto、Misc など）を順に解いて flag 提出</li>
+<li>Attack-Defense: 相手チームを攻撃しつつ自チームのサービスを防御</li>
+<li>King of the Hill: 目標を継続占有して得点</li>
+</ul>
+<h3 id="12-ctfの価値">
+<a class="header-anchor" href="#12-ctf%e3%81%ae%e4%be%a1%e5%80%a4"></a>
+1.2 CTFの価値
+</h3><ul>
+<li>実践力向上: 断片知識を攻撃/防御チェーンに統合</li>
+<li>工学力向上: 自動化、デバッグ、ログ分析、復盤の習慣化</li>
+<li>協業力向上: 分業、並行実行、時間管理、戦略判断</li>
+</ul>
+<h3 id="13-問題の特徴">
+<a class="header-anchor" href="#13-%e5%95%8f%e9%a1%8c%e3%81%ae%e7%89%b9%e5%be%b4"></a>
+1.3 問題の特徴
+</h3><ul>
+<li>多くは「1つの利用可能な欠陥」を中心に設計され、実運用と完全一致しない</li>
+<li>ノイズ情報が意図的に混ざっており、手掛かり選別が必要</li>
+<li>高得点問題は複数ステップ連鎖が多い</li>
+</ul>
+<hr>
+<h2 id="2-web分野">
+<a class="header-anchor" href="#2-web%e5%88%86%e9%87%8e"></a>
+2. Web分野
+</h2><h3 id="21-コア">
+<a class="header-anchor" href="#21-%e3%82%b3%e3%82%a2"></a>
+2.1 コア
+</h3><p>Webアプリの動作を理解し、設計/実装上の欠陥から機密情報（flag など）を取得する。</p>
+<h3 id="22-代表的な問題">
+<a class="header-anchor" href="#22-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+2.2 代表的な問題
+</h3><ul>
+<li>SQLインジェクション</li>
+<li>XSS（反射/格納/DOM）</li>
+<li>ファイルアップロード脆弱性</li>
+<li>逆シリアライズ問題</li>
+<li>SSRF</li>
+<li>コマンド実行（RCE）</li>
+<li>認証/セッション不備</li>
+<li>アクセス制御不備（権限昇格・越権）</li>
+<li>SSTI</li>
+<li>パストラバーサル / LFI/RFI</li>
+</ul>
+<h3 id="23-必要知識">
+<a class="header-anchor" href="#23-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+2.3 必要知識
+</h3><ul>
+<li>HTTP/HTTPS基礎</li>
+<li>主要バックエンドの挙動（Flask、Django、PHP、Node）</li>
+<li>SQL基礎</li>
+<li>入力/処理/出力の安全モデル</li>
+<li>エンコード/デコード</li>
+</ul>
+<h3 id="24-よく使うツール">
+<a class="header-anchor" href="#24-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e3%83%84%e3%83%bc%e3%83%ab"></a>
+2.4 よく使うツール
+</h3><ul>
+<li>Burp Suite</li>
+<li>ブラウザDevTools</li>
+<li>sqlmap</li>
+<li>ffuf / dirsearch</li>
+<li>Postman / curl</li>
+</ul>
+<h3 id="25-解法の基本フロー">
+<a class="header-anchor" href="#25-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+2.5 解法の基本フロー
+</h3><ol>
+<li>画面・API・パラメータ・認可ロジックを棚卸し</li>
+<li>入力可能点を特定</li>
+<li>境界挙動（特殊文字、長大入力、型不一致）を確認</li>
+<li>エラー/応答から脆弱性タイプを判断し payload 構築</li>
+<li>初期突破後に横展開（ファイル読み取り、権限昇格、内部探索）</li>
+</ol>
+<hr>
+<h2 id="3-misc分野">
+<a class="header-anchor" href="#3-misc%e5%88%86%e9%87%8e"></a>
+3. Misc分野
+</h2><h3 id="31-コア">
+<a class="header-anchor" href="#31-%e3%82%b3%e3%82%a2"></a>
+3.1 コア
+</h3><p>Miscは総合問題。情報処理力、スクリプト自動化、分野横断の発想力が問われる。</p>
+<h3 id="32-代表的な問題">
+<a class="header-anchor" href="#32-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+3.2 代表的な問題
+</h3><ul>
+<li>エンコード/デコード</li>
+<li>ステガノグラフィ</li>
+<li>通信解析（pcap、HTTP/TCP）</li>
+<li>フォレンジック断片（ログ、圧縮、メタデータ）</li>
+<li>自動化ミニゲーム/プロトコル対話</li>
+<li>QR/バーコード/キーボードログ/モールス等</li>
+</ul>
+<h3 id="33-必要知識">
+<a class="header-anchor" href="#33-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+3.3 必要知識
+</h3><ul>
+<li>ファイル形式構造（PNG/JPG/ZIP/PDF）</li>
+<li>ネットワーク基礎（TCP/HTTP/DNS）</li>
+<li>Linux CLI</li>
+<li>Python処理（正規表現、バイト列、バッチ処理）</li>
+</ul>
+<h3 id="34-よく使うツール">
+<a class="header-anchor" href="#34-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e3%83%84%e3%83%bc%e3%83%ab"></a>
+3.4 よく使うツール
+</h3><ul>
+<li>CyberChef</li>
+<li>Wireshark / tshark</li>
+<li>binwalk / foremost</li>
+<li>stegsolve / zsteg / exiftool</li>
+<li>Python</li>
+</ul>
+<h3 id="35-解法の基本フロー">
+<a class="header-anchor" href="#35-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+3.5 解法の基本フロー
+</h3><ol>
+<li>アーティファクト種別を見極める</li>
+<li>メタデータ/構造（ヘッダ、フッタ、magic bytes）を確認</li>
+<li>可逆変換を試す</li>
+<li>反復作業は早めにスクリプト化</li>
+</ol>
+<hr>
+<h2 id="4-crypto分野">
+<a class="header-anchor" href="#4-crypto%e5%88%86%e9%87%8e"></a>
+4. Crypto分野
+</h2><h3 id="41-コア">
+<a class="header-anchor" href="#41-%e3%82%b3%e3%82%a2"></a>
+4.1 コア
+</h3><p>CTFのCryptoは、現代暗号の総当たりよりも、弱いパラメータ・実装ミス・運用ミスの悪用が中心。</p>
+<h3 id="42-代表的な問題">
+<a class="header-anchor" href="#42-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+4.2 代表的な問題
+</h3><ul>
+<li>古典暗号</li>
+<li>RSA系脆弱性</li>
+<li>共通鍵暗号の誤用（ECB、IV再利用、padding oracle）</li>
+<li>ハッシュ関連問題</li>
+<li>予測可能乱数</li>
+</ul>
+<h3 id="43-必要知識">
+<a class="header-anchor" href="#43-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+4.3 必要知識
+</h3><ul>
+<li>剰余演算、ユークリッド互除法、逆元</li>
+<li>素数、オイラー関数、高速べき乗</li>
+<li>暗号モード（ECB/CBC/CTR/GCM）</li>
+<li>署名/認証基礎</li>
+</ul>
+<h3 id="44-よく使うツール">
+<a class="header-anchor" href="#44-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e3%83%84%e3%83%bc%e3%83%ab"></a>
+4.4 よく使うツール
+</h3><ul>
+<li>Python + <code>pycryptodome</code></li>
+<li>SageMath</li>
+<li>factordb / yafu</li>
+<li>RsaCtfTool</li>
+</ul>
+<h3 id="45-解法の基本フロー">
+<a class="header-anchor" href="#45-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+4.5 解法の基本フロー
+</h3><ol>
+<li>数学問題か実装不備問題かを判定</li>
+<li>既知/未知を整理</li>
+<li>数学的関係を立て、可解性確認</li>
+<li>弱点パラメータ/再利用を優先検証</li>
+</ol>
+<hr>
+<h2 id="5-pwn分野">
+<a class="header-anchor" href="#5-pwn%e5%88%86%e9%87%8e"></a>
+5. Pwn分野
+</h2><h3 id="51-コア">
+<a class="header-anchor" href="#51-%e3%82%b3%e3%82%a2"></a>
+5.1 コア
+</h3><p>バイナリのメモリ安全性欠陥を利用し、実行フローを制御して最終的に flag 取得または shell 奪取を目指す。</p>
+<h3 id="52-代表的な問題">
+<a class="header-anchor" href="#52-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+5.2 代表的な問題
+</h3><ul>
+<li>スタックオーバーフロー</li>
+<li>ヒープ攻撃</li>
+<li>フォーマット文字列脆弱性</li>
+<li>整数オーバーフロー起点のOOBアクセス</li>
+<li>サンドボックス脱出（上級）</li>
+</ul>
+<h3 id="53-必要知識">
+<a class="header-anchor" href="#53-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+5.3 必要知識
+</h3><ul>
+<li>C言語メモリモデル</li>
+<li>x86/x64呼び出し規約</li>
+<li>ELF/動的リンク</li>
+<li>Linux/syscall基礎</li>
+<li>防御機構（NX, Canary, PIE, RELRO, ASLR）</li>
+</ul>
+<h3 id="54-よく使うツール">
+<a class="header-anchor" href="#54-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e3%83%84%e3%83%bc%e3%83%ab"></a>
+5.4 よく使うツール
+</h3><ul>
+<li>gdb + pwndbg/gef</li>
+<li>pwntools</li>
+<li>checksec</li>
+<li>IDA / Ghidra</li>
+<li>one_gadget / ropper</li>
+</ul>
+<h3 id="55-解法の基本フロー">
+<a class="header-anchor" href="#55-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+5.5 解法の基本フロー
+</h3><ol>
+<li><code>checksec</code> で保護機構確認</li>
+<li>制御可能入力と危険経路を特定</li>
+<li>クラッシュ点とオフセット制御を検証</li>
+<li>保護機構に応じて攻撃チェーン選択</li>
+<li>ローカル成功後にリモート移植（libc差分・タイミング調整）</li>
+</ol>
+<hr>
+<h2 id="6-reverse分野">
+<a class="header-anchor" href="#6-reverse%e5%88%86%e9%87%8e"></a>
+6. Reverse分野
+</h2><h3 id="61-コア">
+<a class="header-anchor" href="#61-%e3%82%b3%e3%82%a2"></a>
+6.1 コア
+</h3><p>静的/動的解析でロジックを復元し、重要データ・検証式・鍵を取り出す。</p>
+<h3 id="62-代表的な問題">
+<a class="header-anchor" href="#62-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+6.2 代表的な問題
+</h3><ul>
+<li>文字列検証と軽い難読化</li>
+<li>制御フロー平坦化/偽分岐</li>
+<li>逆デバッグ/逆サンドボックス</li>
+<li>独自暗号の復元</li>
+<li>APK/so/スクリプト混合解析</li>
+</ul>
+<h3 id="63-必要知識">
+<a class="header-anchor" href="#63-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+6.3 必要知識
+</h3><ul>
+<li>アセンブリ基礎</li>
+<li>コンパイラ最適化の影響</li>
+<li>PE/ELF/APK構造</li>
+<li>ブレークポイント追跡</li>
+</ul>
+<h3 id="64-よく使うツール">
+<a class="header-anchor" href="#64-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e3%83%84%e3%83%bc%e3%83%ab"></a>
+6.4 よく使うツール
+</h3><ul>
+<li>IDA Pro / Ghidra</li>
+<li>x64dbg / OllyDbg</li>
+<li>gdb</li>
+<li>JADX / apktool</li>
+<li>Frida</li>
+</ul>
+<h3 id="65-解法の基本フロー">
+<a class="header-anchor" href="#65-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+6.5 解法の基本フロー
+</h3><ol>
+<li>まず実行してI/O挙動確認</li>
+<li>重要関数を静的に特定</li>
+<li>ブレークポイントで仮説検証</li>
+<li>アルゴリズム復元またはパッチで検証回避</li>
+</ol>
+<hr>
+<h2 id="7-aiセキュリティ分野">
+<a class="header-anchor" href="#7-ai%e3%82%bb%e3%82%ad%e3%83%a5%e3%83%aa%e3%83%86%e3%82%a3%e5%88%86%e9%87%8e"></a>
+7. AIセキュリティ分野
+</h2><h3 id="71-コア">
+<a class="header-anchor" href="#71-%e3%82%b3%e3%82%a2"></a>
+7.1 コア
+</h3><p>モデル・データ・推論パイプライン・統合層に対する攻撃と防御を扱う。</p>
+<h3 id="72-代表的な問題">
+<a class="header-anchor" href="#72-%e4%bb%a3%e8%a1%a8%e7%9a%84%e3%81%aa%e5%95%8f%e9%a1%8c"></a>
+7.2 代表的な問題
+</h3><ul>
+<li>Prompt Injection</li>
+<li>Jailbreak</li>
+<li>Data Leakage</li>
+<li>Tool Abuse / 権限逸脱</li>
+<li>RAG汚染</li>
+<li>Model Extraction / Membership Inference</li>
+<li>敵対的サンプル</li>
+</ul>
+<h3 id="73-必要知識">
+<a class="header-anchor" href="#73-%e5%bf%85%e8%a6%81%e7%9f%a5%e8%ad%98"></a>
+7.3 必要知識
+</h3><ul>
+<li>LLMのロール階層（system/user/assistant）</li>
+<li>RAGパイプライン</li>
+<li>Agentのツール呼び出しと権限境界</li>
+<li>入力フィルタ、出力監査、ポリシーエンジン</li>
+</ul>
+<h3 id="74-よく使う方法">
+<a class="header-anchor" href="#74-%e3%82%88%e3%81%8f%e4%bd%bf%e3%81%86%e6%96%b9%e6%b3%95"></a>
+7.4 よく使う方法
+</h3><ul>
+<li>手動ペイロード設計</li>
+<li>モデル入力出力とツール呼び出しログ監査</li>
+<li>Red Teamベンチマーク</li>
+<li>自動注入テスト</li>
+</ul>
+<h3 id="75-解法の基本フロー">
+<a class="header-anchor" href="#75-%e8%a7%a3%e6%b3%95%e3%81%ae%e5%9f%ba%e6%9c%ac%e3%83%95%e3%83%ad%e3%83%bc"></a>
+7.5 解法の基本フロー
+</h3><ol>
+<li>システム境界の把握</li>
+<li>低リスク探索</li>
+<li>レイヤー別に突破</li>
+<li>再現性の確認</li>
+<li>対策提示（最小権限・文脈分離・ガードレール）</li>
+</ol>
+<h3 id="76-防御チェックリスト">
+<a class="header-anchor" href="#76-%e9%98%b2%e5%be%a1%e3%83%81%e3%82%a7%e3%83%83%e3%82%af%e3%83%aa%e3%82%b9%e3%83%88"></a>
+7.6 防御チェックリスト
+</h3><ul>
+<li>System命令はユーザー入力で上書き不可</li>
+<li>取得文脈とユーザー入力の分離</li>
+<li>ツール呼び出しの権限ゲート</li>
+<li>高リスク出力のポリシー検査と人手確認</li>
+<li>フルログ保全による再現/追跡</li>
+</ul>
+<hr>
+<h2 id="8-チーム分業の提案">
+<a class="header-anchor" href="#8-%e3%83%81%e3%83%bc%e3%83%a0%e5%88%86%e6%a5%ad%e3%81%ae%e6%8f%90%e6%a1%88"></a>
+8. チーム分業の提案
+</h2><ul>
+<li>Web: APIと業務ロジック脆弱性</li>
+<li>Pwn: バイナリ攻撃チェーン</li>
+<li>Reverse: アルゴリズム復元と補助スクリプト</li>
+<li>Crypto: 数学/暗号問題と検証スクリプト</li>
+<li>Misc: 通信・ステガノ・雑多問題の高速処理</li>
+<li>AIセキュリティ: モデル/Agent攻撃面</li>
+</ul>
+<p>成熟チームでは各分野に主担当とバックアップを置くのが効果的。</p>
+<hr>
+<h2 id="9-まとめ">
+<a class="header-anchor" href="#9-%e3%81%be%e3%81%a8%e3%82%81"></a>
+9. まとめ
+</h2><p>CTFはツール競争ではなく、知識構造・分析手法・自動化力・チーム連携の総合力です。</p>
+<p>まずは1〜2分野を深掘りして安定得点源を作り、その後に他分野を広げると効率よく成長できます。</p>
+</div>
+    <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>著者: </strong>M15tak3</p><p>
+      <strong><span class="icon-link icon"></span>パーマリンク: </strong><a href="https://blog.m15tak3.com/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/">https://blog.m15tak3.com/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>タイトル: </strong>CTF分野の詳細ガイド</p><p>
+      
+      <strong><span class="icon-copyright icon"></span>ライセンス: </strong>
+      本ブログのすべての文書は、特に指定されていない限り、<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a>ライセンスに従っています。引用の際は出典を明記してください！
+    </p>
+    <span class="icon-creative-commons article-copyright-bg"></span></blockquote>
+<div class="sponsor-wrapper">
+  <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">スポンサー</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">コーヒーを買ってください</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
+          <img src="/images/wechat.jpg" alt="微信" width="200" />
+          <p class="sponsor-qr-name">微信</p>
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/&amp;title=CTF%e5%88%86%e9%87%8e%e3%81%ae%e8%a9%b3%e7%b4%b0%e3%82%ac%e3%82%a4%e3%83%89&amp;desc=%20CTF%e5%88%86%e9%87%8e%e3%81%ae%e8%a9%b3%e7%b4%b0%e3%82%ac%e3%82%a4%e3%83%89%201.%20CTF%e3%81%a8%e3%81%af%20CTF%ef%bc%88Capture%20The%20Flag%ef%bc%89%e3%81%af%e6%83%85%e5%a0%b1%e3%82%bb%e3%82%ad%e3%83%a5%e3%83%aa%e3%83%86%e3%82%a3%e7%ab%b6%e6%8a%80%e3%81%ae%e5%bd%a2%e5%bc%8f%e3%81%a7%e3%81%99%e3%80%82%e5%8f%82%e5%8a%a0%e8%80%85%e3%81%af%e8%a7%a3%e6%9e%90%e3%80%81%e8%84%86%e5%bc%b1%e6%80%a7%e5%88%a9%e7%94%a8%e3%80%81%e5%be%a9%e5%8f%b7%e3%80%81%e3%83%aa%e3%83%90%e3%83%bc%e3%82%b9%e3%80%81%e3%83%95%e3%82%a9%e3%83%ac%e3%83%b3%e3%82%b8%e3%83%83%e3%82%af%e3%81%aa%e3%81%a9%e3%82%92%e9%80%9a%e3%81%98%e3%81%a6%20flag%ef%bc%88%e9%80%9a%e5%b8%b8%e3%81%af%e7%89%b9%e5%ae%9a%e5%bd%a2%e5%bc%8f%e3%81%ae%e6%96%87%e5%ad%97%e5%88%97%ef%bc%89%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e5%be%97%e7%82%b9%e3%81%97%e3%81%be%e3%81%99%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="CTF分野の詳細ガイド">
+      <div class="share-icon icon icon-qq"></div>
+    </a><a href="javascript:;"  title="CTF分野の詳細ガイド">
+      <div class="share-icon icon icon-weixin"><div id="share-weixin">
+            <div class="share-weixin-dom">
+              <div class="share-weixin-content">
+                <img id="share-weixin-banner"> 
+                <div id="share-weixin-title"></div>
+                <div id="share-weixin-desc"></div>
+              </div>
+              <div class="share-weixin-qrcode">
+                <div class="share-weixin-info">
+                  <div id="share-weixin-author"></div>
+                  <div id="share-weixin-theme">Powered By hugo-theme-reimu</div>
+                </div>
+                <img id="share-weixin-qr" >
+              </div>
+            </div>
+            <div class="share-weixin-canvas"></div>
+          </div></div>
+    </a></div><a
+          data-aos="zoom-in"
+          href="/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/#comments"
+          class="article-comment-link"
+        >
+          <span
+            class="post-comments-count waline-comment-count"
+            data-path="/ja/post/ctf%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3/"
+            itemprop="commentCount"
+          ></span>
+          コメント
+        </a><span
+          data-aos="zoom-in"
+          class="article-visitor-link"
+        >
+          <span
+            class="waline-pageview-count"
+            data-path="/ja/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/"
+            >0</span
+          >
+          <em class="post-meta-item-text">閲覧数</em>
+        </span><ul class="article-category-list"><li class="article-tag-list-item" data-aos="zoom-in">
+    <a
+      class="article-category-link"
+      href="/ja/categories/ctf"
+      data-aos="zoom-in"
+      >CTF</a
+    >
+    </li></ul>
+<ul class="article-tag-list" itemprop="keywords"></ul>
+</footer>
+  </div><nav
+    id="article-nav"
+    aria-label="Article navigation"
+    data-aos="fade-up"
+  ><div class="article-nav-link-wrap left"><img
+            data-src="https://images.ctfassets.net/iuhngnmppwjh/2VrwRqKkQP2TFnrWsxi3aM/a0c8a659be24ea63afea463e0dd1f7d9/pyenv.drawio.png"
+            data-sizes="auto"
+            alt="LinuxでのPython管理（pyenvのインストールと使い方）"
+            class="lazyload"
+          /><a
+          href="/ja/post/pyenv/"
+          aria-label="前の記事:LinuxでのPython管理（pyenvのインストールと使い方）"
+          title="前の記事:LinuxでのPython管理（pyenvのインストールと使い方）"
+        ></a>
+        <div class="article-nav-caption">前の記事</div>
+        <h3 class="article-nav-title">LinuxでのPython管理（pyenvのインストールと使い方）</h3>
+      </div><div class="article-nav-link-wrap right"><img
+            data-src="https://tse1-mm.cn.bing.net/th/id/OIP-C.PDRiwUlnCeqCWOfBjEcD5gHaEK?w=302&amp;h=180&amp;c=7&amp;r=0&amp;o=7&amp;dpr=1.5&amp;pid=1.7&amp;rm=3"
+            data-sizes="auto"
+            alt="AIが私たちをイタカへ近づけはじめたとき..."
+            class="lazyload"
+          /><a
+          href="/ja/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
+          aria-label="次の記事:AIが私たちをイタカへ近づけはじめたとき..."
+          title="次の記事:AIが私たちをイタカへ近づけはじめたとき..."
+        ></a>
+        <div class="article-nav-caption">次の記事</div>
+        <h3 class="article-nav-title">AIが私たちをイタカへ近づけはじめたとき...</h3>
+      </div></nav></article><section id="comments" data-aos="fade-up">
+<div class="comment-header"><h2 class="comment-title">コメントを残す</h2>
+  <div class="comment-selector">
+    <div class="comment-selector-wrap"><div class="selector-item" data-selector="waline">
+          <span>Waline</span>
+        </div></div>
+  </div>
+</div>
+
+<div class="comment-content"><div class="comment waline-comment" data-aos="fade-up"
+     >
+    </div></div>
+</section></section>
+        </div><footer id="footer" aria-label="Site footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info"><div>
+      <span class="icon-copyright"></span>2020-2026<span class="footer-info-sep rotate"></span>M15tak3
+    </div><div>
+        Powered by&nbsp;<a
+          href="https://gohugo.io/"
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          >Hugo</a
+        >&nbsp;Theme.<a
+          href="https://github.com/D-Sketon/hugo-theme-reimu"
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          >Reimu</a
+        >
+      </div><div>
+        <span class="icon-brush"
+          >&nbsp;5.9k</span
+        >
+        &nbsp;|&nbsp;
+        <span class="icon-coffee">&nbsp;00:15</span>
+      </div><div class="footer-beian">
+        <img
+          style="object-fit: contain;margin-right: 2px;"
+          src="https://icp.gov.moe/images/ico64.png"
+          alt=""
+          width="24"
+          height="24"
+        />
+        <a
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          href="https://icp.gov.moe/?keyword=20260232"
+          >萌ICP备20260232号</a
+        >
+      </div><div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv"
+          >総閲覧数&nbsp;<span
+            id="busuanzi_value_site_pv"
+          ></span
+        ></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv"
+          >総閲覧者数&nbsp;<span
+            id="busuanzi_value_site_uv"
+          ></span
+        ></span>
+      </div></div>
+</footer>
+<div class="sidebar-top">
+            <div class="sidebar-top-taichi rotate"></div>
+            <div class="arrow-up"></div>
+          </div><div id="mask" class="hide"></div>
+      </div><nav id="mobile-nav" aria-label="Mobile navigation">
+  <div class="sidebar-wrap"><div class="sidebar-toc-sidebar"><h3 class="toc-title">見出し</h3>
+<div class="sidebar-toc-wrapper toc-div-class">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-ctfとは">1. CTFとは</a>
+      <ul>
+        <li><a href="#11-よくある大会形式">1.1 よくある大会形式</a></li>
+        <li><a href="#12-ctfの価値">1.2 CTFの価値</a></li>
+        <li><a href="#13-問題の特徴">1.3 問題の特徴</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-web分野">2. Web分野</a>
+      <ul>
+        <li><a href="#21-コア">2.1 コア</a></li>
+        <li><a href="#22-代表的な問題">2.2 代表的な問題</a></li>
+        <li><a href="#23-必要知識">2.3 必要知識</a></li>
+        <li><a href="#24-よく使うツール">2.4 よく使うツール</a></li>
+        <li><a href="#25-解法の基本フロー">2.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-misc分野">3. Misc分野</a>
+      <ul>
+        <li><a href="#31-コア">3.1 コア</a></li>
+        <li><a href="#32-代表的な問題">3.2 代表的な問題</a></li>
+        <li><a href="#33-必要知識">3.3 必要知識</a></li>
+        <li><a href="#34-よく使うツール">3.4 よく使うツール</a></li>
+        <li><a href="#35-解法の基本フロー">3.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-crypto分野">4. Crypto分野</a>
+      <ul>
+        <li><a href="#41-コア">4.1 コア</a></li>
+        <li><a href="#42-代表的な問題">4.2 代表的な問題</a></li>
+        <li><a href="#43-必要知識">4.3 必要知識</a></li>
+        <li><a href="#44-よく使うツール">4.4 よく使うツール</a></li>
+        <li><a href="#45-解法の基本フロー">4.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#5-pwn分野">5. Pwn分野</a>
+      <ul>
+        <li><a href="#51-コア">5.1 コア</a></li>
+        <li><a href="#52-代表的な問題">5.2 代表的な問題</a></li>
+        <li><a href="#53-必要知識">5.3 必要知識</a></li>
+        <li><a href="#54-よく使うツール">5.4 よく使うツール</a></li>
+        <li><a href="#55-解法の基本フロー">5.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#6-reverse分野">6. Reverse分野</a>
+      <ul>
+        <li><a href="#61-コア">6.1 コア</a></li>
+        <li><a href="#62-代表的な問題">6.2 代表的な問題</a></li>
+        <li><a href="#63-必要知識">6.3 必要知識</a></li>
+        <li><a href="#64-よく使うツール">6.4 よく使うツール</a></li>
+        <li><a href="#65-解法の基本フロー">6.5 解法の基本フロー</a></li>
+      </ul>
+    </li>
+    <li><a href="#7-aiセキュリティ分野">7. AIセキュリティ分野</a>
+      <ul>
+        <li><a href="#71-コア">7.1 コア</a></li>
+        <li><a href="#72-代表的な問題">7.2 代表的な問題</a></li>
+        <li><a href="#73-必要知識">7.3 必要知識</a></li>
+        <li><a href="#74-よく使う方法">7.4 よく使う方法</a></li>
+        <li><a href="#75-解法の基本フロー">7.5 解法の基本フロー</a></li>
+        <li><a href="#76-防御チェックリスト">7.6 防御チェックリスト</a></li>
+      </ul>
+    </li>
+    <li><a href="#8-チーム分業の提案">8. チーム分業の提案</a></li>
+    <li><a href="#9-まとめ">9. まとめ</a></li>
+  </ul>
+</nav>
+</div></div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img
+    data-src="/avatar/soul.jpg"
+    data-sizes="auto"
+    alt="M15tak3"
+    class="lazyload"
+  />
+  <div class="sidebar-author-name">M15tak3</div>
+  <div class="sidebar-description">挖不出漏洞的菜鸡pwn_ctfer</div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>投稿</div><div class="sidebar-state-number">4</div>
+  </div>
+  <a class="sidebar-state-category" href="/ja/categories/" aria-label="sidebar-state-category-link">
+    <div>カテゴリー</div>
+    <div class="sidebar-state-number">
+      3
+    </div>
+  </a>
+  <a class="sidebar-state-tag" href="/ja/tags/" aria-label="sidebar-state-tag-link">
+    <div>タグ</div>
+    <div class="sidebar-state-number">0</div>
+  </a>
+</div>
+<div class="sidebar-social" ><div class="icon-email sidebar-social-icon">
+        <a
+          href="mailto:skyman.soul@gmail.com"
+          itemprop="url"
+          target="_blank"
+          aria-label="email"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-github sidebar-social-icon">
+        <a
+          href="https://github.com/skymansoul"
+          itemprop="url"
+          target="_blank"
+          aria-label="github"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-qq sidebar-social-icon">
+        <a
+          href="https://user.qzone.qq.com/3294922898/main"
+          itemprop="url"
+          target="_blank"
+          aria-label="qq"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div></div><div class="sidebar-menu"><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/"
+        aria-label="ホーム"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">ホーム</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/archives"
+        aria-label="アーカイブ"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">アーカイブ</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/about"
+        aria-label="プロフィール"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">プロフィール</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/ja/friend"
+        aria-label="フレンド"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">フレンド</div>
+    </div></div></div></div><div class="sidebar-btn-wrapper">
+        <div class="sidebar-toc-btn current"></div>
+        <div class="sidebar-common-btn"></div>
+      </div></nav>
+</div><div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png" />
+        </div>
+      </div><script
+    src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"
+    
+    
+    
+    
+    integrity="sha384-3gT/vsepWkfz/ff7PpWNUeMzeWoH3cDhm/A8jM7ouoAK0/fP/9bcHHR5kHq2nf&#43;e" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"
+    
+    
+    
+    
+    integrity="sha384-J08i8An/QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/material-theme@1.0.0/dist/material-theme.umd.js"
+    
+    
+    
+    
+    integrity="sha384-vLev0II0HKFaxkcm&#43;/7kX5IGwVFBASkGchU311wmU/veIj2bB0UcBkQbW6yw2asK" crossorigin="anonymous"></script><script src="/js/main.js" integrity="" crossorigin="anonymous"  ></script><script src="/js/aos.js" integrity="" crossorigin="anonymous"  ></script><script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", aosInit);
+    } else {
+      aosInit();
+    }
+  </script><script src="/js/pjax_main.js" integrity="" crossorigin="anonymous" data-pjax ></script><script>
+    var ALGOLIA_CONFIG = {
+      logo: '\/images\/algolia_logo.svg',
+      algolia: {
+        applicationID: "CJ4GA2WSME",
+        apiKey: "e1a57ab22db7b417c0967c7006e49d3e",
+        indexName: "blog",
+        hits: {
+          "per_page": parseInt("10")
+        },
+        labels: {
+          "input_placeholder": '検索.....',
+          "hits_empty": '「${query}」に関連するコンテンツは見つかりませんでした',
+          "hits_stats": '${hits} 件の結果が見つかりました（${time} ミリ秒）'
+        }
+      }
+    };
+  </script><script
+    src="https://npm.webcache.cn/algoliasearch@4.17.1/dist/algoliasearch-lite.umd.js"
+    defer
+    
+    
+    
+    integrity="sha384-xvLS0jfKuoREs7pqkRI/OI8GcqohO5S&#43;jQz7ZBtQXnsXmD&#43;9jDOOY4cL6dCPzlrk" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/@reimujs/instantsearch.js@4.57.0-beta.1/dist/instantsearch.production.min.js"
+    defer
+    
+    
+    
+    integrity="sha384-aagKMe8nkqaP2DYQc8kkYOL5l&#43;M5Q2WH/Uhr4teOh0Ybp0RZj0kUSDm45qPikMjK" crossorigin="anonymous"></script><script src="/js/algolia_search.js" integrity="" crossorigin="anonymous"  ></script><script>
+  var setupFirework = () => {
+    if (! false  || !window.matchMedia('(max-width: 768px)').matches) {
+      if (window.firework) {
+        const options = JSON.parse("{\"excludeelements\":[\"a\",\"button\"],\"particles\":[{\"colors\":[\"var(--red-1)\",\"var(--red-2)\",\"var(--red-3)\",\"var(--red-4)\"],\"duration\":[1200,1800],\"easing\":\"easeOutExpo\",\"move\":[\"emit\"],\"number\":20,\"shape\":\"circle\",\"shapeOptions\":{\"alpha\":[0.3,0.5],\"radius\":[16,32]}},{\"colors\":[\"var(--red-0)\"],\"duration\":[1200,1800],\"easing\":\"easeOutExpo\",\"move\":[\"diffuse\"],\"number\":1,\"shape\":\"circle\",\"shapeOptions\":{\"alpha\":[0.2,0.5],\"lineWidth\":6,\"radius\":20}}]}");
+        options.excludeElements = options.excludeelements;
+        delete options.excludeelements;
+        window.firework(options);
+      }
+    }
+  }
+</script><script
+    src="https://npm.webcache.cn/mouse-firework@0.2.0/dist/index.umd.js"
+    defer
+    
+    
+    onload="setupFirework()"
+    integrity="sha384-qi9WggRt19tv8Vc7pCHW3ulMNLwrn515zaLEWZjl1px07vz8&#43;pUoWX8n1rgq282T" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/theme-shokax-pjax@0.0.3/dist/index.umd.js"
+    
+    
+    
+    
+    integrity="sha384-xneY1WY8hOfUzswrE4CrYq35N4BdVcxqxwHPr9zawE/jMSCxD&#43;jAPU55x/jj3wlf" crossorigin="anonymous"></script><script src="/js/pjax.js" integrity="" crossorigin="anonymous"  ></script><script
+    src="https://npm.webcache.cn/quicklink@3.0.1/dist/quicklink.umd.js"
+    
+    
+    
+    
+    integrity="sha384-caMDqvgav/HWdEYQU1QRRHMLleigpL1YHAG0m371DhzfL8rRzUyOb&#43;bEHtwlmYjD" crossorigin="anonymous"></script><script data-pjax>
+    window.quicklink?.listen({
+      timeout:  3000 ,
+      priority:  true ,
+      ignores: JSON.parse("[]")
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div><script data-pjax>
+        window.REIMU_POST = {
+          author: "M15tak3",
+          title: "CTF分野の詳細ガイド",
+          url: "https:\/\/blog.m15tak3.com\/ja\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/",
+          description: " CTF分野の詳細ガイド 1. CTFとは CTF（Capture The Flag）は情報セキュリティ競技の形式です。参加者は解析、脆弱性利用、復号、リバース、フォレンジックなどを通じて flag（通常は特定形式の文字列）を取得し、得点します。\n",
+          cover: "https:\/\/blog.m15tak3.com\/images\/CTF.png",
+        };
+      </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
+          if (_$$(`${gallery} ${children}`).length > 0) {
+            new PhotoSwipeLightbox({
+              gallery,
+              children,pswpModule: () => safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8\u002boTJ7m3DfYEWX1fu1scuS4\u002bs")}).init();
+          }
+        }
+        const pswp = () => {
+          initPswp('.article-entry', 'a.article-gallery-item');
+          initPswp('.article-gallery', 'a.article-gallery-item');
+        }
+        pswp()
+      </script><script data-pjax>
+  var loadScript = (src, integrity) => {
+    const script = document.createElement('script');
+    script.src = src;
+    if (integrity) script.integrity = integrity;
+    script.crossOrigin = 'anonymous';
+    return script;
+  };
+  var commentConfigKeys = ['valine', 'waline', 'twikoo', 'gitalk', 'giscus', 'utterances', 'beaudar', 'disqus'];
+  var commentConfig = {waline: {
+      enable: true,
+      load: async () => {
+        const container = document.querySelector('.waline-comment');
+        if (!container) return;
+        container.style.display = 'block';
+
+        let walineInit;
+        const walineCdn = 'https:\/\/npm.webcache.cn\/@waline\/client@2.15.8\/dist\/waline.mjs';
+        
+        if ('webcache|@waline\/client@2.15.8\/dist\/waline.mjs'.startsWith('local')) {
+          
+          const module = await safeImport(walineCdn);
+          walineInit = module.init;
+        } else {
+          
+          const module = await safeImport(
+            walineCdn, 
+            'sha384-9sbqJjrfGjbkI6\/PI4nU\/MvBfEmkkPC4YK9I4zBeMIf1CVCZdCMH\/KinBEAZII\/5'
+          );
+          walineInit = module.init;
+        }
+        
+        window.walineInstance = walineInit({
+          el: '.waline-comment',
+          serverURL: 'https:\/\/personalblogcomment.m15tak3.com\/',
+          lang: document.documentElement.lang || 'en',
+          locale: "{\"admin\":\"管理者\",\"anonymous\":\"匿名ユーザー\",\"comment\":\"コメント\",\"gifSearchPlaceholder\":\"絵文字検索\",\"hottest\":\"人気コメント順\",\"latest\":\"新しいコメント順\",\"link\":\"サイト\",\"login\":\"ログイン\",\"mail\":\"メール\",\"more\":\"もっと見る\",\"nick\":\"ニックネーム\",\"oldest\":\"古いコメント順\",\"optional\":\"任意\",\"placeholder\":\"何か書いてみてください...\",\"refresh\":\"更新\",\"sofa\":\"最初のコメント\",\"sticky\":\"固定\",\"submit\":\"送信\",\"uploading\":\"聞く......感じる......考える\",\"word\":\"文字\"}",
+          emoji: JSON.parse("[\"https://unpkg.com/@waline/emojis@1.2.0/weibo\",\"https://unpkg.com/@waline/emojis@1.2.0/alus\",\"https://unpkg.com/@waline/emojis@1.2.0/bilibili\",\"https://unpkg.com/@waline/emojis@1.2.0/qq\",\"https://unpkg.com/@waline/emojis@1.2.0/tieba\",\"https://unpkg.com/@waline/emojis@1.2.0/tw-emoji\"]"),
+          meta: JSON.parse("[\"nick\",\"mail\",\"link\"]"),
+          requiredMeta: JSON.parse("[\"nick\",\"mail\"]"),
+          wordLimit:  0 ,
+          comment: true,
+          pageSize:  10 ,
+          dark: 'html[data-theme="dark"]',
+          pageview:  true ,
+        });
+      }
+    },};
+  commentConfig.enable = commentConfigKeys.some(key => commentConfig?.[key]?.enable);
+
+  var defaultComment = '';
+  if (commentConfig.enable) {
+    
+    var savedCommentType = localStorage.getItem('commentType');
+    
+    
+    if (savedCommentType) {
+      if (commentConfig[savedCommentType]?.enable) {
+        defaultComment = savedCommentType;
+      }
+    }
+    
+    
+    if (!defaultComment) {
+      var configDefault = 'waline';
+      if (commentConfig[configDefault]?.enable) {
+        defaultComment = configDefault;
+      }
+    }
+    
+    
+    if (!defaultComment) {
+      defaultComment = commentConfigKeys.find(sys => commentConfig?.[sys]?.enable) || '';
+    }
+  }
+
+  function loadComments() {
+    if (!commentConfig.enable) return;
+    
+    const loadedComments = {
+      valine: false,
+      waline: false,
+      twikoo: false,
+      gitalk: false,
+      giscus: false,
+      disqus: false,
+      utterances: false,
+      beaudar: false,
+    };
+
+    
+    const hideAllComments = () => {
+      const commentContainers = document.querySelectorAll('.comment');
+      commentContainers.forEach(container => {
+        container.style.display = 'none';
+      });
+    };
+
+    
+    const loadCommentSystem = (type) => {
+      if (loadedComments[type]) {
+        
+        document.querySelector(`.${type}-comment`).style.display = 'block';
+        return;
+      }
+
+      
+      commentConfig[type]?.load();
+      loadedComments[type] = true;
+    };
+
+    
+    const changeActiveCommentItems = (item) => {
+      const commentItems = document.querySelectorAll('.selector-item');
+      for (let i = 0; i < commentItems.length; i++) {
+        commentItems[i].classList.remove('active');
+      }
+      item.classList.add('active');
+
+      
+      const commentType = item.getAttribute('data-selector');
+
+      
+      hideAllComments();
+
+      
+      loadCommentSystem(commentType);
+    };
+
+    const commentInit = () => {
+      
+      const commentItems = document.querySelectorAll('.selector-item');
+      for (let item of commentItems) {
+        item.addEventListener('click', () => {
+          
+          const commentType = item.getAttribute('data-selector');
+          window.localStorage.setItem('commentType', commentType);
+          
+          changeActiveCommentItems(item);
+        });
+      }
+
+      
+      if (defaultComment) {
+        const defaultSelectorItem = document.querySelector(`[data-selector="${defaultComment}"]`);
+        if (!defaultSelectorItem) return;
+        defaultSelectorItem.style.display = 'block';
+        defaultSelectorItem.classList.add('active');
+        loadCommentSystem(defaultComment);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', commentInit);
+    } else {
+      commentInit();
+    }
+  };
+  loadComments();
+</script><script
+    src="https://npm.webcache.cn/qrcode@1.5.1/build/qrcode.js"
+    defer
+    
+    data-pjax
+    
+    integrity="sha384-VT1EeewTCEXgndcPMQ0PzV&#43;uVFYjxFIjmAA7s5gcMX9t4Dt5TD&#43;OVQIn7NJWIXn7" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/@zumer/snapdom@1.9.14/dist/snapdom.min.js"
+    defer
+    
+    data-pjax
+    
+    integrity="sha384-OEQ&#43;fJp/Mvi2uzBREXybtxryJvLytWapuHu4EE6LPwTKUwATYcc55tPPcZTzVcmx" crossorigin="anonymous"></script></div>
+</div><script data-pjax>
+    var updateTime = _$('#post-update-time')?.innerHTML;
+
+    if (updateTime) {
+      const update = new Date(updateTime);
+      const now = new Date();
+      const diff = now - update;
+      const days = diff / 86400000;
+      const { daysago: daysAgo, message: template } = window.siteConfig.outdate;
+      if (days >= daysAgo) {
+        let message = `This article was last updated on ${updateTime}. Please note that the content may no longer be applicable.`;
+        if (typeof template === 'string') {
+          message = template.replace(/{time}/, updateTime);
+        } else if (typeof template === 'object') {
+          const lang = document.documentElement.lang;
+          const messageKey = Object.keys(template).find(key => key.toLowerCase() === lang.toLowerCase());
+          if (messageKey && template[messageKey]) {
+            message = template[messageKey].replace(/{time}/, updateTime);
+          }
+        }
+        const blockquote = _$('#outdate-blockquote');
+        if (blockquote) {
+          blockquote.querySelectorAll('p')[1].innerText = message;
+          blockquote.style.display = 'flow-root';
+        }
+      }
+    }
+  </script><script
+    src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js"
+    
+    async
+    
+    
+    integrity="sha384-0M75wtSkhjIInv4coYlaJU83&#43;OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id&#43;S" crossorigin="anonymous"></script><script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script><script>
+  const reimuCopyright = String.raw`
+   ______     ______     __     __    __     __  __    
+  /\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+  \ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+   \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+    \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                    
+  `;
+  console.log(String.raw`%c ${reimuCopyright}`, "color: #ff5252;");
+  console.log(
+    "%c Theme.Reimu" + " %c https://github.com/D-Sketon/hugo-theme-reimu ",
+    "color: white; background: #ff5252; padding:5px 0;",
+    "padding:4px;border:1px solid #ff5252;",
+  );
+</script><script>
+    var setupAPlayer = () => {
+      if (! false  || !window.matchMedia('(max-width: 768px)').matches) {
+        const isMobile = window.matchMedia('(max-width: 959px)').matches;
+        if (isMobile) {
+        const aplayer = _$('#aplayer');
+          if (aplayer) {
+            const aside = aplayer.parentNode?.parentNode;
+            if (aside?.tagName === 'ASIDE') {
+              aplayer.removeAttribute('data-aos');
+              aside.parentNode.removeChild(aplayer);
+              document.body.appendChild(aplayer);
+            }
+          }
+        }
+        new APlayer({
+            theme: "var(--color-link)",
+            container: document.getElementById('aplayer'),
+            audio: JSON.parse("[{\"artist\":\"TRUE (唐沢美帆)\",\"cover\":\"/music/TRUE - Sincerely.jpg\",\"name\":\"Sincerely\",\"url\":\"/music/TRUE - Sincerely.mp3\"}]") || [],
+            fixed: isMobile ? true : ( false  || false),
+            autoplay:  true  || false,
+            loop: 'all' || 'all',
+            order: 'random' || 'list',
+            preload: 'auto' || 'auto',
+            volume:  0.7  || 0.7,
+            mutex:  true  || true,
+            listFolded:  false  || false,
+            lrcType:  0  || 0,
+        });
+      }
+    }
+    </script><script
+    src="https://npm.webcache.cn/aplayer@1.10.1/dist/APlayer.min.js"
+    defer
+    
+    
+    onload="setupAPlayer()"
+    integrity="sha384-gdGYZwHnfJM54evoZhpO0s6ZF5BQiybkiyW7VXr&#43;h5UfruuRL/aORyw&#43;5&#43;HZoU6e" crossorigin="anonymous"></script></body>
+</html>

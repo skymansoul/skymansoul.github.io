@@ -5,12 +5,12 @@
     <link>https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
-    <language>zh-CN</language>
+    <language>en</language>
     
     <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
     <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
     
-    <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
     
     <lastBuildDate>Wed, 06 May 2026 11:00:00 +0800</lastBuildDate>
     
@@ -24,12 +24,12 @@
 
     <item>
       <title>linux-python管理（pyenv的安装与使用）</title>
-      <link>https://blog.m15tak3.com/post/pyenv/</link>
+      <link>https://blog.m15tak3.com/post/pyenv.zh-tw/</link>
       <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/pyenv/</guid>
+      <guid>https://blog.m15tak3.com/post/pyenv.zh-tw/</guid>
       <description>
-        <![CDATA[<h1>linux-python管理（pyenv的安装与使用）</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        <![CDATA[<h1>linux-python管理（pyenv的安装与使用）</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
         
           <h1 id="linux-python管理pyenv的安装与使用">
 <a class="header-anchor" href="#linux-python%e7%ae%a1%e7%90%86pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8"></a>
@@ -88,7 +88,7 @@ pyenv基本使用
 </span></span><span class="line"><span class="cl">pyenv deactivate
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
       </description>
       
         <category>技术</category><category>CTF</category>
@@ -100,12 +100,12 @@ pyenv基本使用
 
     <item>
       <title>从零安装WSL2--Ubuntu</title>
-      <link>https://blog.m15tak3.com/post/wsl1/</link>
+      <link>https://blog.m15tak3.com/post/wsl1.zh-tw/</link>
       <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/wsl1/</guid>
+      <guid>https://blog.m15tak3.com/post/wsl1.zh-tw/</guid>
       <description>
-        <![CDATA[<h1>从零安装WSL2--Ubuntu</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        <![CDATA[<h1>从零安装WSL2--Ubuntu</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
         
           <h1 id="从零安装wsl2ubuntu">
 <a class="header-anchor" href="#%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85wsl2ubuntu"></a>
@@ -150,7 +150,7 @@ wsl的安装
 <p>我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。</p>
 
         
-        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
       </description>
       
         <category>技术</category><category>CTF</category>

@@ -1,6 +1,6 @@
 <!doctype html>
 <html
-  lang="zh-CN" 
+  lang="en" 
   data-theme-mode="auto"
   >
   <head><meta charset="utf-8" />
@@ -8,7 +8,7 @@
   name="viewport"
   content="width=device-width, initial-scale=1, shrink-to-fit=no"
 /><title>
-  linux-python管理（pyenv的安装与使用） | M15tak3
+  Linux Python Management (Installing and Using pyenv) | M15tak3
 </title>
 <meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
 <script data-pjax>
@@ -34,7 +34,7 @@
   gtag('config', 'true');
 </script>
 <script>
-  window.siteConfig = JSON.parse("{\"anchor\":{\"auto\":{\"enable\":false,\"length\":60},\"explicit\":{\"enable\":false,\"marker\":\"{#anchor-\",\"prefix\":\"anchor-\"}},\"anchor_icon\":null,\"base\":\"https://blog.m15tak3.com/\",\"clipboard\":{\"copyright\":{\"count\":50,\"enable\":false,\"license_type\":\"by-nc-sa\"},\"fail\":{\"en\":\"Copy failed (ﾟ⊿ﾟ)ﾂ\",\"ja\":\"コピー失敗 (ﾟ⊿ﾟ)ﾂ\",\"pt-br\":\"Falha ao copiar (ﾟ⊿ﾟ)ﾂ\",\"zh-cn\":\"复制失败 (ﾟ⊿ﾟ)ﾂ\",\"zh-tw\":\"複製失敗 (ﾟ⊿ﾟ)ﾂ\"},\"success\":{\"en\":\"Copy successfully (*^▽^*)\",\"ja\":\"コピー成功 (*^▽^*)\",\"pt-br\":\"Copiado com sucesso (*^▽^*)\",\"zh-cn\":\"复制成功 (*^▽^*)\",\"zh-tw\":\"複製成功 (*^▽^*)\"}},\"code_block\":{\"expand\":true},\"i18n_languages\":[{\"label\":\"简体中文\",\"lang\":\"zh-cn\"},{\"label\":\"繁体中文\",\"lang\":\"zh-tw\"}],\"icon_font\":\"4552607_ex15nbittbh\",\"outdate\":{\"daysago\":365,\"enable\":true,\"message\":{\"en\":\"This article was last updated on {time}. Please note that the content may no longer be applicable.\",\"ja\":\"この記事は最終更新日：{time}。記載内容が現在有効でない可能性がありますのでご注意ください。\",\"pt-br\":\"Este artigo foi atualizado pela última vez em {time}. Observe que o conteúdo pode não ser mais aplicável.\",\"zh-cn\":\"本文最后更新于 {time}，请注意文中内容可能已不适用。\",\"zh-tw\":\"本文最後更新於 {time}，請注意文中內容可能已不適用。\"}}}");
+  window.siteConfig = JSON.parse("{\"anchor\":{\"auto\":{\"enable\":false,\"length\":60},\"explicit\":{\"enable\":false,\"marker\":\"{#anchor-\",\"prefix\":\"anchor-\"}},\"anchor_icon\":null,\"base\":\"https://blog.m15tak3.com/\",\"clipboard\":{\"copyright\":{\"count\":50,\"enable\":false,\"license_type\":\"by-nc-sa\"},\"fail\":{\"en\":\"Copy failed (ﾟ⊿ﾟ)ﾂ\",\"ja\":\"コピー失敗 (ﾟ⊿ﾟ)ﾂ\",\"pt-br\":\"Falha ao copiar (ﾟ⊿ﾟ)ﾂ\",\"zh-cn\":\"复制失败 (ﾟ⊿ﾟ)ﾂ\",\"zh-tw\":\"複製失敗 (ﾟ⊿ﾟ)ﾂ\"},\"success\":{\"en\":\"Copy successfully (*^▽^*)\",\"ja\":\"コピー成功 (*^▽^*)\",\"pt-br\":\"Copiado com sucesso (*^▽^*)\",\"zh-cn\":\"复制成功 (*^▽^*)\",\"zh-tw\":\"複製成功 (*^▽^*)\"}},\"code_block\":{\"expand\":true},\"i18n_languages\":[{\"label\":\"简体中文\",\"lang\":\"zh-cn\"},{\"label\":\"English\",\"lang\":\"en\"},{\"label\":\"日本語\",\"lang\":\"ja\"}],\"icon_font\":\"4552607_ex15nbittbh\",\"outdate\":{\"daysago\":365,\"enable\":true,\"message\":{\"en\":\"This article was last updated on {time}. Please note that the content may no longer be applicable.\",\"ja\":\"この記事は最終更新日：{time}。記載内容が現在有効でない可能性がありますのでご注意ください。\",\"pt-br\":\"Este artigo foi atualizado pela última vez em {time}. Observe que o conteúdo pode não ser mais aplicável.\",\"zh-cn\":\"本文最后更新于 {time}，请注意文中内容可能已不适用。\",\"zh-tw\":\"本文最後更新於 {time}，請注意文中內容可能已不適用。\"}}}");
   
 </script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,7 +56,7 @@
     type="font/woff2"
     crossorigin="anonymous"
   /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
-  <meta property="og:title" content="linux-python管理（pyenv的安装与使用） | M15tak3" />
+  <meta property="og:title" content="Linux Python Management (Installing and Using pyenv) | M15tak3" />
   <meta
     property="og:description"
     content="挖不出漏洞的菜鸡pwn_ctfer"
@@ -114,7 +114,7 @@
             <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="var(--red-1, #ff5252)" />
             <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
           M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="var(--red-1, #ff5252)" />
-          </svg></div><div class="loading-word">少女祈祷中...</div>
+          </svg></div><div class="loading-word">Loading...</div>
     </div>
   </div>
   </div>
@@ -147,23 +147,23 @@
     loaderEl.addEventListener('click', endLoading);
   </script><div id="copy-tooltip"></div>
 <div id="lang-tooltip">
-本文章没有找到对应的语言版本
+This article does not have a corresponding language version
 </div>
 <div id="heatmap-tooltip"></div><div id="container">
       <div id="wrap"><div id="header-nav">
-  <nav id="main-nav" aria-label="Primary navigation"><a class="main-nav-link-wrap" href="/"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">首页</span>
-      </a><a class="main-nav-link-wrap" href="/archives"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">归档</span>
-      </a><a class="main-nav-link-wrap" href="/about"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">关于</span>
-      </a><a class="main-nav-link-wrap" href="/friend"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">友链</span>
+  <nav id="main-nav" aria-label="Primary navigation"><a class="main-nav-link-wrap" href="/"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Home</span>
+      </a><a class="main-nav-link-wrap" href="/archives"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Archives</span>
+      </a><a class="main-nav-link-wrap" href="/about"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">About</span>
+      </a><a class="main-nav-link-wrap" href="/friend"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Friend</span>
       </a><a id="main-nav-toggle" class="nav-icon" aria-label="Toggle navigation" role="button"></a>
   </nav>
-  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-search-btn" class="nav-icon popup-trigger" title="搜索" aria-label="搜索"></a></nav><nav id="i18n-nav" aria-label="Language selection">
+  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-search-btn" class="nav-icon popup-trigger" title="Search" aria-label="Search"></a></nav><nav id="i18n-nav" aria-label="Language selection">
       <div class="custom-dropdown">
         <div class="select-selected" id="select-selected" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language menu">
           <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
-          <span id="selected-lang">简体中文</span>
+          <span id="selected-lang">English</span>
         </div>
-        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" class="selected" aria-selected="true" >简体中文</li><li data-value="zh-tw" role="option" aria-selected="false" >繁体中文</li></ul>
+        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" aria-selected="false" >简体中文</li><li data-value="en" role="option" class="selected" aria-selected="true" >English</li><li data-value="ja" role="option" aria-selected="false" >日本語</li></ul>
       </div>
       <script>
         var selectSelected = document.getElementById("select-selected");
@@ -179,13 +179,13 @@
 
         selectOptions.forEach((item) => {
           item.addEventListener("click", () => {
-            const langMap = {};langMap['zh-tw'] = '\/zh-tw\/post\/pyenv\/';selectedLang.textContent = item.textContent;
+            const langMap = {};langMap['zh-cn'] = '\/zh-cn\/post\/pyenv\/';langMap['ja'] = '\/ja\/post\/pyenv\/';selectedLang.textContent = item.textContent;
             selectItems.classList.remove("show");
             selectOptions.forEach((option) => {
               option.classList.remove("selected");
             });
             item.classList.add("selected");
-            if (item.dataset.value === 'zh-cn') {
+            if (item.dataset.value === 'en') {
               return;
             }
             if (!langMap[item.dataset.value]) {
@@ -208,9 +208,9 @@
       </script>
     </nav></div>
 <header id="header" aria-label="Site header"><picture></picture>
-    <img crossorigin="anonymous" fetchpriority="high" src="https://tse4.mm.bing.net/th/id/OIP.qHqI7HtkP4d7eioBmyuUPQHaEK?rs=1&amp;pid=ImgDetMain&amp;o=7&amp;rm=3" alt="linux-python管理（pyenv的安装与使用）"><div id="header-outer">
+    <img crossorigin="anonymous" fetchpriority="high" src="https://tse4.mm.bing.net/th/id/OIP.qHqI7HtkP4d7eioBmyuUPQHaEK?rs=1&amp;pid=ImgDetMain&amp;o=7&amp;rm=3" alt="Linux Python Management (Installing and Using pyenv)"><div id="header-outer">
     <div id="header-title"><span id="logo">
-            <h1 data-aos="slide-up">linux-python管理（pyenv的安装与使用）</h1>
+            <h1 data-aos="slide-up">Linux Python Management (Installing and Using pyenv)</h1>
           </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
   </div>
 </header><div id="content"
@@ -220,14 +220,14 @@
     <div
       class="sidebar-wrap"
       data-aos="fade-up"
-    ><div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
+    ><div class="sidebar-toc-sidebar"><h3 class="toc-title">Contents</h3>
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#安装编译依赖项">安装编译依赖项</a></li>
-    <li><a href="#安装pyenv">安装pyenv</a></li>
-    <li><a href="#配置shell并应用">配置shell并应用</a></li>
-    <li><a href="#pyenv基本使用">pyenv基本使用</a></li>
+    <li><a href="#install-build-dependencies">Install Build Dependencies</a></li>
+    <li><a href="#install-pyenv">Install pyenv</a></li>
+    <li><a href="#configure-your-shell-and-apply">Configure Your Shell and Apply</a></li>
+    <li><a href="#basic-pyenv-usage">Basic pyenv Usage</a></li>
   </ul>
 </nav>
 </div></div>
@@ -243,16 +243,16 @@
 </div>
 <div class="sidebar-state">
   <div class="sidebar-state-article">
-    <div>文章</div><div class="sidebar-state-number">4</div>
+    <div>Posts</div><div class="sidebar-state-number">7</div>
   </div>
   <a class="sidebar-state-category" href="/categories/" aria-label="sidebar-state-category-link">
-    <div>分类</div>
+    <div>Categories</div>
     <div class="sidebar-state-number">
-      3
+      5
     </div>
   </a>
   <a class="sidebar-state-tag" href="/tags/" aria-label="sidebar-state-tag-link">
-    <div>标签</div>
+    <div>Tags</div>
     <div class="sidebar-state-number">0</div>
   </a>
 </div>
@@ -284,26 +284,26 @@
       <a
         class="sidebar-menu-link-dummy"
         href="/"
-        aria-label="首页"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">首页</div>
+        aria-label="Home"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Home</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/archives"
-        aria-label="归档"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">归档</div>
+        aria-label="Archives"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Archives</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/about"
-        aria-label="关于"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">关于</div>
+        aria-label="About"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">About</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/friend"
-        aria-label="友链"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">友链</div>
+        aria-label="Friend"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Friend</div>
     </div></div></div><div class="sidebar-btn-wrapper" style="position:static">
             <div class="sidebar-toc-btn current"></div>
             <div class="sidebar-common-btn"></div>
@@ -337,77 +337,77 @@
         >
           <p class="alert-heading">WARNING</p>
           <p></p>
-        </blockquote><h1 id="linux-python管理pyenv的安装与使用">
-<a class="header-anchor" href="#linux-python%e7%ae%a1%e7%90%86pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8"></a>
-linux-python管理（pyenv的安装与使用）
-</h1><p>由于在高版本的Linux（例如Ubuntu 24.04）在使用pip管理时会出现<code>externally-managed-environment</code>的问题，即系统不允许直接使用<code>pip</code>安装全局包。我们为了避免对系统的python环境破环以及方便管理python版本，这里我推荐使用pyenv来管理python与虚拟环境。</p>
-<h2 id="安装编译依赖项">
-<a class="header-anchor" href="#%e5%ae%89%e8%a3%85%e7%bc%96%e8%af%91%e4%be%9d%e8%b5%96%e9%a1%b9"></a>
-安装编译依赖项
-</h2><p><strong>对于Ubuntu/Debian系统</strong>：</p>
+        </blockquote><h1 id="linux-python-management-installing-and-using-pyenv">
+<a class="header-anchor" href="#linux-python-management-installing-and-using-pyenv"></a>
+Linux Python Management (Installing and Using pyenv)
+</h1><p>On newer Linux versions (for example, Ubuntu 24.04), using <code>pip</code> for system-level package management may trigger the <code>externally-managed-environment</code> error. In other words, the system does not allow direct global package installation with <code>pip</code>.</p>
+<p>To avoid breaking the system Python environment and to manage Python versions more cleanly, I recommend using <code>pyenv</code> (plus virtual environments).</p>
+<h2 id="install-build-dependencies">
+<a class="header-anchor" href="#install-build-dependencies"></a>
+Install Build Dependencies
+</h2><p><strong>For Ubuntu/Debian:</strong></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-</span></span></code></pre></div><p><strong>对于Centos等系统</strong>：</p>
+</span></span></code></pre></div><p><strong>For CentOS and similar systems:</strong></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
-</span></span></code></pre></div><h2 id="安装pyenv">
-<a class="header-anchor" href="#%e5%ae%89%e8%a3%85pyenv"></a>
-安装pyenv
-</h2><p>​	我们使用官方脚本安装</p>
+</span></span></code></pre></div><h2 id="install-pyenv">
+<a class="header-anchor" href="#install-pyenv"></a>
+Install pyenv
+</h2><p>Install via the official script:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
-</span></span></code></pre></div><h2 id="配置shell并应用">
-<a class="header-anchor" href="#%e9%85%8d%e7%bd%aeshell%e5%b9%b6%e5%ba%94%e7%94%a8"></a>
-配置shell并应用
+</span></span></code></pre></div><h2 id="configure-your-shell-and-apply">
+<a class="header-anchor" href="#configure-your-shell-and-apply"></a>
+Configure Your Shell and Apply
 </h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
 </span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
 </span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
 </span></span><span class="line"><span class="cl"> 
-</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
-</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
-</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#验证</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Verify</span>
 </span></span><span class="line"><span class="cl">pyenv --version
-</span></span></code></pre></div><h2 id="pyenv基本使用">
-<a class="header-anchor" href="#pyenv%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8"></a>
-pyenv基本使用
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1">#pyenv install python-version 例如安装3.13.3 </span>
-</span></span><span class="line"><span class="cl">pyenv install 3.13.3 
+</span></span></code></pre></div><h2 id="basic-pyenv-usage">
+<a class="header-anchor" href="#basic-pyenv-usage"></a>
+Basic pyenv Usage
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># pyenv install python-version, e.g. install 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv global python-version 例如设置全局python版本为3.13.3</span>
-</span></span><span class="line"><span class="cl">pyenv global 3.13.3 
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv global python-version, e.g. set global version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv local python-version 例如设置当前本地python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv local python-version, e.g. set local project version to 3.13.3</span>
 </span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
 </span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv shell python-version 例如对当前shell设置python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv shell python-version, e.g. set shell session version to 3.13.3</span>
 </span></span><span class="line"><span class="cl">pyenv shell python-version
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv virtualenv python-version myproject-env 例如创建ctf虚拟环境python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv virtualenv python-version myproject-env, e.g. create ctf env with 3.13.3</span>
 </span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv activate myproject-env 例如激活ctf虚拟环境</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv activate myproject-env, e.g. activate ctf env</span>
 </span></span><span class="line"><span class="cl">pyenv activate ctf
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#pyenv deactivate 退出虚拟环境</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv deactivate, exit virtual environment</span>
 </span></span><span class="line"><span class="cl">pyenv deactivate
 </span></span></code></pre></div></div>
-    <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>本文作者：</strong>M15tak3</p><p>
-      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/pyenv/">https://blog.m15tak3.com/post/pyenv/</a>
-    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>linux-python管理（pyenv的安装与使用）</p><p>
+    <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>Author: </strong>M15tak3</p><p>
+      <strong><span class="icon-link icon"></span>Permalink: </strong><a href="https://blog.m15tak3.com/post/pyenv/">https://blog.m15tak3.com/post/pyenv/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>Title: </strong>Linux Python Management (Installing and Using pyenv)</p><p>
       
-      <strong><span class="icon-copyright icon"></span>本文版权：</strong>
-      本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> 许可协议。转载请注明出处！
+      <strong><span class="icon-copyright icon"></span>License: </strong>
+      All articles on this blog are licensed under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> license agreement unless otherwise stated. Please indicate the source when reprinting!
     </p>
     <span class="icon-creative-commons article-copyright-bg"></span></blockquote>
 <div class="sponsor-wrapper">
-  <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">赞助</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">请作者喝杯咖啡吧</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
+  <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">Sponsor</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">Buy me a coffee</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
           <img src="/images/wechat.jpg" alt="微信" width="200" />
           <p class="sponsor-qr-name">微信</p>
-        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/pyenv/&amp;title=linux-python%e7%ae%a1%e7%90%86%ef%bc%88pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8%ef%bc%89&amp;desc=%20linux-python%e7%ae%a1%e7%90%86%ef%bc%88pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8%ef%bc%89%20%e7%94%b1%e4%ba%8e%e5%9c%a8%e9%ab%98%e7%89%88%e6%9c%ac%e7%9a%84Linux%ef%bc%88%e4%be%8b%e5%a6%82Ubuntu%2024.04%ef%bc%89%e5%9c%a8%e4%bd%bf%e7%94%a8pip%e7%ae%a1%e7%90%86%e6%97%b6%e4%bc%9a%e5%87%ba%e7%8e%b0externally-managed-environment%e7%9a%84%e9%97%ae%e9%a2%98%ef%bc%8c%e5%8d%b3%e7%b3%bb%e7%bb%9f%e4%b8%8d%e5%85%81%e8%ae%b8%e7%9b%b4%e6%8e%a5%e4%bd%bf%e7%94%a8pip%e5%ae%89%e8%a3%85%e5%85%a8%e5%b1%80%e5%8c%85%e3%80%82%e6%88%91%e4%bb%ac%e4%b8%ba%e4%ba%86%e9%81%bf%e5%85%8d%e5%af%b9%e7%b3%bb%e7%bb%9f%e7%9a%84python%e7%8e%af%e5%a2%83%e7%a0%b4%e7%8e%af%e4%bb%a5%e5%8f%8a%e6%96%b9%e4%be%bf%e7%ae%a1%e7%90%86python%e7%89%88%e6%9c%ac%ef%bc%8c%e8%bf%99%e9%87%8c%e6%88%91%e6%8e%a8%e8%8d%90%e4%bd%bf%e7%94%a8pyenv%e6%9d%a5%e7%ae%a1%e7%90%86python%e4%b8%8e%e8%99%9a%e6%8b%9f%e7%8e%af%e5%a2%83%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="linux-python管理（pyenv的安装与使用）">
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/pyenv/&amp;title=Linux%20Python%20Management%20%28Installing%20and%20Using%20pyenv%29&amp;desc=%20Linux%20Python%20Management%20%28Installing%20and%20Using%20pyenv%29%20On%20newer%20Linux%20versions%20%28for%20example,%20Ubuntu%2024.04%29,%20using%20pip%20for%20system-level%20package%20management%20may%20trigger%20the%20externally-managed-environment%20error.%20In%20other%20words,%20the%20system%20does%20not%20allow%20direct%20global%20package%20installation%20with%20pip.%0aTo%20%e2%80%a6&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Linux Python Management (Installing and Using pyenv)">
       <div class="share-icon icon icon-qq"></div>
-    </a><a href="javascript:;"  title="linux-python管理（pyenv的安装与使用）">
+    </a><a href="javascript:;"  title="Linux Python Management (Installing and Using pyenv)">
       <div class="share-icon icon icon-weixin"><div id="share-weixin">
             <div class="share-weixin-dom">
               <div class="share-weixin-content">
@@ -435,7 +435,7 @@ pyenv基本使用
             data-path="/post/pyenv/"
             itemprop="commentCount"
           ></span>
-          留言
+          Comments
         </a><span
           data-aos="zoom-in"
           class="article-visitor-link"
@@ -445,13 +445,13 @@ pyenv基本使用
             data-path="/post/pyenv/"
             >0</span
           >
-          <em class="post-meta-item-text">阅读量</em>
+          <em class="post-meta-item-text">Readings</em>
         </span><ul class="article-category-list"><li class="article-tag-list-item" data-aos="zoom-in">
     <a
       class="article-category-link"
-      href="/categories/%e6%8a%80%e6%9c%af"
+      href="/categories/tech"
       data-aos="zoom-in"
-      >技术</a
+      >Tech</a
     >
     </li><li class="article-tag-list-item" data-aos="zoom-in">
     <a
@@ -468,34 +468,34 @@ pyenv基本使用
     aria-label="Article navigation"
     data-aos="fade-up"
   ><div class="article-nav-link-wrap left"><img
-            data-src="/images/wsl.jpg"
+            data-src="https://images.ctfassets.net/iuhngnmppwjh/2VrwRqKkQP2TFnrWsxi3aM/a0c8a659be24ea63afea463e0dd1f7d9/pyenv.drawio.png"
             data-sizes="auto"
-            alt="从零安装WSL2--Ubuntu"
+            alt="linux-python管理（pyenv的安装与使用）"
             class="lazyload"
           /><a
-          href="/post/wsl1/"
-          aria-label="前一篇:从零安装WSL2--Ubuntu"
-          title="前一篇:从零安装WSL2--Ubuntu"
+          href="/post/pyenv.zh-tw/"
+          aria-label="Prev:linux-python管理（pyenv的安装与使用）"
+          title="Prev:linux-python管理（pyenv的安装与使用）"
         ></a>
-        <div class="article-nav-caption">前一篇</div>
-        <h3 class="article-nav-title">从零安装WSL2--Ubuntu</h3>
+        <div class="article-nav-caption">Prev</div>
+        <h3 class="article-nav-title">linux-python管理（pyenv的安装与使用）</h3>
       </div><div class="article-nav-link-wrap right"><img
-            data-src="/images/CTF.png"
+            data-src="https://tse1-mm.cn.bing.net/th/id/OIP-C.PDRiwUlnCeqCWOfBjEcD5gHaEK?w=302&amp;h=180&amp;c=7&amp;r=0&amp;o=7&amp;dpr=1.5&amp;pid=1.7&amp;rm=3"
             data-sizes="auto"
-            alt="CTF 方向详解"
+            alt="当AI开始替我们靠近伊萨卡..."
             class="lazyload"
           /><a
-          href="/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/"
-          aria-label="后一篇:CTF 方向详解"
-          title="后一篇:CTF 方向详解"
+          href="/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1.zh-tw/"
+          aria-label="Next:当AI开始替我们靠近伊萨卡..."
+          title="Next:当AI开始替我们靠近伊萨卡..."
         ></a>
-        <div class="article-nav-caption">后一篇</div>
-        <h3 class="article-nav-title">CTF 方向详解</h3>
+        <div class="article-nav-caption">Next</div>
+        <h3 class="article-nav-title">当AI开始替我们靠近伊萨卡...</h3>
       </div></nav></article><section id="comments" data-aos="fade-up">
-<div class="comment-header"><h2 class="comment-title">说些什么吧！</h2>
+<div class="comment-header"><h2 class="comment-title">Leave a comment</h2>
   <div class="comment-selector">
     <div class="comment-selector-wrap"><div class="selector-item" data-selector="waline">
-          <span>waline</span>
+          <span>Waline</span>
         </div></div>
   </div>
 </div>
@@ -511,7 +511,7 @@ pyenv基本使用
   <div id="footer-info"><div>
       <span class="icon-copyright"></span>2020-2026<span class="footer-info-sep rotate"></span>M15tak3
     </div><div>
-        基于&nbsp;<a
+        Powered by&nbsp;<a
           href="https://gohugo.io/"
           target="_blank"
           rel="noopener nofollow noreferrer"
@@ -524,10 +524,10 @@ pyenv基本使用
         >
       </div><div>
         <span class="icon-brush"
-          >&nbsp;6.9k</span
+          >&nbsp;5.9k</span
         >
         &nbsp;|&nbsp;
-        <span class="icon-coffee">&nbsp;00:17</span>
+        <span class="icon-coffee">&nbsp;00:24</span>
       </div><div class="footer-beian">
         <img
           style="object-fit: contain;margin-right: 2px;"
@@ -545,14 +545,14 @@ pyenv基本使用
       </div><div>
         <span class="icon-eye"></span>
         <span id="busuanzi_container_site_pv"
-          >总访问量&nbsp;<span
+          >Number of visits&nbsp;<span
             id="busuanzi_value_site_pv"
           ></span
         ></span>
         &nbsp;|&nbsp;
         <span class="icon-user"></span>
         <span id="busuanzi_container_site_uv"
-          >总访客量&nbsp;<span
+          >Number of visitors&nbsp;<span
             id="busuanzi_value_site_uv"
           ></span
         ></span>
@@ -563,14 +563,14 @@ pyenv基本使用
             <div class="arrow-up"></div>
           </div><div id="mask" class="hide"></div>
       </div><nav id="mobile-nav" aria-label="Mobile navigation">
-  <div class="sidebar-wrap"><div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
+  <div class="sidebar-wrap"><div class="sidebar-toc-sidebar"><h3 class="toc-title">Contents</h3>
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#安装编译依赖项">安装编译依赖项</a></li>
-    <li><a href="#安装pyenv">安装pyenv</a></li>
-    <li><a href="#配置shell并应用">配置shell并应用</a></li>
-    <li><a href="#pyenv基本使用">pyenv基本使用</a></li>
+    <li><a href="#install-build-dependencies">Install Build Dependencies</a></li>
+    <li><a href="#install-pyenv">Install pyenv</a></li>
+    <li><a href="#configure-your-shell-and-apply">Configure Your Shell and Apply</a></li>
+    <li><a href="#basic-pyenv-usage">Basic pyenv Usage</a></li>
   </ul>
 </nav>
 </div></div>
@@ -586,16 +586,16 @@ pyenv基本使用
 </div>
 <div class="sidebar-state">
   <div class="sidebar-state-article">
-    <div>文章</div><div class="sidebar-state-number">4</div>
+    <div>Posts</div><div class="sidebar-state-number">7</div>
   </div>
   <a class="sidebar-state-category" href="/categories/" aria-label="sidebar-state-category-link">
-    <div>分类</div>
+    <div>Categories</div>
     <div class="sidebar-state-number">
-      3
+      5
     </div>
   </a>
   <a class="sidebar-state-tag" href="/tags/" aria-label="sidebar-state-tag-link">
-    <div>标签</div>
+    <div>Tags</div>
     <div class="sidebar-state-number">0</div>
   </a>
 </div>
@@ -627,26 +627,26 @@ pyenv基本使用
       <a
         class="sidebar-menu-link-dummy"
         href="/"
-        aria-label="首页"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">首页</div>
+        aria-label="Home"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Home</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/archives"
-        aria-label="归档"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">归档</div>
+        aria-label="Archives"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Archives</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/about"
-        aria-label="关于"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">关于</div>
+        aria-label="About"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">About</div>
     </div><div class="sidebar-menu-link-wrap">
       <a
         class="sidebar-menu-link-dummy"
         href="/friend"
-        aria-label="友链"
-      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">友链</div>
+        aria-label="Friend"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Friend</div>
     </div></div></div></div><div class="sidebar-btn-wrapper">
         <div class="sidebar-toc-btn current"></div>
         <div class="sidebar-common-btn"></div>
@@ -708,9 +708,9 @@ pyenv基本使用
           "per_page": parseInt("10")
         },
         labels: {
-          "input_placeholder": '搜索.....',
-          "hits_empty": '未发现与 「${query}」相关内容',
-          "hits_stats": '找到${hits}条结果（用时 ${time} ms）'
+          "input_placeholder": 'Search.....',
+          "hits_empty": 'No results found for 「${query}」',
+          "hits_stats": 'Found ${hits} results (in ${time} ms)'
         }
       }
     };
@@ -768,9 +768,9 @@ pyenv基本使用
   <div><script data-pjax>
         window.REIMU_POST = {
           author: "M15tak3",
-          title: "linux-python管理（pyenv的安装与使用）",
+          title: "Linux Python Management (Installing and Using pyenv)",
           url: "https:\/\/blog.m15tak3.com\/post\/pyenv\/",
-          description: " linux-python管理（pyenv的安装与使用） 由于在高版本的Linux（例如Ubuntu 24.04）在使用pip管理时会出现externally-managed-environment的问题，即系统不允许直接使用pip安装全局包。我们为了避免对系统的python环境破环以及方便管理python版本，这里我推荐使用pyenv来管理python与虚拟环境。\n",
+          description: " Linux Python Management (Installing and Using pyenv) On newer Linux versions (for example, Ubuntu 24.04), using pip for system-level package management may trigger the externally-managed-environment error. In other words, the system does not allow direct global package installation with pip.\nTo …",
           cover: "https:\/\/images.ctfassets.net\/iuhngnmppwjh\/2VrwRqKkQP2TFnrWsxi3aM\/a0c8a659be24ea63afea463e0dd1f7d9\/pyenv.drawio.png",
         };
       </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
@@ -821,7 +821,7 @@ pyenv基本使用
           el: '.waline-comment',
           serverURL: 'https:\/\/personalblogcomment.m15tak3.com\/',
           lang: document.documentElement.lang || 'en',
-          locale: JSON.parse("{\"admin\":\"管理员\",\"anonymous\":\"匿名用户\",\"comment\":\"评论\",\"gifsearchplaceholder\":\"表情包\",\"hottest\":\"最热的评论\",\"latest\":\"最新的评论\",\"link\":\"网址\",\"login\":\"登录\",\"mail\":\"邮箱\",\"more\":\"更多\",\"nick\":\"昵称\",\"oldest\":\"最早的评论\",\"optional\":\"可选\",\"placeholder\":\"说点什么吧...\",\"refresh\":\"刷新\",\"sofa\":\"沙发\",\"sticky\":\"置顶\",\"submit\":\"提交\",\"uploading\":\"倾听......感受......思考\",\"word\":\"字\"}"),
+          locale: "{\"admin\":\"Admin\",\"anonymous\":\"Anonymous user\",\"comment\":\"Comment\",\"gifSearchPlaceholder\":\"Search stickers\",\"hottest\":\"Hottest comments\",\"latest\":\"Latest comments\",\"link\":\"Website\",\"login\":\"Login\",\"mail\":\"Email\",\"more\":\"More\",\"nick\":\"Nickname\",\"oldest\":\"Oldest comments\",\"optional\":\"Optional\",\"placeholder\":\"Say something...\",\"refresh\":\"Refresh\",\"sofa\":\"Be the first\",\"sticky\":\"Pinned\",\"submit\":\"Submit\",\"uploading\":\"Listening... Feeling... Thinking...\",\"word\":\"words\"}",
           emoji: JSON.parse("[\"https://unpkg.com/@waline/emojis@1.2.0/weibo\",\"https://unpkg.com/@waline/emojis@1.2.0/alus\",\"https://unpkg.com/@waline/emojis@1.2.0/bilibili\",\"https://unpkg.com/@waline/emojis@1.2.0/qq\",\"https://unpkg.com/@waline/emojis@1.2.0/tieba\",\"https://unpkg.com/@waline/emojis@1.2.0/tw-emoji\"]"),
           meta: JSON.parse("[\"nick\",\"mail\",\"link\"]"),
           requiredMeta: JSON.parse("[\"nick\",\"mail\"]"),
