@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/en/post/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Thu, 14 May 2026 17:00:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/en/post/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>A Detailed Guide to CTF Tracks</title>
+      <link>https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</link>
+      <pubDate>Thu, 14 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</guid>
+      <description>
+        <![CDATA[<h1>A Detailed Guide to CTF Tracks</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="a-detailed-guide-to-ctf-tracks">
+<a class="header-anchor" href="#a-detailed-guide-to-ctf-tracks"></a>
+A Detailed Guide to CTF Tracks
+</h1><h2 id="1-what-is-ctf">
+<a class="header-anchor" href="#1-what-is-ctf"></a>
+1. What Is CTF
+</h2><p>CTF (Capture The Flag) is a cybersecurity competition format. Players solve challenges through analysis, exploitation, cryptanalysis, reverse engineering, and forensics, then submit a <code>flag</code> (usually a specially formatted string) for points.</p>
+<p>The core of CTF is not memorizing tool commands. It is understanding system fundamentals, security mechanisms, and attacker/defender thinking under concrete challenge scenarios.</p>
+<h3 id="11-common-competition-formats">
+<a class="header-anchor" href="#11-common-competition-formats"></a>
+1.1 Common Competition Formats
+</h3><ul>
+<li>Jeopardy: categorized challenges (Web, Pwn, Reverse, Crypto, Misc, etc.), submit flags one by one.</li>
+<li>Attack-Defense: attack other teams&rsquo; services while defending your own.</li>
+<li>King of the Hill: continuously hold target points to gain score.</li>
+</ul>
+<h3 id="12-why-ctf-matters">
+<a class="header-anchor" href="#12-why-ctf-matters"></a>
+1.2 Why CTF Matters
+</h3><ul>
+<li>Practical ability: turns fragmented knowledge into complete attack/defense chains.</li>
+<li>Engineering ability: automation, debugging, log analysis, and postmortem habits.</li>
+<li>Collaboration ability: team split, parallel progress, time management, and strategy decisions.</li>
+</ul>
+<h3 id="13-typical-challenge-characteristics">
+<a class="header-anchor" href="#13-typical-challenge-characteristics"></a>
+1.3 Typical Challenge Characteristics
+</h3><ul>
+<li>Most problems are built around one exploitable flaw and are not identical to production systems.</li>
+<li>Deliberate noise is common; you must separate useful clues from distractions.</li>
+<li>High-value challenges often require multi-step chaining across domains.</li>
+</ul>
+<hr>
+<h2 id="2-web-track">
+<a class="header-anchor" href="#2-web-track"></a>
+2. Web Track
+</h2><h3 id="21-core-focus">
+<a class="header-anchor" href="#21-core-focus"></a>
+2.1 Core Focus
+</h3><p>Understand how Web applications work, then use design/implementation flaws to extract sensitive data (for example, flags).</p>
+<h3 id="22-common-problem-types">
+<a class="header-anchor" href="#22-common-problem-types"></a>
+2.2 Common Problem Types
+</h3><ul>
+<li>SQL injection (union, error-based, blind, stacked)</li>
+<li>XSS (reflected, stored, DOM-based)</li>
+<li>File upload vulnerabilities (extension bypass, MIME bypass, parser bugs)</li>
+<li>Deserialization issues (PHP/Python/Java)</li>
+<li>SSRF (internal network probing, cloud metadata endpoints)</li>
+<li>Command injection (RCE)</li>
+<li>Auth/session weaknesses (weak passwords, JWT forgery, session fixation)</li>
+<li>Access control bugs (horizontal/vertical privilege bypass)</li>
+<li>SSTI</li>
+<li>Path traversal / local file include (LFI/RFI)</li>
+</ul>
+<h3 id="23-knowledge-you-need">
+<a class="header-anchor" href="#23-knowledge-you-need"></a>
+2.3 Knowledge You Need
+</h3><ul>
+<li>HTTP/HTTPS basics (methods, status codes, cookies, headers)</li>
+<li>Backend framework behavior (Flask, Django, PHP, Node, etc.)</li>
+<li>SQL basics (MySQL/PostgreSQL)</li>
+<li>Secure data flow model (input -&gt; processing -&gt; output)</li>
+<li>Encoding/decoding (URL, Base64, Unicode, HTML entities)</li>
+</ul>
+<h3 id="24-common-tools">
+<a class="header-anchor" href="#24-common-tools"></a>
+2.4 Common Tools
+</h3><ul>
+<li>Burp Suite</li>
+<li>Browser DevTools</li>
+<li>sqlmap</li>
+<li>ffuf / dirsearch</li>
+<li>Postman / curl</li>
+</ul>
+<h3 id="25-generic-solving-workflow">
+<a class="header-anchor" href="#25-generic-solving-workflow"></a>
+2.5 Generic Solving Workflow
+</h3><ol>
+<li>Inventory pages, endpoints, parameters, and auth flow.</li>
+<li>Find controllable input points.</li>
+<li>Test boundary behavior (special chars, long input, type mismatch).</li>
+<li>Use errors and responses to classify vulnerability type and craft payloads.</li>
+<li>After initial foothold, expand laterally (file read, privilege escalation, internal probing).</li>
+</ol>
+<hr>
+<h2 id="3-misc-track">
+<a class="header-anchor" href="#3-misc-track"></a>
+3. Misc Track
+</h2><h3 id="31-core-focus">
+<a class="header-anchor" href="#31-core-focus"></a>
+3.1 Core Focus
+</h3><p>Misc emphasizes information processing, automation, and cross-domain reasoning. It is often about connecting multiple small clues rather than exploiting one single bug.</p>
+<h3 id="32-common-problem-types">
+<a class="header-anchor" href="#32-common-problem-types"></a>
+3.2 Common Problem Types
+</h3><ul>
+<li>Encoding/decoding puzzles</li>
+<li>Steganography (image/audio/text/file tail)</li>
+<li>Traffic analysis (pcap, HTTP/TCP extraction)</li>
+<li>Forensics artifacts (logs, archives, metadata)</li>
+<li>Protocol interaction or small automation games</li>
+<li>QR/barcode/keyboard traffic/Morse-style tasks</li>
+</ul>
+<h3 id="33-knowledge-you-need">
+<a class="header-anchor" href="#33-knowledge-you-need"></a>
+3.3 Knowledge You Need
+</h3><ul>
+<li>File format structures (PNG/JPG/ZIP/PDF)</li>
+<li>Network basics (TCP/HTTP/DNS)</li>
+<li>Linux CLI and batch operations</li>
+<li>Python scripting (regex, bytes, batch processing)</li>
+</ul>
+<h3 id="34-common-tools">
+<a class="header-anchor" href="#34-common-tools"></a>
+3.4 Common Tools
+</h3><ul>
+<li>CyberChef</li>
+<li>Wireshark / tshark</li>
+<li>binwalk / foremost</li>
+<li>stegsolve / zsteg / exiftool</li>
+<li>Python</li>
+</ul>
+<h3 id="35-generic-solving-workflow">
+<a class="header-anchor" href="#35-generic-solving-workflow"></a>
+3.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify artifact type.</li>
+<li>Inspect metadata and structure (headers, tails, magic bytes).</li>
+<li>Try reversible transformations.</li>
+<li>Script repetitive operations early.</li>
+</ol>
+<hr>
+<h2 id="4-crypto-track">
+<a class="header-anchor" href="#4-crypto-track"></a>
+4. Crypto Track
+</h2><h3 id="41-core-focus">
+<a class="header-anchor" href="#41-core-focus"></a>
+4.1 Core Focus
+</h3><p>In CTF, Crypto is usually not about brute-forcing modern algorithms, but about exploiting weak parameters, flawed implementations, or insecure usage.</p>
+<h3 id="42-common-problem-types">
+<a class="header-anchor" href="#42-common-problem-types"></a>
+4.2 Common Problem Types
+</h3><ul>
+<li>Classical ciphers (Caesar, Vigenere, rail fence)</li>
+<li>RSA issues (small exponent, common modulus, weak prime entropy, partial leakage)</li>
+<li>Symmetric misuse (ECB, IV reuse, padding oracle)</li>
+<li>Hash-related issues (length extension, weak collision setups)</li>
+<li>Predictable randomness (weak seeds)</li>
+</ul>
+<h3 id="43-knowledge-you-need">
+<a class="header-anchor" href="#43-knowledge-you-need"></a>
+4.3 Knowledge You Need
+</h3><ul>
+<li>Modular arithmetic, Euclid, inverses</li>
+<li>Prime math, Euler phi, fast exponentiation</li>
+<li>Cipher modes (ECB/CBC/CTR/GCM)</li>
+<li>Signature/auth concepts (HMAC, RSA/ECDSA basics)</li>
+</ul>
+<h3 id="44-common-tools">
+<a class="header-anchor" href="#44-common-tools"></a>
+4.4 Common Tools
+</h3><ul>
+<li>Python + <code>pycryptodome</code></li>
+<li>SageMath</li>
+<li>factordb / yafu</li>
+<li>RsaCtfTool</li>
+</ul>
+<h3 id="45-generic-solving-workflow">
+<a class="header-anchor" href="#45-generic-solving-workflow"></a>
+4.5 Generic Solving Workflow
+</h3><ol>
+<li>Decide whether this is algorithmic or implementation-driven.</li>
+<li>List knowns/unknowns (key, ciphertext, params, oracle behavior).</li>
+<li>Build mathematical relationships and solvability conditions.</li>
+<li>Prioritize weak/reused parameters.</li>
+</ol>
+<hr>
+<h2 id="5-pwn-track">
+<a class="header-anchor" href="#5-pwn-track"></a>
+5. Pwn Track
+</h2><h3 id="51-core-focus">
+<a class="header-anchor" href="#51-core-focus"></a>
+5.1 Core Focus
+</h3><p>Exploit binary memory-safety flaws to control execution flow and finally read flag or get shell.</p>
+<h3 id="52-common-problem-types">
+<a class="header-anchor" href="#52-common-problem-types"></a>
+5.2 Common Problem Types
+</h3><ul>
+<li>Stack overflow (ret2win, ret2libc, ROP)</li>
+<li>Heap exploitation (UAF, double free, tcache poisoning)</li>
+<li>Format string bugs</li>
+<li>Integer overflow leading to OOB read/write</li>
+<li>Sandbox escape (advanced)</li>
+</ul>
+<h3 id="53-knowledge-you-need">
+<a class="header-anchor" href="#53-knowledge-you-need"></a>
+5.3 Knowledge You Need
+</h3><ul>
+<li>C memory model (stack, heap, globals)</li>
+<li>x86/x64 calling conventions</li>
+<li>ELF and dynamic linking</li>
+<li>Linux/syscall fundamentals</li>
+<li>Protections: NX, Canary, PIE, RELRO, ASLR</li>
+</ul>
+<h3 id="54-common-tools">
+<a class="header-anchor" href="#54-common-tools"></a>
+5.4 Common Tools
+</h3><ul>
+<li>gdb + pwndbg/gef</li>
+<li>pwntools</li>
+<li>checksec</li>
+<li>IDA / Ghidra</li>
+<li>one_gadget / ropper</li>
+</ul>
+<h3 id="55-generic-solving-workflow">
+<a class="header-anchor" href="#55-generic-solving-workflow"></a>
+5.5 Generic Solving Workflow
+</h3><ol>
+<li>Run <code>checksec</code>.</li>
+<li>Reverse for controllable input and dangerous code paths.</li>
+<li>Confirm crash point and offset control.</li>
+<li>Choose exploit chain based on active mitigations.</li>
+<li>Port local exploit to remote; handle libc and timing differences.</li>
+</ol>
+<hr>
+<h2 id="6-reverse-track">
+<a class="header-anchor" href="#6-reverse-track"></a>
+6. Reverse Track
+</h2><h3 id="61-core-focus">
+<a class="header-anchor" href="#61-core-focus"></a>
+6.1 Core Focus
+</h3><p>Reconstruct program logic through static and dynamic analysis to recover key data, validation rules, or keys.</p>
+<h3 id="62-common-problem-types">
+<a class="header-anchor" href="#62-common-problem-types"></a>
+6.2 Common Problem Types
+</h3><ul>
+<li>String checks and simple obfuscation</li>
+<li>Control-flow flattening/fake branches</li>
+<li>Anti-debug/anti-sandbox</li>
+<li>Custom crypto routine recovery</li>
+<li>APK/so/script mixed reversing</li>
+</ul>
+<h3 id="63-knowledge-you-need">
+<a class="header-anchor" href="#63-knowledge-you-need"></a>
+6.3 Knowledge You Need
+</h3><ul>
+<li>Assembly basics</li>
+<li>Compiler optimization side effects</li>
+<li>PE/ELF/APK structures</li>
+<li>Dynamic breakpoint-tracing workflow</li>
+</ul>
+<h3 id="64-common-tools">
+<a class="header-anchor" href="#64-common-tools"></a>
+6.4 Common Tools
+</h3><ul>
+<li>IDA Pro / Ghidra</li>
+<li>x64dbg / OllyDbg</li>
+<li>gdb</li>
+<li>JADX / apktool</li>
+<li>Frida</li>
+</ul>
+<h3 id="65-generic-solving-workflow">
+<a class="header-anchor" href="#65-generic-solving-workflow"></a>
+6.5 Generic Solving Workflow
+</h3><ol>
+<li>Execute first and observe IO behavior.</li>
+<li>Locate critical functions statically.</li>
+<li>Validate hypotheses with breakpoints.</li>
+<li>Rebuild algorithm or patch around key verification.</li>
+</ol>
+<hr>
+<h2 id="7-ai-security-track">
+<a class="header-anchor" href="#7-ai-security-track"></a>
+7. AI Security Track
+</h2><h3 id="71-core-focus">
+<a class="header-anchor" href="#71-core-focus"></a>
+7.1 Core Focus
+</h3><p>Focus on attacks/defenses around model, data, inference pipeline, and integration layer.</p>
+<h3 id="72-common-problem-types">
+<a class="header-anchor" href="#72-common-problem-types"></a>
+7.2 Common Problem Types
+</h3><ul>
+<li>Prompt injection</li>
+<li>Jailbreak</li>
+<li>Data leakage (system prompts/private data)</li>
+<li>Tool abuse / privilege overreach</li>
+<li>RAG poisoning/retrieval manipulation</li>
+<li>Model extraction / membership inference</li>
+<li>Adversarial examples</li>
+</ul>
+<h3 id="73-knowledge-you-need">
+<a class="header-anchor" href="#73-knowledge-you-need"></a>
+7.3 Knowledge You Need
+</h3><ul>
+<li>LLM role hierarchy (system/user/assistant)</li>
+<li>RAG pipeline (retrieve/rerank/context build)</li>
+<li>Agent tool invocation and permission boundaries</li>
+<li>Input filtering, output policy checks, and safety strategy engines</li>
+</ul>
+<h3 id="74-common-methods">
+<a class="header-anchor" href="#74-common-methods"></a>
+7.4 Common Methods
+</h3><ul>
+<li>Manual payload crafting across turns and role tricks</li>
+<li>Log auditing for model/tool call traces</li>
+<li>Red-team benchmark sets</li>
+<li>Automated injection test scripts</li>
+</ul>
+<h3 id="75-generic-solving-workflow">
+<a class="header-anchor" href="#75-generic-solving-workflow"></a>
+7.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify system boundaries.</li>
+<li>Start with low-risk probing.</li>
+<li>Escalate by layer (instruction conflicts -&gt; context poisoning -&gt; tool abuse).</li>
+<li>Confirm reproducibility.</li>
+<li>Provide mitigations (least privilege, context isolation, policy guardrails).</li>
+</ol>
+<h3 id="76-defensive-checklist">
+<a class="header-anchor" href="#76-defensive-checklist"></a>
+7.6 Defensive Checklist
+</h3><ul>
+<li>System instructions must not be overridden by user input.</li>
+<li>Separate retrieved context from user text with trust labels.</li>
+<li>Add permission gateways for tool calls (allowlists + auditing).</li>
+<li>Require policy checks / human review for high-risk output.</li>
+<li>Keep full logs for replay and incident tracing.</li>
+</ul>
+<hr>
+<h2 id="8-team-role-suggestions">
+<a class="header-anchor" href="#8-team-role-suggestions"></a>
+8. Team Role Suggestions
+</h2><ul>
+<li>Web: endpoint and business-logic vulnerabilities</li>
+<li>Pwn: binary exploitation chain</li>
+<li>Reverse: algorithm reconstruction and helper scripts</li>
+<li>Crypto: math/crypto tasks + validation scripts</li>
+<li>Misc: traffic/steg/mixed fast cleanup</li>
+<li>AI security: model and agent attack surface</li>
+</ul>
+<p>Mature teams usually need both ownership and backup for each domain.</p>
+<hr>
+<h2 id="9-conclusion">
+<a class="header-anchor" href="#9-conclusion"></a>
+9. Conclusion
+</h2><p>CTF is not just tool usage. It is the combination of knowledge structure, analysis method, automation ability, and team coordination.</p>
+<p>A practical learning path is to deeply specialize in 1-2 tracks first, build stable scoring strength, then gradually expand to other tracks.</p>
+
+        
+        <hr><p>Published on 2026-05-14 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-14</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>When AI Starts Bringing Us Closer to Ithaca...</title>
+      <link>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <description>
+        <![CDATA[<h1>When AI Starts Bringing Us Closer to Ithaca...</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="when-ai-starts-bringing-us-closer-to-ithaca">
+<a class="header-anchor" href="#when-ai-starts-bringing-us-closer-to-ithaca"></a>
+When AI Starts Bringing Us Closer to Ithaca&hellip;
+</h1><p>At some point, I realized my first reaction to a problem had become: ask AI.</p>
+<p>At first, that felt exciting. AI was like a lamp you can switch on at any moment, lighting up corners that once took a long time to explore alone. If I did not understand code, I asked it. If I could not explain an error, I asked it. If I had no idea how to start a CTF challenge, I asked it. Web, Reverse, Pwn, Crypto: things that used to require endless searching and trial-and-error suddenly felt much closer.</p>
+<p>This is real progress, and I do not want to deny that. AI lowers barriers and removes a lot of meaningless friction. People who were blocked by environment setup, unfamiliar terms, and fragmented documentation can now enter the field more smoothly. For security learners, that help is real. It gives difficult knowledge a softer entry point, and in lonely study hours, it can feel like a tireless companion.</p>
+<p>But at the same time, something else is quietly becoming lighter.</p>
+<p>In the past, getting stuck in CTF was normal. You could stare at a code fragment and see nothing. You could build payload after payload and get silence. You could get lost in decompiled output, search through traffic captures for one anomaly, and guess the next move of a program from registers and stack frames. Learning was slow. Many nights ended with no beautiful result, only a pile of failed attempts.</p>
+<p>Yet when I look back, what stayed with me was exactly that slowness. The moments without immediate answers taught me how to observe. Wrong guesses taught me where the boundaries were. Problems I could not solve for a long time taught me that security is not remembering vulnerability names, but holding on to doubt inside uncertainty.</p>
+<p>Now answers arrive too quickly. Sometimes before we have even sat with the question, we rush to submit something. A fluent explanation can replace half an hour of silent reasoning. A complete-looking solution path can make us believe we already understand.</p>
+<p>That makes me a little sad. Not because AI is too powerful, but because we are becoming less able to tolerate the state of &ldquo;not knowing.&rdquo; Not knowing used to be the most natural entry to learning. It forced us to pause, to admit blank space, to move step by step toward the unknown. Now that blank space gets filled almost instantly. A confident answer appears on screen, well-structured, patient, polished. Anxiety fades for a while.</p>
+<p>But understanding may fade with it.</p>
+<p>In CTF, the most important thing was never only the flag. The flag can be an endpoint, or just a signal. What truly changes us is the path we walk toward it. Why did you suspect this point? Why does this route work? Why did the other direction fail? Why does the same payload break in a different environment? If we skip that journey and only see the final string, what remains inside is often empty.</p>
+<p>AI is excellent at giving answers, but not always at helping people own answers. In cybersecurity, this is especially risky. Security is judgment. It is sensitivity to boundaries. It is distrust of things that &ldquo;look normal.&rdquo; AI can explain vulnerabilities, generate scripts, and speak with technical fluency. But it can also be wrong, and often wrong in ways that look right. Smoothness can make errors look respectable, and guesses look like conclusions. Without verification ability, it is easy to mistake that polish for truth.</p>
+<p>Sometimes AI feels like a faster road that helps us avoid muddy paths. But some of our strength is built in that mud. We avoid detours, but we also lose time wrestling with real questions. We reach results faster, but not always the essence.</p>
+<p>This is not an anti-AI argument. I will keep using it, and I know I depend on it. It helps me see blind spots, save time, and find a starting point in chaos. I just hope I do not forget this: tools can light the road, but they cannot grow eyes for me.</p>
+<p>In CTF, maybe the best way to use AI is not to let it replace problem-solving, but to let it accompany us while we stay in front of the problem. It can suggest a direction, but we still need to decide whether there is really a path. It can help write a script, but we still need to know why every line exists. It can produce an answer, but we still need to ask: is this an answer I truly understand?</p>
+<p>We are entering an age where answers are cheaper than ever. Precisely because of that, slowing down becomes more precious. Slow is not backward, and it is not incompetence. Slow is respect for the problem. Slow is a way to keep understanding for ourselves.</p>
+<p>When everything is compressed into progress bars, outcomes, screenshots, and summaries, slowing down takes courage.</p>
+<p>In cybersecurity, rushing is dangerous. Security is not a speed quiz; it is verification. Saying a vulnerability name first does not mean being closer to truth. Producing a payload first does not mean truly understanding the system. Security needs patience, skepticism, and the willingness to pause where things seem reasonable. Many vulnerabilities are not discovered by speed, but by repeated observation, repeated verification, and repeated questioning.</p>
+<p>So I hope we can still learn to slow down.</p>
+<p>Not to reject AI. Not to return to the past. But to keep a healthy distance while using it. Look at the challenge first. Think about boundaries first. Let the question stay in your head for a while.</p>
+<p>Do not rush to cover all blank space with answers, and do not rush to use generated content to silence your insecurity.</p>
+<p>Some blank space is worth keeping.</p>
+<p>Because that is where thinking begins.</p>
+<p>AI can bring us to Ithaca faster.</p>
+<p>But before arrival, I still want to know whether we truly saw the sea.</p>
+
+        
+        <hr><p>Published on 2026-05-07 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-07</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Essay</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Linux Python Management (Installing and Using pyenv)</title>
+      <link>https://blog.m15tak3.com/en/post/pyenv/</link>
+      <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/pyenv/</guid>
+      <description>
+        <![CDATA[<h1>Linux Python Management (Installing and Using pyenv)</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="linux-python-management-installing-and-using-pyenv">
+<a class="header-anchor" href="#linux-python-management-installing-and-using-pyenv"></a>
+Linux Python Management (Installing and Using pyenv)
+</h1><p>On newer Linux versions (for example, Ubuntu 24.04), using <code>pip</code> for system-level package management may trigger the <code>externally-managed-environment</code> error. In other words, the system does not allow direct global package installation with <code>pip</code>.</p>
+<p>To avoid breaking the system Python environment and to manage Python versions more cleanly, I recommend using <code>pyenv</code> (plus virtual environments).</p>
+<h2 id="install-build-dependencies">
+<a class="header-anchor" href="#install-build-dependencies"></a>
+Install Build Dependencies
+</h2><p><strong>For Ubuntu/Debian:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+</span></span></code></pre></div><p><strong>For CentOS and similar systems:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
+</span></span></code></pre></div><h2 id="install-pyenv">
+<a class="header-anchor" href="#install-pyenv"></a>
+Install pyenv
+</h2><p>Install via the official script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
+</span></span></code></pre></div><h2 id="configure-your-shell-and-apply">
+<a class="header-anchor" href="#configure-your-shell-and-apply"></a>
+Configure Your Shell and Apply
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Verify</span>
+</span></span><span class="line"><span class="cl">pyenv --version
+</span></span></code></pre></div><h2 id="basic-pyenv-usage">
+<a class="header-anchor" href="#basic-pyenv-usage"></a>
+Basic pyenv Usage
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># pyenv install python-version, e.g. install 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv global python-version, e.g. set global version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv local python-version, e.g. set local project version to 3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
+</span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv shell python-version, e.g. set shell session version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv shell python-version
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv virtualenv python-version myproject-env, e.g. create ctf env with 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv activate myproject-env, e.g. activate ctf env</span>
+</span></span><span class="line"><span class="cl">pyenv activate ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv deactivate, exit virtual environment</span>
+</span></span><span class="line"><span class="cl">pyenv deactivate
+</span></span></code></pre></div>
+        
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Installing WSL2 &#43; Ubuntu from Scratch</title>
+      <link>https://blog.m15tak3.com/en/post/wsl1/</link>
+      <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/wsl1/</guid>
+      <description>
+        <![CDATA[<h1>Installing WSL2 + Ubuntu from Scratch</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="installing-wsl2--ubuntu-from-scratch">
+<a class="header-anchor" href="#installing-wsl2--ubuntu-from-scratch"></a>
+Installing WSL2 + Ubuntu from Scratch
+</h1><h2 id="before-you-start">
+<a class="header-anchor" href="#before-you-start"></a>
+Before You Start
+</h2><p>You can think of WSL as a lightweight VM that gives much better local file interaction than VMware under Windows.</p>
+<p><strong>Note</strong>: after installing a Linux subsystem, if you later upgrade Windows from Home to Pro, subsystem file corruption can happen. Please keep backups.</p>
+<h2 id="installing-wsl">
+<a class="header-anchor" href="#installing-wsl"></a>
+Installing WSL
+</h2><h3 id="enable-required-features">
+<a class="header-anchor" href="#enable-required-features"></a>
+Enable Required Features
+</h3><p>Open: <code>Windows Settings -&gt; System -&gt; Optional features -&gt; More Windows features</code></p>
+<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
+<p>Enable <strong>Windows Subsystem for Linux</strong> and <strong>Virtual Machine Platform</strong>, then click OK. Windows will install these features and ask for a reboot.</p>
+<p><img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<h2 id="install-wsl-ubuntu">
+<a class="header-anchor" href="#install-wsl-ubuntu"></a>
+Install WSL Ubuntu
+</h2><p>Open a terminal and run:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p>The system will automatically pull Ubuntu 24.04 in this setup, so just wait for the progress to finish.</p>
+<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
+<p>After installation, the subsystem starts automatically and asks you to create a username. Username rules vary slightly by distro; if your name is rejected, adjust it accordingly.</p>
+<p><img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
+<h2 id="move-the-subsystem-to-another-drive">
+<a class="header-anchor" href="#move-the-subsystem-to-another-drive"></a>
+Move the Subsystem to Another Drive
+</h2><p>By default, WSL installs distributions under drive C. If you want to move it, first run <code>exit</code> in the Linux shell.</p>
+<p>Then shut down all WSL VMs and export the installed Ubuntu 22.04 for backup:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
+<p>You can choose your own path, but the exported file must end with <code>.tar</code>.</p>
+<p>Now unregister the current distro and import it to your target location:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
+<p>After that, the subsystem location is changed, and your files stay intact.</p>
+
+        
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

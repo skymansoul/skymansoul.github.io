@@ -1,0 +1,1460 @@
+<!doctype html>
+<html
+  lang="en" 
+  data-theme-mode="auto"
+  >
+  <head><meta charset="utf-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, shrink-to-fit=no"
+/><title>
+  A Detailed Guide to CTF Tracks | M15tak3
+</title>
+<meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
+<script data-pjax>
+  var _hmt = _hmt || [];
+  _hmt.push(["_trackPageview", location.pathname]);
+</script><script>
+  (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "true");
+</script>
+<script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+<script data-pjax>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+
+  gtag('js', new Date());
+
+  gtag('config', 'true');
+</script>
+<script>
+  window.siteConfig = JSON.parse("{\"anchor\":{\"auto\":{\"enable\":false,\"length\":60},\"explicit\":{\"enable\":false,\"marker\":\"{#anchor-\",\"prefix\":\"anchor-\"}},\"anchor_icon\":null,\"base\":\"https://blog.m15tak3.com/\",\"clipboard\":{\"copyright\":{\"count\":50,\"enable\":false,\"license_type\":\"by-nc-sa\"},\"fail\":{\"en\":\"Copy failed (ﾟ⊿ﾟ)ﾂ\",\"ja\":\"コピー失敗 (ﾟ⊿ﾟ)ﾂ\",\"pt-br\":\"Falha ao copiar (ﾟ⊿ﾟ)ﾂ\",\"zh-cn\":\"复制失败 (ﾟ⊿ﾟ)ﾂ\",\"zh-tw\":\"複製失敗 (ﾟ⊿ﾟ)ﾂ\"},\"success\":{\"en\":\"Copy successfully (*^▽^*)\",\"ja\":\"コピー成功 (*^▽^*)\",\"pt-br\":\"Copiado com sucesso (*^▽^*)\",\"zh-cn\":\"复制成功 (*^▽^*)\",\"zh-tw\":\"複製成功 (*^▽^*)\"}},\"code_block\":{\"expand\":true},\"i18n_languages\":[{\"label\":\"简体中文\",\"lang\":\"zh-cn\"},{\"label\":\"English\",\"lang\":\"en\"},{\"label\":\"日本語\",\"lang\":\"ja\"}],\"icon_font\":\"4552607_ex15nbittbh\",\"outdate\":{\"daysago\":365,\"enable\":true,\"message\":{\"en\":\"This article was last updated on {time}. Please note that the content may no longer be applicable.\",\"ja\":\"この記事は最終更新日：{time}。記載内容が現在有効でない可能性がありますのでご注意ください。\",\"pt-br\":\"Este artigo foi atualizado pela última vez em {time}. Observe que o conteúdo pode não ser mais aplicável.\",\"zh-cn\":\"本文最后更新于 {time}，请注意文中内容可能已不适用。\",\"zh-tw\":\"本文最後更新於 {time}，請注意文中內容可能已不適用。\"}}}");
+  
+</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="preload"
+  as="style"
+  href="https://fonts.googleapis.com/css?family=Satisfy:400,400italic,700,700italic%7cYuji%20Boku:400,400italic,700,700italic%7cMa%20Shan%20Zheng:400,400italic,700,700italic%7c&amp;display=swap"
+/>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css?family=Satisfy:400,400italic,700,700italic%7cYuji%20Boku:400,400italic,700,700italic%7cMa%20Shan%20Zheng:400,400italic,700,700italic%7c&amp;display=swap"
+  media="print"
+  onload="this.media='all'"
+/>
+<link
+    rel="preload"
+    href="//at.alicdn.com/t/c/font_4552607_ex15nbittbh.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin="anonymous"
+  /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
+  <meta property="og:title" content="A Detailed Guide to CTF Tracks | M15tak3" />
+  <meta
+    property="og:description"
+    content="挖不出漏洞的菜鸡pwn_ctfer"
+  />
+  <meta property="og:url" content="https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/" />
+  <meta
+    property="og:site_name"
+    content="M15tak3のBlog"
+  />
+  <meta property="og:image" content="https://blog.m15tak3.com/images/CTF.png" />
+  <meta property="article:author" content="M15tak3" />
+  <meta property="article:published_time" content="2026-05-14T17:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-05-14T17:00:00&#43;08:00" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/CTF.png" />
+<link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.57876414f2b60ef30ccc3136d98201d83857e432b6fa4c623b3541362c5ab383.css" /><link
+    rel="preload"
+    as="style"
+    href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css"
+    integrity="sha384-IfxC36XL/toUyJ939C73PcgMuRzAZuIzZxE38drsmO5p6jD7ei&#43;Zx/1oA/0l8ysE" crossorigin="anonymous"
+    onload="this.onload=null;this.rel='stylesheet'"
+  /><link
+    rel="preload"
+    as="style"
+    href="https://npm.webcache.cn/katex@0.16.24/dist/katex.min.css"
+    integrity="sha384-tTgKLjMYmJr94v8qu2PE5MUGSMbyN2xiH266JUB3gpm8vnnJywd1dWSOEfrFz&#43;YI" crossorigin="anonymous"
+    onload="this.onload=null;this.rel='stylesheet'"
+  /><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/@waline/client@2.15.8/dist/waline.css"
+    integrity="sha384-vltfZtesCdl6NYVcFVcjEaIi5RpNvZe9t7fXvq8twVtcoy&#43;Ub9QgnxUYJmwOhYCK" crossorigin="anonymous"/><script
+    src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"
+    
+    
+    
+    
+    integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/@reimujs/aos@0.1.2/dist/aos.css"
+    integrity="sha384-GMRP93c6Hkz9JVKGAuRR3nTS7M07RwPgTFenXiosjq2VbVgvdDNcz1g6Mkj8AONa" crossorigin="anonymous"/><link
+    rel="stylesheet"
+    href="https://npm.webcache.cn/aplayer@1.10.1/dist/APlayer.min.css"
+    integrity="sha384-tLMkTWh2pfXNWGFlUS0w1TFtRG5xZ9lPWFOooj&#43;vDDLIL&#43;xBGQU/voDBY5XE2lVh" crossorigin="anonymous"/><style>
+  .pace .pace-progress {
+    background: #3f8fb6 !important;
+  }
+  .pace .pace-activity {
+    border-top-color: #3f8fb6 !important;
+    border-left-color: #3f8fb6 !important;
+  }
+</style></head>
+  <body><div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi rotate"><svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+            <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="var(--red-1, #ff5252)" />
+            <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+          M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="var(--red-1, #ff5252)" />
+          </svg></div><div class="loading-word">Loading...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var loaderEl = document.getElementById('loader');
+    var startLoading = () => {
+      time = Date.now();
+      loaderEl.classList.remove("loading");
+    }
+    var hideLoader = () => {
+      document.body.style.overflow = 'auto';
+      loader.classList.add('loading');
+    };
+
+    var endLoading = () => {
+      if (!time) {
+        hideLoader();
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          hideLoader();
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    loaderEl.addEventListener('click', endLoading);
+  </script><div id="copy-tooltip"></div>
+<div id="lang-tooltip">
+This article does not have a corresponding language version
+</div>
+<div id="heatmap-tooltip"></div><div id="container">
+      <div id="wrap"><div id="header-nav">
+  <nav id="main-nav" aria-label="Primary navigation"><a class="main-nav-link-wrap" href="/en/"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Home</span>
+      </a><a class="main-nav-link-wrap" href="/en/archives"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Archives</span>
+      </a><a class="main-nav-link-wrap" href="/en/about"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">About</span>
+      </a><a class="main-nav-link-wrap" href="/en/friend"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">Friend</span>
+      </a><a id="main-nav-toggle" class="nav-icon" aria-label="Toggle navigation" role="button"></a>
+  </nav>
+  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-search-btn" class="nav-icon popup-trigger" title="Search" aria-label="Search"></a></nav><nav id="i18n-nav" aria-label="Language selection">
+      <div class="custom-dropdown">
+        <div class="select-selected" id="select-selected" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language menu">
+          <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
+          <span id="selected-lang">English</span>
+        </div>
+        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" aria-selected="false" >简体中文</li><li data-value="en" role="option" class="selected" aria-selected="true" >English</li><li data-value="ja" role="option" aria-selected="false" >日本語</li></ul>
+      </div>
+      <script>
+        var selectSelected = document.getElementById("select-selected");
+        var selectedLang = document.getElementById("selected-lang");
+        var selectItems = document.getElementById("select-items");
+        var selectOptions = selectItems.querySelectorAll("li");
+
+        selectSelected.addEventListener("click", () => {
+          selectItems.classList.toggle("show");
+          var expanded = selectSelected.getAttribute("aria-expanded") === "true";
+          selectSelected.setAttribute("aria-expanded", (!expanded).toString());
+        });
+
+        selectOptions.forEach((item) => {
+          item.addEventListener("click", () => {
+            const langMap = {};langMap['zh-cn'] = '\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/';langMap['ja'] = '\/ja\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/';selectedLang.textContent = item.textContent;
+            selectItems.classList.remove("show");
+            selectOptions.forEach((option) => {
+              option.classList.remove("selected");
+            });
+            item.classList.add("selected");
+            if (item.dataset.value === 'en') {
+              return;
+            }
+            if (!langMap[item.dataset.value]) {
+              _$("#lang-tooltip").style.opacity = "1";
+              setTimeout(() => {
+                _$("#lang-tooltip").style.opacity = "0";
+              }, 1000);
+              return;
+            }
+            window.location = langMap[item.dataset.value];
+          });
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!event.target.closest(".custom-dropdown")) {
+            selectItems.classList.remove("show");
+            selectSelected.setAttribute("aria-expanded", "false");
+          }
+        });
+      </script>
+    </nav></div>
+<header id="header" aria-label="Site header"><picture></picture>
+    <img crossorigin="anonymous" fetchpriority="high" src="/images/CTF.png" alt="A Detailed Guide to CTF Tracks"><div id="header-outer">
+    <div id="header-title"><span id="logo">
+            <h1 data-aos="slide-up">A Detailed Guide to CTF Tracks</h1>
+          </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
+  </div>
+</header><div id="content"
+          aria-label="Page content"
+          class="sidebar-left"
+            ><aside id="sidebar" aria-label="Sidebar"><div class="sidebar-wrapper-container sticky"><div id="aplayer" theme="var(--color-link)" data-aos="fade-up"></div><div class="sidebar-wrapper">
+    <div
+      class="sidebar-wrap"
+      data-aos="fade-up"
+    ><div class="sidebar-toc-sidebar"><h3 class="toc-title">Contents</h3>
+<div class="sidebar-toc-wrapper toc-div-class">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-what-is-ctf">1. What Is CTF</a>
+      <ul>
+        <li><a href="#11-common-competition-formats">1.1 Common Competition Formats</a></li>
+        <li><a href="#12-why-ctf-matters">1.2 Why CTF Matters</a></li>
+        <li><a href="#13-typical-challenge-characteristics">1.3 Typical Challenge Characteristics</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-web-track">2. Web Track</a>
+      <ul>
+        <li><a href="#21-core-focus">2.1 Core Focus</a></li>
+        <li><a href="#22-common-problem-types">2.2 Common Problem Types</a></li>
+        <li><a href="#23-knowledge-you-need">2.3 Knowledge You Need</a></li>
+        <li><a href="#24-common-tools">2.4 Common Tools</a></li>
+        <li><a href="#25-generic-solving-workflow">2.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-misc-track">3. Misc Track</a>
+      <ul>
+        <li><a href="#31-core-focus">3.1 Core Focus</a></li>
+        <li><a href="#32-common-problem-types">3.2 Common Problem Types</a></li>
+        <li><a href="#33-knowledge-you-need">3.3 Knowledge You Need</a></li>
+        <li><a href="#34-common-tools">3.4 Common Tools</a></li>
+        <li><a href="#35-generic-solving-workflow">3.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-crypto-track">4. Crypto Track</a>
+      <ul>
+        <li><a href="#41-core-focus">4.1 Core Focus</a></li>
+        <li><a href="#42-common-problem-types">4.2 Common Problem Types</a></li>
+        <li><a href="#43-knowledge-you-need">4.3 Knowledge You Need</a></li>
+        <li><a href="#44-common-tools">4.4 Common Tools</a></li>
+        <li><a href="#45-generic-solving-workflow">4.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#5-pwn-track">5. Pwn Track</a>
+      <ul>
+        <li><a href="#51-core-focus">5.1 Core Focus</a></li>
+        <li><a href="#52-common-problem-types">5.2 Common Problem Types</a></li>
+        <li><a href="#53-knowledge-you-need">5.3 Knowledge You Need</a></li>
+        <li><a href="#54-common-tools">5.4 Common Tools</a></li>
+        <li><a href="#55-generic-solving-workflow">5.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#6-reverse-track">6. Reverse Track</a>
+      <ul>
+        <li><a href="#61-core-focus">6.1 Core Focus</a></li>
+        <li><a href="#62-common-problem-types">6.2 Common Problem Types</a></li>
+        <li><a href="#63-knowledge-you-need">6.3 Knowledge You Need</a></li>
+        <li><a href="#64-common-tools">6.4 Common Tools</a></li>
+        <li><a href="#65-generic-solving-workflow">6.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#7-ai-security-track">7. AI Security Track</a>
+      <ul>
+        <li><a href="#71-core-focus">7.1 Core Focus</a></li>
+        <li><a href="#72-common-problem-types">7.2 Common Problem Types</a></li>
+        <li><a href="#73-knowledge-you-need">7.3 Knowledge You Need</a></li>
+        <li><a href="#74-common-methods">7.4 Common Methods</a></li>
+        <li><a href="#75-generic-solving-workflow">7.5 Generic Solving Workflow</a></li>
+        <li><a href="#76-defensive-checklist">7.6 Defensive Checklist</a></li>
+      </ul>
+    </li>
+    <li><a href="#8-team-role-suggestions">8. Team Role Suggestions</a></li>
+    <li><a href="#9-conclusion">9. Conclusion</a></li>
+  </ul>
+</nav>
+</div></div>
+          <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img
+    data-src="/avatar/soul.jpg"
+    data-sizes="auto"
+    alt="M15tak3"
+    class="lazyload"
+  />
+  <div class="sidebar-author-name">M15tak3</div>
+  <div class="sidebar-description">挖不出漏洞的菜鸡pwn_ctfer</div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div><div class="sidebar-state-number">4</div>
+  </div>
+  <a class="sidebar-state-category" href="/en/categories/" aria-label="sidebar-state-category-link">
+    <div>Categories</div>
+    <div class="sidebar-state-number">
+      3
+    </div>
+  </a>
+  <a class="sidebar-state-tag" href="/en/tags/" aria-label="sidebar-state-tag-link">
+    <div>Tags</div>
+    <div class="sidebar-state-number">0</div>
+  </a>
+</div>
+<div class="sidebar-social" ><div class="icon-email sidebar-social-icon">
+        <a
+          href="mailto:skyman.soul@gmail.com"
+          itemprop="url"
+          target="_blank"
+          aria-label="email"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-github sidebar-social-icon">
+        <a
+          href="https://github.com/skymansoul"
+          itemprop="url"
+          target="_blank"
+          aria-label="github"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-qq sidebar-social-icon">
+        <a
+          href="https://user.qzone.qq.com/3294922898/main"
+          itemprop="url"
+          target="_blank"
+          aria-label="qq"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div></div><div class="sidebar-menu"><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/"
+        aria-label="Home"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Home</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/archives"
+        aria-label="Archives"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Archives</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/about"
+        aria-label="About"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">About</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/friend"
+        aria-label="Friend"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Friend</div>
+    </div></div></div><div class="sidebar-btn-wrapper" style="position:static">
+            <div class="sidebar-toc-btn current"></div>
+            <div class="sidebar-common-btn"></div>
+          </div></div>
+  </div><div class="sidebar-widget"></div></div></aside>
+<section id="main" aria-label="Main content"><article
+  class="h-entry article"
+  itemscope
+  itemtype="https://schema.org/BlogPosting"
+>
+  <div
+    class="article-inner"
+    data-aos="fade-up"
+  >
+    <div class="article-meta"><div class="article-date">
+  <span
+    class="article-date-link icon-calendar"
+    data-aos="zoom-in"
+  >
+    <time datetime="2026-05-14 17:00:00 &#43;0800 CST" itemprop="datePublished"
+      >2026-05-14</time
+    >
+    <time style="display: none;" id="post-update-time"
+      >2026-05-14</time
+    >
+  </span></div>
+</div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
+          class="alert-blockquote warning"
+          id="outdate-blockquote"
+          style="display: none;"
+        >
+          <p class="alert-heading">WARNING</p>
+          <p></p>
+        </blockquote><h1 id="a-detailed-guide-to-ctf-tracks">
+<a class="header-anchor" href="#a-detailed-guide-to-ctf-tracks"></a>
+A Detailed Guide to CTF Tracks
+</h1><h2 id="1-what-is-ctf">
+<a class="header-anchor" href="#1-what-is-ctf"></a>
+1. What Is CTF
+</h2><p>CTF (Capture The Flag) is a cybersecurity competition format. Players solve challenges through analysis, exploitation, cryptanalysis, reverse engineering, and forensics, then submit a <code>flag</code> (usually a specially formatted string) for points.</p>
+<p>The core of CTF is not memorizing tool commands. It is understanding system fundamentals, security mechanisms, and attacker/defender thinking under concrete challenge scenarios.</p>
+<h3 id="11-common-competition-formats">
+<a class="header-anchor" href="#11-common-competition-formats"></a>
+1.1 Common Competition Formats
+</h3><ul>
+<li>Jeopardy: categorized challenges (Web, Pwn, Reverse, Crypto, Misc, etc.), submit flags one by one.</li>
+<li>Attack-Defense: attack other teams&rsquo; services while defending your own.</li>
+<li>King of the Hill: continuously hold target points to gain score.</li>
+</ul>
+<h3 id="12-why-ctf-matters">
+<a class="header-anchor" href="#12-why-ctf-matters"></a>
+1.2 Why CTF Matters
+</h3><ul>
+<li>Practical ability: turns fragmented knowledge into complete attack/defense chains.</li>
+<li>Engineering ability: automation, debugging, log analysis, and postmortem habits.</li>
+<li>Collaboration ability: team split, parallel progress, time management, and strategy decisions.</li>
+</ul>
+<h3 id="13-typical-challenge-characteristics">
+<a class="header-anchor" href="#13-typical-challenge-characteristics"></a>
+1.3 Typical Challenge Characteristics
+</h3><ul>
+<li>Most problems are built around one exploitable flaw and are not identical to production systems.</li>
+<li>Deliberate noise is common; you must separate useful clues from distractions.</li>
+<li>High-value challenges often require multi-step chaining across domains.</li>
+</ul>
+<hr>
+<h2 id="2-web-track">
+<a class="header-anchor" href="#2-web-track"></a>
+2. Web Track
+</h2><h3 id="21-core-focus">
+<a class="header-anchor" href="#21-core-focus"></a>
+2.1 Core Focus
+</h3><p>Understand how Web applications work, then use design/implementation flaws to extract sensitive data (for example, flags).</p>
+<h3 id="22-common-problem-types">
+<a class="header-anchor" href="#22-common-problem-types"></a>
+2.2 Common Problem Types
+</h3><ul>
+<li>SQL injection (union, error-based, blind, stacked)</li>
+<li>XSS (reflected, stored, DOM-based)</li>
+<li>File upload vulnerabilities (extension bypass, MIME bypass, parser bugs)</li>
+<li>Deserialization issues (PHP/Python/Java)</li>
+<li>SSRF (internal network probing, cloud metadata endpoints)</li>
+<li>Command injection (RCE)</li>
+<li>Auth/session weaknesses (weak passwords, JWT forgery, session fixation)</li>
+<li>Access control bugs (horizontal/vertical privilege bypass)</li>
+<li>SSTI</li>
+<li>Path traversal / local file include (LFI/RFI)</li>
+</ul>
+<h3 id="23-knowledge-you-need">
+<a class="header-anchor" href="#23-knowledge-you-need"></a>
+2.3 Knowledge You Need
+</h3><ul>
+<li>HTTP/HTTPS basics (methods, status codes, cookies, headers)</li>
+<li>Backend framework behavior (Flask, Django, PHP, Node, etc.)</li>
+<li>SQL basics (MySQL/PostgreSQL)</li>
+<li>Secure data flow model (input -&gt; processing -&gt; output)</li>
+<li>Encoding/decoding (URL, Base64, Unicode, HTML entities)</li>
+</ul>
+<h3 id="24-common-tools">
+<a class="header-anchor" href="#24-common-tools"></a>
+2.4 Common Tools
+</h3><ul>
+<li>Burp Suite</li>
+<li>Browser DevTools</li>
+<li>sqlmap</li>
+<li>ffuf / dirsearch</li>
+<li>Postman / curl</li>
+</ul>
+<h3 id="25-generic-solving-workflow">
+<a class="header-anchor" href="#25-generic-solving-workflow"></a>
+2.5 Generic Solving Workflow
+</h3><ol>
+<li>Inventory pages, endpoints, parameters, and auth flow.</li>
+<li>Find controllable input points.</li>
+<li>Test boundary behavior (special chars, long input, type mismatch).</li>
+<li>Use errors and responses to classify vulnerability type and craft payloads.</li>
+<li>After initial foothold, expand laterally (file read, privilege escalation, internal probing).</li>
+</ol>
+<hr>
+<h2 id="3-misc-track">
+<a class="header-anchor" href="#3-misc-track"></a>
+3. Misc Track
+</h2><h3 id="31-core-focus">
+<a class="header-anchor" href="#31-core-focus"></a>
+3.1 Core Focus
+</h3><p>Misc emphasizes information processing, automation, and cross-domain reasoning. It is often about connecting multiple small clues rather than exploiting one single bug.</p>
+<h3 id="32-common-problem-types">
+<a class="header-anchor" href="#32-common-problem-types"></a>
+3.2 Common Problem Types
+</h3><ul>
+<li>Encoding/decoding puzzles</li>
+<li>Steganography (image/audio/text/file tail)</li>
+<li>Traffic analysis (pcap, HTTP/TCP extraction)</li>
+<li>Forensics artifacts (logs, archives, metadata)</li>
+<li>Protocol interaction or small automation games</li>
+<li>QR/barcode/keyboard traffic/Morse-style tasks</li>
+</ul>
+<h3 id="33-knowledge-you-need">
+<a class="header-anchor" href="#33-knowledge-you-need"></a>
+3.3 Knowledge You Need
+</h3><ul>
+<li>File format structures (PNG/JPG/ZIP/PDF)</li>
+<li>Network basics (TCP/HTTP/DNS)</li>
+<li>Linux CLI and batch operations</li>
+<li>Python scripting (regex, bytes, batch processing)</li>
+</ul>
+<h3 id="34-common-tools">
+<a class="header-anchor" href="#34-common-tools"></a>
+3.4 Common Tools
+</h3><ul>
+<li>CyberChef</li>
+<li>Wireshark / tshark</li>
+<li>binwalk / foremost</li>
+<li>stegsolve / zsteg / exiftool</li>
+<li>Python</li>
+</ul>
+<h3 id="35-generic-solving-workflow">
+<a class="header-anchor" href="#35-generic-solving-workflow"></a>
+3.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify artifact type.</li>
+<li>Inspect metadata and structure (headers, tails, magic bytes).</li>
+<li>Try reversible transformations.</li>
+<li>Script repetitive operations early.</li>
+</ol>
+<hr>
+<h2 id="4-crypto-track">
+<a class="header-anchor" href="#4-crypto-track"></a>
+4. Crypto Track
+</h2><h3 id="41-core-focus">
+<a class="header-anchor" href="#41-core-focus"></a>
+4.1 Core Focus
+</h3><p>In CTF, Crypto is usually not about brute-forcing modern algorithms, but about exploiting weak parameters, flawed implementations, or insecure usage.</p>
+<h3 id="42-common-problem-types">
+<a class="header-anchor" href="#42-common-problem-types"></a>
+4.2 Common Problem Types
+</h3><ul>
+<li>Classical ciphers (Caesar, Vigenere, rail fence)</li>
+<li>RSA issues (small exponent, common modulus, weak prime entropy, partial leakage)</li>
+<li>Symmetric misuse (ECB, IV reuse, padding oracle)</li>
+<li>Hash-related issues (length extension, weak collision setups)</li>
+<li>Predictable randomness (weak seeds)</li>
+</ul>
+<h3 id="43-knowledge-you-need">
+<a class="header-anchor" href="#43-knowledge-you-need"></a>
+4.3 Knowledge You Need
+</h3><ul>
+<li>Modular arithmetic, Euclid, inverses</li>
+<li>Prime math, Euler phi, fast exponentiation</li>
+<li>Cipher modes (ECB/CBC/CTR/GCM)</li>
+<li>Signature/auth concepts (HMAC, RSA/ECDSA basics)</li>
+</ul>
+<h3 id="44-common-tools">
+<a class="header-anchor" href="#44-common-tools"></a>
+4.4 Common Tools
+</h3><ul>
+<li>Python + <code>pycryptodome</code></li>
+<li>SageMath</li>
+<li>factordb / yafu</li>
+<li>RsaCtfTool</li>
+</ul>
+<h3 id="45-generic-solving-workflow">
+<a class="header-anchor" href="#45-generic-solving-workflow"></a>
+4.5 Generic Solving Workflow
+</h3><ol>
+<li>Decide whether this is algorithmic or implementation-driven.</li>
+<li>List knowns/unknowns (key, ciphertext, params, oracle behavior).</li>
+<li>Build mathematical relationships and solvability conditions.</li>
+<li>Prioritize weak/reused parameters.</li>
+</ol>
+<hr>
+<h2 id="5-pwn-track">
+<a class="header-anchor" href="#5-pwn-track"></a>
+5. Pwn Track
+</h2><h3 id="51-core-focus">
+<a class="header-anchor" href="#51-core-focus"></a>
+5.1 Core Focus
+</h3><p>Exploit binary memory-safety flaws to control execution flow and finally read flag or get shell.</p>
+<h3 id="52-common-problem-types">
+<a class="header-anchor" href="#52-common-problem-types"></a>
+5.2 Common Problem Types
+</h3><ul>
+<li>Stack overflow (ret2win, ret2libc, ROP)</li>
+<li>Heap exploitation (UAF, double free, tcache poisoning)</li>
+<li>Format string bugs</li>
+<li>Integer overflow leading to OOB read/write</li>
+<li>Sandbox escape (advanced)</li>
+</ul>
+<h3 id="53-knowledge-you-need">
+<a class="header-anchor" href="#53-knowledge-you-need"></a>
+5.3 Knowledge You Need
+</h3><ul>
+<li>C memory model (stack, heap, globals)</li>
+<li>x86/x64 calling conventions</li>
+<li>ELF and dynamic linking</li>
+<li>Linux/syscall fundamentals</li>
+<li>Protections: NX, Canary, PIE, RELRO, ASLR</li>
+</ul>
+<h3 id="54-common-tools">
+<a class="header-anchor" href="#54-common-tools"></a>
+5.4 Common Tools
+</h3><ul>
+<li>gdb + pwndbg/gef</li>
+<li>pwntools</li>
+<li>checksec</li>
+<li>IDA / Ghidra</li>
+<li>one_gadget / ropper</li>
+</ul>
+<h3 id="55-generic-solving-workflow">
+<a class="header-anchor" href="#55-generic-solving-workflow"></a>
+5.5 Generic Solving Workflow
+</h3><ol>
+<li>Run <code>checksec</code>.</li>
+<li>Reverse for controllable input and dangerous code paths.</li>
+<li>Confirm crash point and offset control.</li>
+<li>Choose exploit chain based on active mitigations.</li>
+<li>Port local exploit to remote; handle libc and timing differences.</li>
+</ol>
+<hr>
+<h2 id="6-reverse-track">
+<a class="header-anchor" href="#6-reverse-track"></a>
+6. Reverse Track
+</h2><h3 id="61-core-focus">
+<a class="header-anchor" href="#61-core-focus"></a>
+6.1 Core Focus
+</h3><p>Reconstruct program logic through static and dynamic analysis to recover key data, validation rules, or keys.</p>
+<h3 id="62-common-problem-types">
+<a class="header-anchor" href="#62-common-problem-types"></a>
+6.2 Common Problem Types
+</h3><ul>
+<li>String checks and simple obfuscation</li>
+<li>Control-flow flattening/fake branches</li>
+<li>Anti-debug/anti-sandbox</li>
+<li>Custom crypto routine recovery</li>
+<li>APK/so/script mixed reversing</li>
+</ul>
+<h3 id="63-knowledge-you-need">
+<a class="header-anchor" href="#63-knowledge-you-need"></a>
+6.3 Knowledge You Need
+</h3><ul>
+<li>Assembly basics</li>
+<li>Compiler optimization side effects</li>
+<li>PE/ELF/APK structures</li>
+<li>Dynamic breakpoint-tracing workflow</li>
+</ul>
+<h3 id="64-common-tools">
+<a class="header-anchor" href="#64-common-tools"></a>
+6.4 Common Tools
+</h3><ul>
+<li>IDA Pro / Ghidra</li>
+<li>x64dbg / OllyDbg</li>
+<li>gdb</li>
+<li>JADX / apktool</li>
+<li>Frida</li>
+</ul>
+<h3 id="65-generic-solving-workflow">
+<a class="header-anchor" href="#65-generic-solving-workflow"></a>
+6.5 Generic Solving Workflow
+</h3><ol>
+<li>Execute first and observe IO behavior.</li>
+<li>Locate critical functions statically.</li>
+<li>Validate hypotheses with breakpoints.</li>
+<li>Rebuild algorithm or patch around key verification.</li>
+</ol>
+<hr>
+<h2 id="7-ai-security-track">
+<a class="header-anchor" href="#7-ai-security-track"></a>
+7. AI Security Track
+</h2><h3 id="71-core-focus">
+<a class="header-anchor" href="#71-core-focus"></a>
+7.1 Core Focus
+</h3><p>Focus on attacks/defenses around model, data, inference pipeline, and integration layer.</p>
+<h3 id="72-common-problem-types">
+<a class="header-anchor" href="#72-common-problem-types"></a>
+7.2 Common Problem Types
+</h3><ul>
+<li>Prompt injection</li>
+<li>Jailbreak</li>
+<li>Data leakage (system prompts/private data)</li>
+<li>Tool abuse / privilege overreach</li>
+<li>RAG poisoning/retrieval manipulation</li>
+<li>Model extraction / membership inference</li>
+<li>Adversarial examples</li>
+</ul>
+<h3 id="73-knowledge-you-need">
+<a class="header-anchor" href="#73-knowledge-you-need"></a>
+7.3 Knowledge You Need
+</h3><ul>
+<li>LLM role hierarchy (system/user/assistant)</li>
+<li>RAG pipeline (retrieve/rerank/context build)</li>
+<li>Agent tool invocation and permission boundaries</li>
+<li>Input filtering, output policy checks, and safety strategy engines</li>
+</ul>
+<h3 id="74-common-methods">
+<a class="header-anchor" href="#74-common-methods"></a>
+7.4 Common Methods
+</h3><ul>
+<li>Manual payload crafting across turns and role tricks</li>
+<li>Log auditing for model/tool call traces</li>
+<li>Red-team benchmark sets</li>
+<li>Automated injection test scripts</li>
+</ul>
+<h3 id="75-generic-solving-workflow">
+<a class="header-anchor" href="#75-generic-solving-workflow"></a>
+7.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify system boundaries.</li>
+<li>Start with low-risk probing.</li>
+<li>Escalate by layer (instruction conflicts -&gt; context poisoning -&gt; tool abuse).</li>
+<li>Confirm reproducibility.</li>
+<li>Provide mitigations (least privilege, context isolation, policy guardrails).</li>
+</ol>
+<h3 id="76-defensive-checklist">
+<a class="header-anchor" href="#76-defensive-checklist"></a>
+7.6 Defensive Checklist
+</h3><ul>
+<li>System instructions must not be overridden by user input.</li>
+<li>Separate retrieved context from user text with trust labels.</li>
+<li>Add permission gateways for tool calls (allowlists + auditing).</li>
+<li>Require policy checks / human review for high-risk output.</li>
+<li>Keep full logs for replay and incident tracing.</li>
+</ul>
+<hr>
+<h2 id="8-team-role-suggestions">
+<a class="header-anchor" href="#8-team-role-suggestions"></a>
+8. Team Role Suggestions
+</h2><ul>
+<li>Web: endpoint and business-logic vulnerabilities</li>
+<li>Pwn: binary exploitation chain</li>
+<li>Reverse: algorithm reconstruction and helper scripts</li>
+<li>Crypto: math/crypto tasks + validation scripts</li>
+<li>Misc: traffic/steg/mixed fast cleanup</li>
+<li>AI security: model and agent attack surface</li>
+</ul>
+<p>Mature teams usually need both ownership and backup for each domain.</p>
+<hr>
+<h2 id="9-conclusion">
+<a class="header-anchor" href="#9-conclusion"></a>
+9. Conclusion
+</h2><p>CTF is not just tool usage. It is the combination of knowledge structure, analysis method, automation ability, and team coordination.</p>
+<p>A practical learning path is to deeply specialize in 1-2 tracks first, build stable scoring strength, then gradually expand to other tracks.</p>
+</div>
+    <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>Author: </strong>M15tak3</p><p>
+      <strong><span class="icon-link icon"></span>Permalink: </strong><a href="https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/">https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>Title: </strong>A Detailed Guide to CTF Tracks</p><p>
+      
+      <strong><span class="icon-copyright icon"></span>License: </strong>
+      All articles on this blog are licensed under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> license agreement unless otherwise stated. Please indicate the source when reprinting!
+    </p>
+    <span class="icon-creative-commons article-copyright-bg"></span></blockquote>
+<div class="sponsor-wrapper">
+  <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">Sponsor</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">Buy me a coffee</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
+          <img src="/images/wechat.jpg" alt="微信" width="200" />
+          <p class="sponsor-qr-name">微信</p>
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/&amp;title=A%20Detailed%20Guide%20to%20CTF%20Tracks&amp;desc=%20A%20Detailed%20Guide%20to%20CTF%20Tracks%201.%20What%20Is%20CTF%20CTF%20%28Capture%20The%20Flag%29%20is%20a%20cybersecurity%20competition%20format.%20Players%20solve%20challenges%20through%20analysis,%20exploitation,%20cryptanalysis,%20reverse%20engineering,%20and%20forensics,%20then%20submit%20a%20flag%20%28usually%20a%20specially%20formatted%20string%29%20for%20points.%0aThe%20core%20of%20%e2%80%a6&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="A Detailed Guide to CTF Tracks">
+      <div class="share-icon icon icon-qq"></div>
+    </a><a href="javascript:;"  title="A Detailed Guide to CTF Tracks">
+      <div class="share-icon icon icon-weixin"><div id="share-weixin">
+            <div class="share-weixin-dom">
+              <div class="share-weixin-content">
+                <img id="share-weixin-banner"> 
+                <div id="share-weixin-title"></div>
+                <div id="share-weixin-desc"></div>
+              </div>
+              <div class="share-weixin-qrcode">
+                <div class="share-weixin-info">
+                  <div id="share-weixin-author"></div>
+                  <div id="share-weixin-theme">Powered By hugo-theme-reimu</div>
+                </div>
+                <img id="share-weixin-qr" >
+              </div>
+            </div>
+            <div class="share-weixin-canvas"></div>
+          </div></div>
+    </a></div><a
+          data-aos="zoom-in"
+          href="/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/#comments"
+          class="article-comment-link"
+        >
+          <span
+            class="post-comments-count waline-comment-count"
+            data-path="/en/post/ctf%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3/"
+            itemprop="commentCount"
+          ></span>
+          Comments
+        </a><span
+          data-aos="zoom-in"
+          class="article-visitor-link"
+        >
+          <span
+            class="waline-pageview-count"
+            data-path="/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/"
+            >0</span
+          >
+          <em class="post-meta-item-text">Readings</em>
+        </span><ul class="article-category-list"><li class="article-tag-list-item" data-aos="zoom-in">
+    <a
+      class="article-category-link"
+      href="/en/categories/ctf"
+      data-aos="zoom-in"
+      >CTF</a
+    >
+    </li></ul>
+<ul class="article-tag-list" itemprop="keywords"></ul>
+</footer>
+  </div><nav
+    id="article-nav"
+    aria-label="Article navigation"
+    data-aos="fade-up"
+  ><div class="article-nav-link-wrap left"><img
+            data-src="https://images.ctfassets.net/iuhngnmppwjh/2VrwRqKkQP2TFnrWsxi3aM/a0c8a659be24ea63afea463e0dd1f7d9/pyenv.drawio.png"
+            data-sizes="auto"
+            alt="Linux Python Management (Installing and Using pyenv)"
+            class="lazyload"
+          /><a
+          href="/en/post/pyenv/"
+          aria-label="Prev:Linux Python Management (Installing and Using pyenv)"
+          title="Prev:Linux Python Management (Installing and Using pyenv)"
+        ></a>
+        <div class="article-nav-caption">Prev</div>
+        <h3 class="article-nav-title">Linux Python Management (Installing and Using pyenv)</h3>
+      </div><div class="article-nav-link-wrap right"><img
+            data-src="https://tse1-mm.cn.bing.net/th/id/OIP-C.PDRiwUlnCeqCWOfBjEcD5gHaEK?w=302&amp;h=180&amp;c=7&amp;r=0&amp;o=7&amp;dpr=1.5&amp;pid=1.7&amp;rm=3"
+            data-sizes="auto"
+            alt="When AI Starts Bringing Us Closer to Ithaca..."
+            class="lazyload"
+          /><a
+          href="/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
+          aria-label="Next:When AI Starts Bringing Us Closer to Ithaca..."
+          title="Next:When AI Starts Bringing Us Closer to Ithaca..."
+        ></a>
+        <div class="article-nav-caption">Next</div>
+        <h3 class="article-nav-title">When AI Starts Bringing Us Closer to Ithaca...</h3>
+      </div></nav></article><section id="comments" data-aos="fade-up">
+<div class="comment-header"><h2 class="comment-title">Leave a comment</h2>
+  <div class="comment-selector">
+    <div class="comment-selector-wrap"><div class="selector-item" data-selector="waline">
+          <span>Waline</span>
+        </div></div>
+  </div>
+</div>
+
+<div class="comment-content"><div class="comment waline-comment" data-aos="fade-up"
+     >
+    </div></div>
+</section></section>
+        </div><footer id="footer" aria-label="Site footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info"><div>
+      <span class="icon-copyright"></span>2020-2026<span class="footer-info-sep rotate"></span>M15tak3
+    </div><div>
+        Powered by&nbsp;<a
+          href="https://gohugo.io/"
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          >Hugo</a
+        >&nbsp;Theme.<a
+          href="https://github.com/D-Sketon/hugo-theme-reimu"
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          >Reimu</a
+        >
+      </div><div>
+        <span class="icon-brush"
+          >&nbsp;2.6k</span
+        >
+        &nbsp;|&nbsp;
+        <span class="icon-coffee">&nbsp;00:15</span>
+      </div><div class="footer-beian">
+        <img
+          style="object-fit: contain;margin-right: 2px;"
+          src="https://icp.gov.moe/images/ico64.png"
+          alt=""
+          width="24"
+          height="24"
+        />
+        <a
+          target="_blank"
+          rel="noopener nofollow noreferrer"
+          href="https://icp.gov.moe/?keyword=20260232"
+          >萌ICP备20260232号</a
+        >
+      </div><div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv"
+          >Number of visits&nbsp;<span
+            id="busuanzi_value_site_pv"
+          ></span
+        ></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv"
+          >Number of visitors&nbsp;<span
+            id="busuanzi_value_site_uv"
+          ></span
+        ></span>
+      </div></div>
+</footer>
+<div class="sidebar-top">
+            <div class="sidebar-top-taichi rotate"></div>
+            <div class="arrow-up"></div>
+          </div><div id="mask" class="hide"></div>
+      </div><nav id="mobile-nav" aria-label="Mobile navigation">
+  <div class="sidebar-wrap"><div class="sidebar-toc-sidebar"><h3 class="toc-title">Contents</h3>
+<div class="sidebar-toc-wrapper toc-div-class">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-what-is-ctf">1. What Is CTF</a>
+      <ul>
+        <li><a href="#11-common-competition-formats">1.1 Common Competition Formats</a></li>
+        <li><a href="#12-why-ctf-matters">1.2 Why CTF Matters</a></li>
+        <li><a href="#13-typical-challenge-characteristics">1.3 Typical Challenge Characteristics</a></li>
+      </ul>
+    </li>
+    <li><a href="#2-web-track">2. Web Track</a>
+      <ul>
+        <li><a href="#21-core-focus">2.1 Core Focus</a></li>
+        <li><a href="#22-common-problem-types">2.2 Common Problem Types</a></li>
+        <li><a href="#23-knowledge-you-need">2.3 Knowledge You Need</a></li>
+        <li><a href="#24-common-tools">2.4 Common Tools</a></li>
+        <li><a href="#25-generic-solving-workflow">2.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-misc-track">3. Misc Track</a>
+      <ul>
+        <li><a href="#31-core-focus">3.1 Core Focus</a></li>
+        <li><a href="#32-common-problem-types">3.2 Common Problem Types</a></li>
+        <li><a href="#33-knowledge-you-need">3.3 Knowledge You Need</a></li>
+        <li><a href="#34-common-tools">3.4 Common Tools</a></li>
+        <li><a href="#35-generic-solving-workflow">3.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-crypto-track">4. Crypto Track</a>
+      <ul>
+        <li><a href="#41-core-focus">4.1 Core Focus</a></li>
+        <li><a href="#42-common-problem-types">4.2 Common Problem Types</a></li>
+        <li><a href="#43-knowledge-you-need">4.3 Knowledge You Need</a></li>
+        <li><a href="#44-common-tools">4.4 Common Tools</a></li>
+        <li><a href="#45-generic-solving-workflow">4.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#5-pwn-track">5. Pwn Track</a>
+      <ul>
+        <li><a href="#51-core-focus">5.1 Core Focus</a></li>
+        <li><a href="#52-common-problem-types">5.2 Common Problem Types</a></li>
+        <li><a href="#53-knowledge-you-need">5.3 Knowledge You Need</a></li>
+        <li><a href="#54-common-tools">5.4 Common Tools</a></li>
+        <li><a href="#55-generic-solving-workflow">5.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#6-reverse-track">6. Reverse Track</a>
+      <ul>
+        <li><a href="#61-core-focus">6.1 Core Focus</a></li>
+        <li><a href="#62-common-problem-types">6.2 Common Problem Types</a></li>
+        <li><a href="#63-knowledge-you-need">6.3 Knowledge You Need</a></li>
+        <li><a href="#64-common-tools">6.4 Common Tools</a></li>
+        <li><a href="#65-generic-solving-workflow">6.5 Generic Solving Workflow</a></li>
+      </ul>
+    </li>
+    <li><a href="#7-ai-security-track">7. AI Security Track</a>
+      <ul>
+        <li><a href="#71-core-focus">7.1 Core Focus</a></li>
+        <li><a href="#72-common-problem-types">7.2 Common Problem Types</a></li>
+        <li><a href="#73-knowledge-you-need">7.3 Knowledge You Need</a></li>
+        <li><a href="#74-common-methods">7.4 Common Methods</a></li>
+        <li><a href="#75-generic-solving-workflow">7.5 Generic Solving Workflow</a></li>
+        <li><a href="#76-defensive-checklist">7.6 Defensive Checklist</a></li>
+      </ul>
+    </li>
+    <li><a href="#8-team-role-suggestions">8. Team Role Suggestions</a></li>
+    <li><a href="#9-conclusion">9. Conclusion</a></li>
+  </ul>
+</nav>
+</div></div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img
+    data-src="/avatar/soul.jpg"
+    data-sizes="auto"
+    alt="M15tak3"
+    class="lazyload"
+  />
+  <div class="sidebar-author-name">M15tak3</div>
+  <div class="sidebar-description">挖不出漏洞的菜鸡pwn_ctfer</div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div><div class="sidebar-state-number">4</div>
+  </div>
+  <a class="sidebar-state-category" href="/en/categories/" aria-label="sidebar-state-category-link">
+    <div>Categories</div>
+    <div class="sidebar-state-number">
+      3
+    </div>
+  </a>
+  <a class="sidebar-state-tag" href="/en/tags/" aria-label="sidebar-state-tag-link">
+    <div>Tags</div>
+    <div class="sidebar-state-number">0</div>
+  </a>
+</div>
+<div class="sidebar-social" ><div class="icon-email sidebar-social-icon">
+        <a
+          href="mailto:skyman.soul@gmail.com"
+          itemprop="url"
+          target="_blank"
+          aria-label="email"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-github sidebar-social-icon">
+        <a
+          href="https://github.com/skymansoul"
+          itemprop="url"
+          target="_blank"
+          aria-label="github"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div><div class="icon-qq sidebar-social-icon">
+        <a
+          href="https://user.qzone.qq.com/3294922898/main"
+          itemprop="url"
+          target="_blank"
+          aria-label="qq"
+          rel="noopener nofollow noreferrer"
+        ></a>
+      </div></div><div class="sidebar-menu"><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/"
+        aria-label="Home"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Home</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/archives"
+        aria-label="Archives"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Archives</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/about"
+        aria-label="About"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">About</div>
+    </div><div class="sidebar-menu-link-wrap">
+      <a
+        class="sidebar-menu-link-dummy"
+        href="/en/friend"
+        aria-label="Friend"
+      ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">Friend</div>
+    </div></div></div></div><div class="sidebar-btn-wrapper">
+        <div class="sidebar-toc-btn current"></div>
+        <div class="sidebar-common-btn"></div>
+      </div></nav>
+</div><div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png" />
+        </div>
+      </div><script
+    src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"
+    
+    
+    
+    
+    integrity="sha384-3gT/vsepWkfz/ff7PpWNUeMzeWoH3cDhm/A8jM7ouoAK0/fP/9bcHHR5kHq2nf&#43;e" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"
+    
+    
+    
+    
+    integrity="sha384-J08i8An/QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/material-theme@1.0.0/dist/material-theme.umd.js"
+    
+    
+    
+    
+    integrity="sha384-vLev0II0HKFaxkcm&#43;/7kX5IGwVFBASkGchU311wmU/veIj2bB0UcBkQbW6yw2asK" crossorigin="anonymous"></script><script src="/js/main.js" integrity="" crossorigin="anonymous"  ></script><script src="/js/aos.js" integrity="" crossorigin="anonymous"  ></script><script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", aosInit);
+    } else {
+      aosInit();
+    }
+  </script><script src="/js/pjax_main.js" integrity="" crossorigin="anonymous" data-pjax ></script><script>
+    var ALGOLIA_CONFIG = {
+      logo: '\/images\/algolia_logo.svg',
+      algolia: {
+        applicationID: "CJ4GA2WSME",
+        apiKey: "e1a57ab22db7b417c0967c7006e49d3e",
+        indexName: "blog",
+        hits: {
+          "per_page": parseInt("10")
+        },
+        labels: {
+          "input_placeholder": 'Search.....',
+          "hits_empty": 'No results found for 「${query}」',
+          "hits_stats": 'Found ${hits} results (in ${time} ms)'
+        }
+      }
+    };
+  </script><script
+    src="https://npm.webcache.cn/algoliasearch@4.17.1/dist/algoliasearch-lite.umd.js"
+    defer
+    
+    
+    
+    integrity="sha384-xvLS0jfKuoREs7pqkRI/OI8GcqohO5S&#43;jQz7ZBtQXnsXmD&#43;9jDOOY4cL6dCPzlrk" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/@reimujs/instantsearch.js@4.57.0-beta.1/dist/instantsearch.production.min.js"
+    defer
+    
+    
+    
+    integrity="sha384-aagKMe8nkqaP2DYQc8kkYOL5l&#43;M5Q2WH/Uhr4teOh0Ybp0RZj0kUSDm45qPikMjK" crossorigin="anonymous"></script><script src="/js/algolia_search.js" integrity="" crossorigin="anonymous"  ></script><script>
+  var setupFirework = () => {
+    if (! false  || !window.matchMedia('(max-width: 768px)').matches) {
+      if (window.firework) {
+        const options = JSON.parse("{\"excludeelements\":[\"a\",\"button\"],\"particles\":[{\"colors\":[\"var(--red-1)\",\"var(--red-2)\",\"var(--red-3)\",\"var(--red-4)\"],\"duration\":[1200,1800],\"easing\":\"easeOutExpo\",\"move\":[\"emit\"],\"number\":20,\"shape\":\"circle\",\"shapeOptions\":{\"alpha\":[0.3,0.5],\"radius\":[16,32]}},{\"colors\":[\"var(--red-0)\"],\"duration\":[1200,1800],\"easing\":\"easeOutExpo\",\"move\":[\"diffuse\"],\"number\":1,\"shape\":\"circle\",\"shapeOptions\":{\"alpha\":[0.2,0.5],\"lineWidth\":6,\"radius\":20}}]}");
+        options.excludeElements = options.excludeelements;
+        delete options.excludeelements;
+        window.firework(options);
+      }
+    }
+  }
+</script><script
+    src="https://npm.webcache.cn/mouse-firework@0.2.0/dist/index.umd.js"
+    defer
+    
+    
+    onload="setupFirework()"
+    integrity="sha384-qi9WggRt19tv8Vc7pCHW3ulMNLwrn515zaLEWZjl1px07vz8&#43;pUoWX8n1rgq282T" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/theme-shokax-pjax@0.0.3/dist/index.umd.js"
+    
+    
+    
+    
+    integrity="sha384-xneY1WY8hOfUzswrE4CrYq35N4BdVcxqxwHPr9zawE/jMSCxD&#43;jAPU55x/jj3wlf" crossorigin="anonymous"></script><script src="/js/pjax.js" integrity="" crossorigin="anonymous"  ></script><script
+    src="https://npm.webcache.cn/quicklink@3.0.1/dist/quicklink.umd.js"
+    
+    
+    
+    
+    integrity="sha384-caMDqvgav/HWdEYQU1QRRHMLleigpL1YHAG0m371DhzfL8rRzUyOb&#43;bEHtwlmYjD" crossorigin="anonymous"></script><script data-pjax>
+    window.quicklink?.listen({
+      timeout:  3000 ,
+      priority:  true ,
+      ignores: JSON.parse("[]")
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div><script data-pjax>
+        window.REIMU_POST = {
+          author: "M15tak3",
+          title: "A Detailed Guide to CTF Tracks",
+          url: "https:\/\/blog.m15tak3.com\/en\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/",
+          description: " A Detailed Guide to CTF Tracks 1. What Is CTF CTF (Capture The Flag) is a cybersecurity competition format. Players solve challenges through analysis, exploitation, cryptanalysis, reverse engineering, and forensics, then submit a flag (usually a specially formatted string) for points.\nThe core of …",
+          cover: "https:\/\/blog.m15tak3.com\/images\/CTF.png",
+        };
+      </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
+          if (_$$(`${gallery} ${children}`).length > 0) {
+            new PhotoSwipeLightbox({
+              gallery,
+              children,pswpModule: () => safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8\u002boTJ7m3DfYEWX1fu1scuS4\u002bs")}).init();
+          }
+        }
+        const pswp = () => {
+          initPswp('.article-entry', 'a.article-gallery-item');
+          initPswp('.article-gallery', 'a.article-gallery-item');
+        }
+        pswp()
+      </script><script data-pjax>
+  var loadScript = (src, integrity) => {
+    const script = document.createElement('script');
+    script.src = src;
+    if (integrity) script.integrity = integrity;
+    script.crossOrigin = 'anonymous';
+    return script;
+  };
+  var commentConfigKeys = ['valine', 'waline', 'twikoo', 'gitalk', 'giscus', 'utterances', 'beaudar', 'disqus'];
+  var commentConfig = {waline: {
+      enable: true,
+      load: async () => {
+        const container = document.querySelector('.waline-comment');
+        if (!container) return;
+        container.style.display = 'block';
+
+        let walineInit;
+        const walineCdn = 'https:\/\/npm.webcache.cn\/@waline\/client@2.15.8\/dist\/waline.mjs';
+        
+        if ('webcache|@waline\/client@2.15.8\/dist\/waline.mjs'.startsWith('local')) {
+          
+          const module = await safeImport(walineCdn);
+          walineInit = module.init;
+        } else {
+          
+          const module = await safeImport(
+            walineCdn, 
+            'sha384-9sbqJjrfGjbkI6\/PI4nU\/MvBfEmkkPC4YK9I4zBeMIf1CVCZdCMH\/KinBEAZII\/5'
+          );
+          walineInit = module.init;
+        }
+        
+        window.walineInstance = walineInit({
+          el: '.waline-comment',
+          serverURL: 'https:\/\/personalblogcomment.m15tak3.com\/',
+          lang: document.documentElement.lang || 'en',
+          locale: "{\"admin\":\"Admin\",\"anonymous\":\"Anonymous user\",\"comment\":\"Comment\",\"gifSearchPlaceholder\":\"Search stickers\",\"hottest\":\"Hottest comments\",\"latest\":\"Latest comments\",\"link\":\"Website\",\"login\":\"Login\",\"mail\":\"Email\",\"more\":\"More\",\"nick\":\"Nickname\",\"oldest\":\"Oldest comments\",\"optional\":\"Optional\",\"placeholder\":\"Say something...\",\"refresh\":\"Refresh\",\"sofa\":\"Be the first\",\"sticky\":\"Pinned\",\"submit\":\"Submit\",\"uploading\":\"Listening... Feeling... Thinking...\",\"word\":\"words\"}",
+          emoji: JSON.parse("[\"https://unpkg.com/@waline/emojis@1.2.0/weibo\",\"https://unpkg.com/@waline/emojis@1.2.0/alus\",\"https://unpkg.com/@waline/emojis@1.2.0/bilibili\",\"https://unpkg.com/@waline/emojis@1.2.0/qq\",\"https://unpkg.com/@waline/emojis@1.2.0/tieba\",\"https://unpkg.com/@waline/emojis@1.2.0/tw-emoji\"]"),
+          meta: JSON.parse("[\"nick\",\"mail\",\"link\"]"),
+          requiredMeta: JSON.parse("[\"nick\",\"mail\"]"),
+          wordLimit:  0 ,
+          comment: true,
+          pageSize:  10 ,
+          dark: 'html[data-theme="dark"]',
+          pageview:  true ,
+        });
+      }
+    },};
+  commentConfig.enable = commentConfigKeys.some(key => commentConfig?.[key]?.enable);
+
+  var defaultComment = '';
+  if (commentConfig.enable) {
+    
+    var savedCommentType = localStorage.getItem('commentType');
+    
+    
+    if (savedCommentType) {
+      if (commentConfig[savedCommentType]?.enable) {
+        defaultComment = savedCommentType;
+      }
+    }
+    
+    
+    if (!defaultComment) {
+      var configDefault = 'waline';
+      if (commentConfig[configDefault]?.enable) {
+        defaultComment = configDefault;
+      }
+    }
+    
+    
+    if (!defaultComment) {
+      defaultComment = commentConfigKeys.find(sys => commentConfig?.[sys]?.enable) || '';
+    }
+  }
+
+  function loadComments() {
+    if (!commentConfig.enable) return;
+    
+    const loadedComments = {
+      valine: false,
+      waline: false,
+      twikoo: false,
+      gitalk: false,
+      giscus: false,
+      disqus: false,
+      utterances: false,
+      beaudar: false,
+    };
+
+    
+    const hideAllComments = () => {
+      const commentContainers = document.querySelectorAll('.comment');
+      commentContainers.forEach(container => {
+        container.style.display = 'none';
+      });
+    };
+
+    
+    const loadCommentSystem = (type) => {
+      if (loadedComments[type]) {
+        
+        document.querySelector(`.${type}-comment`).style.display = 'block';
+        return;
+      }
+
+      
+      commentConfig[type]?.load();
+      loadedComments[type] = true;
+    };
+
+    
+    const changeActiveCommentItems = (item) => {
+      const commentItems = document.querySelectorAll('.selector-item');
+      for (let i = 0; i < commentItems.length; i++) {
+        commentItems[i].classList.remove('active');
+      }
+      item.classList.add('active');
+
+      
+      const commentType = item.getAttribute('data-selector');
+
+      
+      hideAllComments();
+
+      
+      loadCommentSystem(commentType);
+    };
+
+    const commentInit = () => {
+      
+      const commentItems = document.querySelectorAll('.selector-item');
+      for (let item of commentItems) {
+        item.addEventListener('click', () => {
+          
+          const commentType = item.getAttribute('data-selector');
+          window.localStorage.setItem('commentType', commentType);
+          
+          changeActiveCommentItems(item);
+        });
+      }
+
+      
+      if (defaultComment) {
+        const defaultSelectorItem = document.querySelector(`[data-selector="${defaultComment}"]`);
+        if (!defaultSelectorItem) return;
+        defaultSelectorItem.style.display = 'block';
+        defaultSelectorItem.classList.add('active');
+        loadCommentSystem(defaultComment);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', commentInit);
+    } else {
+      commentInit();
+    }
+  };
+  loadComments();
+</script><script
+    src="https://npm.webcache.cn/qrcode@1.5.1/build/qrcode.js"
+    defer
+    
+    data-pjax
+    
+    integrity="sha384-VT1EeewTCEXgndcPMQ0PzV&#43;uVFYjxFIjmAA7s5gcMX9t4Dt5TD&#43;OVQIn7NJWIXn7" crossorigin="anonymous"></script><script
+    src="https://npm.webcache.cn/@zumer/snapdom@1.9.14/dist/snapdom.min.js"
+    defer
+    
+    data-pjax
+    
+    integrity="sha384-OEQ&#43;fJp/Mvi2uzBREXybtxryJvLytWapuHu4EE6LPwTKUwATYcc55tPPcZTzVcmx" crossorigin="anonymous"></script></div>
+</div><script data-pjax>
+    var updateTime = _$('#post-update-time')?.innerHTML;
+
+    if (updateTime) {
+      const update = new Date(updateTime);
+      const now = new Date();
+      const diff = now - update;
+      const days = diff / 86400000;
+      const { daysago: daysAgo, message: template } = window.siteConfig.outdate;
+      if (days >= daysAgo) {
+        let message = `This article was last updated on ${updateTime}. Please note that the content may no longer be applicable.`;
+        if (typeof template === 'string') {
+          message = template.replace(/{time}/, updateTime);
+        } else if (typeof template === 'object') {
+          const lang = document.documentElement.lang;
+          const messageKey = Object.keys(template).find(key => key.toLowerCase() === lang.toLowerCase());
+          if (messageKey && template[messageKey]) {
+            message = template[messageKey].replace(/{time}/, updateTime);
+          }
+        }
+        const blockquote = _$('#outdate-blockquote');
+        if (blockquote) {
+          blockquote.querySelectorAll('p')[1].innerText = message;
+          blockquote.style.display = 'flow-root';
+        }
+      }
+    }
+  </script><script
+    src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js"
+    
+    async
+    
+    
+    integrity="sha384-0M75wtSkhjIInv4coYlaJU83&#43;OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id&#43;S" crossorigin="anonymous"></script><script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script><script>
+  const reimuCopyright = String.raw`
+   ______     ______     __     __    __     __  __    
+  /\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+  \ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+   \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+    \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                    
+  `;
+  console.log(String.raw`%c ${reimuCopyright}`, "color: #ff5252;");
+  console.log(
+    "%c Theme.Reimu" + " %c https://github.com/D-Sketon/hugo-theme-reimu ",
+    "color: white; background: #ff5252; padding:5px 0;",
+    "padding:4px;border:1px solid #ff5252;",
+  );
+</script><script>
+    var setupAPlayer = () => {
+      if (! false  || !window.matchMedia('(max-width: 768px)').matches) {
+        const isMobile = window.matchMedia('(max-width: 959px)').matches;
+        if (isMobile) {
+        const aplayer = _$('#aplayer');
+          if (aplayer) {
+            const aside = aplayer.parentNode?.parentNode;
+            if (aside?.tagName === 'ASIDE') {
+              aplayer.removeAttribute('data-aos');
+              aside.parentNode.removeChild(aplayer);
+              document.body.appendChild(aplayer);
+            }
+          }
+        }
+        new APlayer({
+            theme: "var(--color-link)",
+            container: document.getElementById('aplayer'),
+            audio: JSON.parse("[{\"artist\":\"TRUE (唐沢美帆)\",\"cover\":\"/music/TRUE - Sincerely.jpg\",\"name\":\"Sincerely\",\"url\":\"/music/TRUE - Sincerely.mp3\"}]") || [],
+            fixed: isMobile ? true : ( false  || false),
+            autoplay:  true  || false,
+            loop: 'all' || 'all',
+            order: 'random' || 'list',
+            preload: 'auto' || 'auto',
+            volume:  0.7  || 0.7,
+            mutex:  true  || true,
+            listFolded:  false  || false,
+            lrcType:  0  || 0,
+        });
+      }
+    }
+    </script><script
+    src="https://npm.webcache.cn/aplayer@1.10.1/dist/APlayer.min.js"
+    defer
+    
+    
+    onload="setupAPlayer()"
+    integrity="sha384-gdGYZwHnfJM54evoZhpO0s6ZF5BQiybkiyW7VXr&#43;h5UfruuRL/aORyw&#43;5&#43;HZoU6e" crossorigin="anonymous"></script></body>
+</html>
