@@ -2,183 +2,173 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://blog.m15tak3.com/zh-tw/categories/</loc>
+    <loc>http://localhost:1313/zh-tw/categories/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/categories/"
+                href="http://localhost:1313/categories/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/categories/"
+                href="http://localhost:1313/zh-tw/categories/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/categories/ctf/</loc>
+    <loc>http://localhost:1313/zh-tw/categories/ctf/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/categories/ctf/"
+                href="http://localhost:1313/categories/ctf/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/categories/ctf/"
+                href="http://localhost:1313/zh-tw/categories/ctf/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/</loc>
+    <loc>http://localhost:1313/zh-tw/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/"
+                href="http://localhost:1313/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/"
+                href="http://localhost:1313/zh-tw/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/post/</loc>
+    <loc>http://localhost:1313/zh-tw/post/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-CN"
-                href="https://blog.m15tak3.com/post/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/post/"
-                />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</loc>
+    <loc>http://localhost:1313/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
+                href="http://localhost:1313/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
+                href="http://localhost:1313/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/categories/%E9%9A%8F%E7%AC%94/</loc>
+    <loc>http://localhost:1313/zh-tw/categories/%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/categories/%E9%9A%8F%E7%AC%94/"
+                href="http://localhost:1313/categories/%E9%9A%8F%E7%AC%94/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/categories/%E9%9A%8F%E7%AC%94/"
+                href="http://localhost:1313/zh-tw/categories/%E9%9A%8F%E7%AC%94/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/post/pyenv/</loc>
+    <loc>http://localhost:1313/zh-tw/post/pyenv/</loc>
     <lastmod>2026-05-06T11:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.1</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/post/pyenv/"
+                href="http://localhost:1313/post/pyenv/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/post/pyenv/"
+                href="http://localhost:1313/zh-tw/post/pyenv/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/categories/%E6%8A%80%E6%9C%AF/</loc>
+    <loc>http://localhost:1313/zh-tw/categories/%E6%8A%80%E6%9C%AF/</loc>
     <lastmod>2026-05-06T11:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/"
+                href="http://localhost:1313/categories/%E6%8A%80%E6%9C%AF/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/categories/%E6%8A%80%E6%9C%AF/"
+                href="http://localhost:1313/zh-tw/categories/%E6%8A%80%E6%9C%AF/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/post/wsl1/</loc>
+    <loc>http://localhost:1313/zh-tw/post/wsl1/</loc>
     <lastmod>2026-05-06T09:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/post/wsl1/"
+                href="http://localhost:1313/post/wsl1/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/post/wsl1/"
+                href="http://localhost:1313/zh-tw/post/wsl1/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/friend/</loc>
+    <loc>http://localhost:1313/zh-tw/friend/</loc>
     <lastmod>2026-05-03T20:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/friend/"
+                href="http://localhost:1313/friend/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/friend/"
+                href="http://localhost:1313/zh-tw/friend/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/about/</loc>
+    <loc>http://localhost:1313/zh-tw/about/</loc>
     <lastmod>2026-04-28T12:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/about/"
+                href="http://localhost:1313/about/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/about/"
+                href="http://localhost:1313/zh-tw/about/"
                 />
   </url><url>
-    <loc>https://blog.m15tak3.com/zh-tw/tags/</loc>
+    <loc>http://localhost:1313/zh-tw/tags/</loc>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-CN"
-                href="https://blog.m15tak3.com/tags/"
+                href="http://localhost:1313/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-TW"
-                href="https://blog.m15tak3.com/zh-tw/tags/"
+                href="http://localhost:1313/zh-tw/tags/"
                 />
   </url>
 </urlset>

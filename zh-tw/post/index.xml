@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on M15tak3のBlog</title>
-    <link>https://blog.m15tak3.com/zh-tw/post/</link>
+    <link>http://localhost:1313/zh-tw/post/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>zh-TW</language>
@@ -15,7 +15,7 @@
     <lastBuildDate>Thu, 07 May 2026 17:00:00 +0800</lastBuildDate>
     
     
-    <atom:link href="https://blog.m15tak3.com/zh-tw/post/index.xml" rel="self" type="application/rss&#43;xml" />
+    <atom:link href="http://localhost:1313/zh-tw/post/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
     
@@ -24,10 +24,10 @@
 
     <item>
       <title>当AI开始替我们靠近伊萨卡...</title>
-      <link>https://blog.m15tak3.com/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <link>http://localhost:1313/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
       <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <guid>http://localhost:1313/zh-tw/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
       <description>
         <![CDATA[<h1>当AI开始替我们靠近伊萨卡...</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -54,7 +54,7 @@
 <p>​	但我更想知道，在抵达之前，我们有没有真正见过海。</p>
 
         
-        <hr><p>本文2026-05-07首發於<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最後修改於2026-05-07</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
+        <hr><p>本文2026-05-07首發於<a href='http://localhost:1313/'>M15tak3のBlog</a>，最後修改於2026-05-07</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
       </description>
       
         <category>随笔</category><category>CTF</category>
@@ -66,10 +66,10 @@
 
     <item>
       <title>linux-python管理（pyenv的安装与使用）</title>
-      <link>https://blog.m15tak3.com/zh-tw/post/pyenv/</link>
+      <link>http://localhost:1313/zh-tw/post/pyenv/</link>
       <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/zh-tw/post/pyenv/</guid>
+      <guid>http://localhost:1313/zh-tw/post/pyenv/</guid>
       <description>
         <![CDATA[<h1>linux-python管理（pyenv的安装与使用）</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -130,7 +130,7 @@ pyenv基本使用
 </span></span><span class="line"><span class="cl">pyenv deactivate
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-06首發於<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最後修改於2026-05-06</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
+        <hr><p>本文2026-05-06首發於<a href='http://localhost:1313/'>M15tak3のBlog</a>，最後修改於2026-05-06</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
       </description>
       
         <category>技术</category><category>CTF</category>
@@ -142,10 +142,10 @@ pyenv基本使用
 
     <item>
       <title>从零安装WSL2--Ubuntu</title>
-      <link>https://blog.m15tak3.com/zh-tw/post/wsl1/</link>
+      <link>http://localhost:1313/zh-tw/post/wsl1/</link>
       <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/zh-tw/post/wsl1/</guid>
+      <guid>http://localhost:1313/zh-tw/post/wsl1/</guid>
       <description>
         <![CDATA[<h1>从零安装WSL2--Ubuntu</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -192,7 +192,7 @@ wsl的安装
 <p>我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。</p>
 
         
-        <hr><p>本文2026-05-06首發於<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最後修改於2026-05-06</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
+        <hr><p>本文2026-05-06首發於<a href='http://localhost:1313/'>M15tak3のBlog</a>，最後修改於2026-05-06</p><p>本部落格所有文章除特別聲明外，均採用 BY-NC-SA 授權協議。轉載請註明出處！</p>]]>
       </description>
       
         <category>技术</category><category>CTF</category>
