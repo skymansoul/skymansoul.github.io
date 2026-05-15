@@ -122,8 +122,78 @@
                 href="https://blog.m15tak3.com/en/post/"
                 />
   </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/ai/</loc>
+    <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/ai/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/ai/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/ai/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/ctf/</loc>
+    <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/ctf/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/ctf/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/ctf/"
+                />
+  </url><url>
     <loc>https://blog.m15tak3.com/en/categories/essay/</loc>
     <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/reflection/</loc>
+    <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/</loc>
+    <lastmod>2026-05-07T17:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/course/</loc>
+    <lastmod>2026-05-06T11:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url><url>
@@ -145,6 +215,46 @@
                 rel="alternate"
                 hreflang="en"
                 href="https://blog.m15tak3.com/en/post/pyenv/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/pyenv/</loc>
+    <lastmod>2026-05-06T11:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/pyenv/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/pyenv/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/pyenv/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/python/</loc>
+    <lastmod>2026-05-06T11:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/python/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/python/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/python/"
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/en/categories/tech/</loc>
@@ -170,6 +280,26 @@
                 rel="alternate"
                 hreflang="en"
                 href="https://blog.m15tak3.com/en/post/wsl1/"
+                />
+  </url><url>
+    <loc>https://blog.m15tak3.com/en/tags/wsl/</loc>
+    <lastmod>2026-05-06T09:00:00+08:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-CN"
+                href="https://blog.m15tak3.com/tags/wsl/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ja"
+                href="https://blog.m15tak3.com/ja/tags/wsl/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://blog.m15tak3.com/en/tags/wsl/"
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/en/friend/</loc>
@@ -210,25 +340,6 @@
                 rel="alternate"
                 hreflang="en"
                 href="https://blog.m15tak3.com/en/about/"
-                />
-  </url><url>
-    <loc>https://blog.m15tak3.com/en/tags/</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-CN"
-                href="https://blog.m15tak3.com/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="ja"
-                href="https://blog.m15tak3.com/ja/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://blog.m15tak3.com/en/tags/"
                 />
   </url>
 </urlset>

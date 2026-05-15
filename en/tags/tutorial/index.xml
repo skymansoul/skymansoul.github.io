@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tutorial on M15tak3のBlog</title>
+    <link>http://localhost:1313/en/tags/tutorial/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Wed, 06 May 2026 11:00:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="http://localhost:1313/en/tags/tutorial/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>Linux Python Management (Installing and Using pyenv)</title>
+      <link>http://localhost:1313/en/post/pyenv/</link>
+      <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>http://localhost:1313/en/post/pyenv/</guid>
+      <description>
+        <![CDATA[<h1>Linux Python Management (Installing and Using pyenv)</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="linux-python-management-installing-and-using-pyenv">
+<a class="header-anchor" href="#linux-python-management-installing-and-using-pyenv"></a>
+Linux Python Management (Installing and Using pyenv)
+</h1><p>On newer Linux versions (for example, Ubuntu 24.04), using <code>pip</code> for system-level package management may trigger the <code>externally-managed-environment</code> error. In other words, the system does not allow direct global package installation with <code>pip</code>.</p>
+<p>To avoid breaking the system Python environment and to manage Python versions more cleanly, I recommend using <code>pyenv</code> (plus virtual environments).</p>
+<h2 id="install-build-dependencies">
+<a class="header-anchor" href="#install-build-dependencies"></a>
+Install Build Dependencies
+</h2><p><strong>For Ubuntu/Debian:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+</span></span></code></pre></div><p><strong>For CentOS and similar systems:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
+</span></span></code></pre></div><h2 id="install-pyenv">
+<a class="header-anchor" href="#install-pyenv"></a>
+Install pyenv
+</h2><p>Install via the official script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
+</span></span></code></pre></div><h2 id="configure-your-shell-and-apply">
+<a class="header-anchor" href="#configure-your-shell-and-apply"></a>
+Configure Your Shell and Apply
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Verify</span>
+</span></span><span class="line"><span class="cl">pyenv --version
+</span></span></code></pre></div><h2 id="basic-pyenv-usage">
+<a class="header-anchor" href="#basic-pyenv-usage"></a>
+Basic pyenv Usage
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># pyenv install python-version, e.g. install 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv global python-version, e.g. set global version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv local python-version, e.g. set local project version to 3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
+</span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv shell python-version, e.g. set shell session version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv shell python-version
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv virtualenv python-version myproject-env, e.g. create ctf env with 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv activate myproject-env, e.g. activate ctf env</span>
+</span></span><span class="line"><span class="cl">pyenv activate ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv deactivate, exit virtual environment</span>
+</span></span><span class="line"><span class="cl">pyenv deactivate
+</span></span></code></pre></div>
+        
+        <hr><p>Published on 2026-05-06 at <a href='http://localhost:1313/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

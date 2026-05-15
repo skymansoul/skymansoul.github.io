@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Wsl on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/en/tags/wsl/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Wed, 06 May 2026 09:00:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/en/tags/wsl/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>Installing WSL2 &#43; Ubuntu from Scratch</title>
+      <link>https://blog.m15tak3.com/en/post/wsl1/</link>
+      <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/wsl1/</guid>
+      <description>
+        <![CDATA[<h1>Installing WSL2 + Ubuntu from Scratch</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="installing-wsl2--ubuntu-from-scratch">
+<a class="header-anchor" href="#installing-wsl2--ubuntu-from-scratch"></a>
+Installing WSL2 + Ubuntu from Scratch
+</h1><h2 id="before-you-start">
+<a class="header-anchor" href="#before-you-start"></a>
+Before You Start
+</h2><p>You can think of WSL as a lightweight VM that gives much better local file interaction than VMware under Windows.</p>
+<p><strong>Note</strong>: after installing a Linux subsystem, if you later upgrade Windows from Home to Pro, subsystem file corruption can happen. Please keep backups.</p>
+<h2 id="installing-wsl">
+<a class="header-anchor" href="#installing-wsl"></a>
+Installing WSL
+</h2><h3 id="enable-required-features">
+<a class="header-anchor" href="#enable-required-features"></a>
+Enable Required Features
+</h3><p>Open: <code>Windows Settings -&gt; System -&gt; Optional features -&gt; More Windows features</code></p>
+<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
+<p>Enable <strong>Windows Subsystem for Linux</strong> and <strong>Virtual Machine Platform</strong>, then click OK. Windows will install these features and ask for a reboot.</p>
+<p><img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<h2 id="install-wsl-ubuntu">
+<a class="header-anchor" href="#install-wsl-ubuntu"></a>
+Install WSL Ubuntu
+</h2><p>Open a terminal and run:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p>The system will automatically pull Ubuntu 24.04 in this setup, so just wait for the progress to finish.</p>
+<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
+<p>After installation, the subsystem starts automatically and asks you to create a username. Username rules vary slightly by distro; if your name is rejected, adjust it accordingly.</p>
+<p><img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
+<h2 id="move-the-subsystem-to-another-drive">
+<a class="header-anchor" href="#move-the-subsystem-to-another-drive"></a>
+Move the Subsystem to Another Drive
+</h2><p>By default, WSL installs distributions under drive C. If you want to move it, first run <code>exit</code> in the Linux shell.</p>
+<p>Then shut down all WSL VMs and export the installed Ubuntu 22.04 for backup:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
+<p>You can choose your own path, but the exported file must end with <code>.tar</code>.</p>
+<p>Now unregister the current distro and import it to your target location:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
+<p>After that, the subsystem location is changed, and your files stay intact.</p>
+
+        
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>
