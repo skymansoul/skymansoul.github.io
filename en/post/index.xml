@@ -12,12 +12,536 @@
     
     <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
     
-    <lastBuildDate>Thu, 14 May 2026 17:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 15 May 2026 11:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/en/post/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
+    
+      
+    
+
+    <item>
+      <title>CTF CSV Challenge Tutorial</title>
+      <link>https://blog.m15tak3.com/en/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <description>
+        <![CDATA[<h1>CTF CSV Challenge Tutorial</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="ctf-csv-challenge-tutorial-what-the-challenge-wants-and-how-to-write-the-python-script">
+<a class="header-anchor" href="#ctf-csv-challenge-tutorial-what-the-challenge-wants-and-how-to-write-the-python-script"></a>
+CTF CSV Challenge Tutorial: What the Challenge Wants and How to Write the Python Script
+</h1><p>CSV challenges in CTFs are usually placed under Misc, data analysis, forensics, or scripting. They look like ordinary spreadsheet files, but the real test is not whether you can use Excel. The real test is whether you can find patterns in a large amount of structured data, extract the useful information, and finally recover the flag.</p>
+<p>In one sentence: <strong>a CSV challenge wants you to process data with a script instead of reading it line by line with your eyes.</strong></p>
+<hr>
+<h2 id="1-what-a-csv-challenge-usually-wants-you-to-do">
+<a class="header-anchor" href="#1-what-a-csv-challenge-usually-wants-you-to-do"></a>
+1. What a CSV Challenge Usually Wants You to Do
+</h2><p>A CSV file is essentially a text file whose fields are separated by commas, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">char</span><span class="p">,</span><span class="s">index</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">2</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">3</span><span class="p">
+</span></span></span></code></pre></div><p>In CTF challenges, the flag may be split, shuffled, hidden, or encoded inside the table. Common goals include the following.</p>
+<h3 id="11-search-for-the-flag-directly">
+<a class="header-anchor" href="#11-search-for-the-flag-directly"></a>
+1.1 Search for the Flag Directly
+</h3><p>The simplest case is that the flag is hidden in a certain row, column, or note field. The challenge may give you a very large CSV file so that it is hard to find manually.</p>
+<p>What you need to do:</p>
+<ol>
+<li>Read the CSV.</li>
+<li>Iterate through every row.</li>
+<li>Search every field for keywords such as <code>flag{</code>, <code>ctf{</code>, or <code>FLAG{</code>.</li>
+</ol>
+<h3 id="12-sort-by-one-column-and-concatenate-characters">
+<a class="header-anchor" href="#12-sort-by-one-column-and-concatenate-characters"></a>
+1.2 Sort by One Column and Concatenate Characters
+</h3><p>Many challenges split the flag into individual characters and then shuffle their order, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">pos</span><span class="p">,</span><span class="s">ch</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>Here, the challenge wants you to sort by <code>pos</code> and then concatenate <code>ch</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>The key is to identify the &ldquo;order column&rdquo; and the &ldquo;character column&rdquo;.</p>
+<h3 id="13-filter-valid-rows-by-condition">
+<a class="header-anchor" href="#13-filter-valid-rows-by-condition"></a>
+1.3 Filter Valid Rows by Condition
+</h3><p>Some CSV files contain a lot of noise, and only rows matching a condition are real. For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">?</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">6</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>The challenge wants you to keep rows where <code>valid=1</code> and then concatenate <code>value</code>.</p>
+<p>The core idea is: <strong>filter first, extract next, then concatenate.</strong></p>
+<h3 id="14-decode-encoded-fields">
+<a class="header-anchor" href="#14-decode-encoded-fields"></a>
+1.4 Decode Encoded Fields
+</h3><p>The CSV may not store characters directly. It may store ASCII, hex, binary, Base64, or other encodings.</p>
+<p>For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">ascii</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">102</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">108</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">97</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">103</span><span class="p">
+</span></span></span></code></pre></div><p>Here, <code>102 108 97 103</code> corresponds to ASCII characters:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>So you need to convert numbers into characters:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">chr</span><span class="p">(</span><span class="mi">102</span><span class="p">)</span>  <span class="c1"># f</span>
+</span></span></code></pre></div><h3 id="15-reconstruct-an-image-or-qr-code-from-coordinates">
+<a class="header-anchor" href="#15-reconstruct-an-image-or-qr-code-from-coordinates"></a>
+1.5 Reconstruct an Image or QR Code from Coordinates
+</h3><p>A slightly more advanced CSV challenge may give you coordinates and colors, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">x</span><span class="p">,</span><span class="s">y</span><span class="p">,</span><span class="s">color</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span></code></pre></div><p>This kind of challenge may want you to reconstruct an image, a QR code, or a pixel map from the CSV. You need to:</p>
+<ol>
+<li>Read the <code>x</code> and <code>y</code> coordinates.</li>
+<li>Draw pixels according to the color values.</li>
+<li>Save the result as an image.</li>
+<li>Scan the QR code or inspect the image to get the flag.</li>
+</ol>
+<hr>
+<h2 id="2-what-to-check-first-after-getting-a-csv-file">
+<a class="header-anchor" href="#2-what-to-check-first-after-getting-a-csv-file"></a>
+2. What to Check First After Getting a CSV File
+</h2><p>Do not start by writing a complicated script. Do some basic observation first.</p>
+<h3 id="21-check-the-header">
+<a class="header-anchor" href="#21-check-the-header"></a>
+2.1 Check the Header
+</h3><p>The header often reveals the intended solving path, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">index, char, order, ascii, hex, x, y, r, g, b, valid
+</span></span></code></pre></div><p>Different fields usually point to different directions:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Field name</th>
+          <th>Possible meaning</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>index</code> / <code>pos</code> / <code>order</code></td>
+          <td>Sorting</td>
+      </tr>
+      <tr>
+          <td><code>char</code> / <code>ch</code> / <code>value</code></td>
+          <td>Character concatenation</td>
+      </tr>
+      <tr>
+          <td><code>ascii</code></td>
+          <td>ASCII to character</td>
+      </tr>
+      <tr>
+          <td><code>hex</code></td>
+          <td>Hex decoding</td>
+      </tr>
+      <tr>
+          <td><code>bin</code></td>
+          <td>Binary decoding</td>
+      </tr>
+      <tr>
+          <td><code>x</code> / <code>y</code></td>
+          <td>Coordinate drawing</td>
+      </tr>
+      <tr>
+          <td><code>r</code> / <code>g</code> / <code>b</code></td>
+          <td>RGB image</td>
+      </tr>
+      <tr>
+          <td><code>valid</code> / <code>flag</code> / <code>is_true</code></td>
+          <td>Filtering valid data</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="22-check-the-amount-of-data">
+<a class="header-anchor" href="#22-check-the-amount-of-data"></a>
+2.2 Check the Amount of Data
+</h3><p>If there are only dozens of rows, you can inspect the pattern manually. If there are thousands or tens of thousands of rows, you must write a script.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;data.csv&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Row count:&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Header:&#34;</span><span class="p">,</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;First 5 rows:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="23-check-for-abnormal-values">
+<a class="header-anchor" href="#23-check-for-abnormal-values"></a>
+2.3 Check for Abnormal Values
+</h3><p>CTF challenges often hide key information in abnormal values, such as:</p>
+<ul>
+<li>A column has one unusually long row.</li>
+<li>A row contains <code>{</code> or <code>}</code>.</li>
+<li>Some numbers clearly fall in the ASCII range: <code>32</code> to <code>126</code>.</li>
+<li>Some fields look like hex: <code>66 6c 61 67</code>.</li>
+<li>Some fields look like Base64, possibly ending with <code>=</code>.</li>
+</ul>
+<hr>
+<h2 id="3-basic-python-csv-reading">
+<a class="header-anchor" href="#3-basic-python-csv-reading"></a>
+3. Basic Python CSV Reading
+</h2><p>Prefer Python&rsquo;s standard <code>csv</code> library first. It does not require installing third-party packages.</p>
+<h3 id="31-read-as-dictionaries">
+<a class="header-anchor" href="#31-read-as-dictionaries"></a>
+3.1 Read as Dictionaries
+</h3><p>If the CSV has a header, <code>DictReader</code> is the most convenient option.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><p>Suppose the CSV is:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">char</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>Each row will be read as:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="p">{</span><span class="s2">&#34;index&#34;</span><span class="p">:</span> <span class="s2">&#34;0&#34;</span><span class="p">,</span> <span class="s2">&#34;char&#34;</span><span class="p">:</span> <span class="s2">&#34;f&#34;</span><span class="p">}</span>
+</span></span></code></pre></div><p>Note: <strong>values read from a CSV are strings by default.</strong>
+If you need sorting or calculation, convert them to <code>int</code> manually.</p>
+<hr>
+<h2 id="4-script-template-1-search-for-the-flag-directly">
+<a class="header-anchor" href="#4-script-template-1-search-for-the-flag-directly"></a>
+4. Script Template 1: Search for the Flag Directly
+</h2><p>Use this when the challenge gives you a huge CSV and you suspect the flag is directly hidden inside it.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;flag\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">col_no</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="k">match</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[+] Found flag at row </span><span class="si">{</span><span class="n">line_no</span><span class="si">}</span><span class="s2">, column </span><span class="si">{</span><span class="n">col_no</span><span class="si">}</span><span class="s2">:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="k">match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+</span></span></code></pre></div><p>If the contest uses a flag format other than <code>flag{}</code>, change this line:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;your_prefix\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="5-script-template-2-sort-and-concatenate-characters">
+<a class="header-anchor" href="#5-script-template-2-sort-and-concatenate-characters"></a>
+5. Script Template 2: Sort and Concatenate Characters
+</h2><p>Use this when the CSV has columns such as <code>index</code> and <code>char</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;char&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>The most common thing to change is the column name. If the challenge uses <code>pos</code> and <code>value</code>, change it to:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span></code></pre></div><hr>
+<h2 id="6-script-template-3-filter-valid-rows-and-concatenate">
+<a class="header-anchor" href="#6-script-template-3-filter-valid-rows-and-concatenate"></a>
+6. Script Template 3: Filter Valid Rows and Concatenate
+</h2><p>Use this when the CSV has a column marking whether a row is valid, such as <code>valid</code>, <code>is_flag</code>, or <code>status</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>If sorting is also required, combine filtering and sorting:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">]),</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="7-script-template-4-ascii-to-characters">
+<a class="header-anchor" href="#7-script-template-4-ascii-to-characters"></a>
+7. Script Template 4: ASCII to Characters
+</h2><p>Use this when a field contains numbers such as <code>102,108,97,103</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">chars</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>If the CSV also contains an order column:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="8-script-template-5-hex-decoding">
+<a class="header-anchor" href="#8-script-template-5-hex-decoding"></a>
+8. Script Template 5: Hex Decoding
+</h2><p>The CSV may contain hex values such as <code>66</code>, <code>6c</code>, <code>61</code>, and <code>67</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_parts</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_string</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hex_parts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></div><p>If each row contains a complete hex string, you can decode it row by row:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span></code></pre></div><hr>
+<h2 id="9-script-template-6-reconstruct-an-image-from-coordinates">
+<a class="header-anchor" href="#9-script-template-6-reconstruct-an-image-from-coordinates"></a>
+9. Script Template 6: Reconstruct an Image from Coordinates
+</h2><p>If the CSV contains <code>x</code>, <code>y</code>, <code>value</code>, or <code>r</code>, <code>g</code>, <code>b</code>, it probably wants you to draw an image.</p>
+<p>Install Pillow first:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install pillow
+</span></span></code></pre></div><p>Black-and-white image reconstruction:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;L&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="mi">255</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">color</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">255</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">color</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] Saved result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>RGB image reconstruction:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;r&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;g&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;b&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] Saved result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>After saving the image, scan it directly if it is a QR code. If the orientation is wrong, try rotating, flipping, or enlarging it.</p>
+<hr>
+<h2 id="10-a-complete-solving-example">
+<a class="header-anchor" href="#10-a-complete-solving-example"></a>
+10. A Complete Solving Example
+</h2><p>Suppose the challenge gives you <code>data.csv</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">pos</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">9</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>The challenge gives no extra hints and only says &ldquo;find the flag&rdquo;.</p>
+<p>First, observe the fields:</p>
+<ul>
+<li><code>pos</code>: looks like an order.</li>
+<li><code>value</code>: looks like a character.</li>
+<li><code>valid</code>: looks like a filtering condition.</li>
+</ul>
+<p>So the idea is:</p>
+<ol>
+<li>Read the CSV.</li>
+<li>Keep only rows where <code>valid=1</code>.</li>
+<li>Sort by <code>pos</code> from small to large.</li>
+<li>Concatenate <code>value</code>.</li>
+</ol>
+<p>Final script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>Run it:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python solve.py
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>In a real contest, the output is usually:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{xxxxxxxxxxxxxxxx}
+</span></span></code></pre></div><hr>
+<h2 id="11-general-workflow-for-solving-csv-challenges">
+<a class="header-anchor" href="#11-general-workflow-for-solving-csv-challenges"></a>
+11. General Workflow for Solving CSV Challenges
+</h2><p>When you encounter a CSV challenge, follow this process:</p>
+<ol>
+<li><strong>Check the file name and description</strong>: look for hints such as sorting, coordinates, colors, encoding, logs, or traffic.</li>
+<li><strong>Check the header</strong>: field names usually point to the intended solving direction.</li>
+<li><strong>Print the first few rows</strong>: confirm what each column looks like.</li>
+<li><strong>Count rows and inspect field ranges</strong>: judge whether it may be image coordinates, ASCII, or a time series.</li>
+<li><strong>Write the smallest script first</strong>: make it read, print, and filter.</li>
+<li><strong>Add features step by step</strong>: sort, concatenate, decode, and draw.</li>
+<li><strong>Search for the flag format</strong>: finally use regex to extract <code>flag{...}</code>.</li>
+</ol>
+<hr>
+<h2 id="12-common-pitfalls">
+<a class="header-anchor" href="#12-common-pitfalls"></a>
+12. Common Pitfalls
+</h2><h3 id="121-encoding-errors">
+<a class="header-anchor" href="#121-encoding-errors"></a>
+12.1 Encoding Errors
+</h3><p>If <code>utf-8</code> fails, try:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;gbk&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Or:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8-sig&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p><code>utf-8-sig</code> can handle CSV files with a BOM.</p>
+<h3 id="122-numeric-sorting-turns-into-string-sorting">
+<a class="header-anchor" href="#122-numeric-sorting-turns-into-string-sorting"></a>
+12.2 Numeric Sorting Turns into String Sorting
+</h3><p>Wrong example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span></code></pre></div><p>If <code>x[0]</code> is a string, the order may become:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1, 10, 11, 2, 3
+</span></span></code></pre></div><p>So convert it to an integer:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span></code></pre></div><h3 id="123-the-separator-is-not-a-comma">
+<a class="header-anchor" href="#123-the-separator-is-not-a-comma"></a>
+12.3 The Separator Is Not a Comma
+</h3><p>Some files are called CSV, but actually use semicolons, tabs, or vertical bars as separators.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Tab-separated:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;</span><span class="se">\t</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="124-the-header-contains-spaces">
+<a class="header-anchor" href="#124-the-header-contains-spaces"></a>
+12.4 The Header Contains Spaces
+</h3><p>Some headers may look like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s"> index </span><span class="p">,</span><span class="s"> char</span><span class="p">
+</span></span></span></code></pre></div><p>This will make <code>row[&quot;index&quot;]</code> fail. Print the field names first:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span></code></pre></div><p>Or strip keys after reading:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span></span></code></pre></div>
+        
+        <hr><p>Published on 2026-05-15 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-15</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
     
       
     

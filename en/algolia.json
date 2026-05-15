@@ -6,6 +6,12 @@
     "updated": "2026-05-07 17:00:00"
   }, 
   {
+    "objectID": "74da0800fe74f8af9ac9bf99ad1b8d32c3fb1821",
+    "permalink": "/en/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/",
+    "title": "CTF CSV Challenge Tutorial","content": " CTF CSV Challenge Tutorial: What the Challenge Wants and How to Write the Python Script CSV challenges in CTFs are usually placed under Misc, data analysis, forensics, or scripting. They look like ordinary spreadsheet files, but the real test is not whether you can use Excel. The real test is whether you can find patterns in a large amount of structured data, extract the useful information, and finally recover the flag.\nIn one sentence: a CSV challenge wants you to process data with a script instead of reading it line by line with your eyes.\n1. What a CSV Challenge Usually Wants You to Do A CSV file is essentially a text file whose fields are separated by commas, for example:\nid,char,index 1,f,0 2,l,1 3,a,2 4,g,3 In CTF challenges, the flag may be split, shuffled, hidden, or encoded inside the table. Common goals include the following.\n1.1 Search for the Flag Directly The simplest case is that the flag is hidden in a certain row, column, or note field. The challenge may give you a …","date": "2026-05-15 11:00:00",
+    "updated": "2026-05-15 11:00:00"
+  }, 
+  {
     "objectID": "46591bed907a2c406ea2310cc4f2e91a8bddcc09",
     "permalink": "/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/",
     "title": "A Detailed Guide to CTF Tracks","content": " A Detailed Guide to CTF Tracks 1. What Is CTF CTF (Capture The Flag) is a cybersecurity competition format. Players solve challenges through analysis, exploitation, cryptanalysis, reverse engineering, and forensics, then submit a flag (usually a specially formatted string) for points.\nThe core of CTF is not memorizing tool commands. It is understanding system fundamentals, security mechanisms, and attacker/defender thinking under concrete challenge scenarios.\n1.1 Common Competition Formats Jeopardy: categorized challenges (Web, Pwn, Reverse, Crypto, Misc, etc.), submit flags one by one. Attack-Defense: attack other teams\u0026amp;rsquo; services while defending your own. King of the Hill: continuously hold target points to gain score. 1.2 Why CTF Matters Practical ability: turns fragmented knowledge into complete attack/defense chains. Engineering ability: automation, debugging, log analysis, and postmortem habits. Collaboration ability: team split, parallel progress, time management, and …","date": "2026-05-14 17:00:00",
