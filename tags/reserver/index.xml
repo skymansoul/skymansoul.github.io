@@ -335,7 +335,128 @@ Crypto
 </span></span></code></pre></div><h3 id="probabilistic_sponge">
 <a class="header-anchor" href="#probabilistic_sponge"></a>
 probabilistic_sponge
-</h3><p>还没有喵！</p>
+</h3><p>题目分析</p>
+<p>题面给的东西很少，核心就三份：</p>
+<ul>
+<li>challenge.py</li>
+<li>README.md</li>
+<li>论文2024-1136.pdf</li>
+</ul>
+<p>README.md只告诉我们最基本的交互方式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">digest &lt;seed&gt;
+</span></span><span class="line"><span class="cl">trace &lt;mode&gt; &lt;seed&gt;
+</span></span><span class="line"><span class="cl">submit &lt;seed_a&gt; &lt;seed_b&gt; &lt;proof&gt;
+</span></span></code></pre></div><p>输入是48-bit seed，本地可以算digest，远程还额外提供trace和submit。光看这个接口，很容易第一眼把它当成一道碰撞题，但真正把challenge.py读进去以后，会发现这题并不是随便找两个digest一样的seed。</p>
+<p>先读公开代码</p>
+<p>代码开头一组参数已经把题目的尺度说明白了：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">LANE_BITS</span> <span class="o">=</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="n">STATE_LANES</span> <span class="o">=</span> <span class="mi">25</span>
+</span></span><span class="line"><span class="cl"><span class="n">RATE_BYTES</span> <span class="o">=</span> <span class="mi">15</span>
+</span></span><span class="line"><span class="cl"><span class="n">BLOCK_BYTES</span> <span class="o">=</span> <span class="mi">15</span>
+</span></span><span class="line"><span class="cl"><span class="n">DIGEST_BYTES</span> <span class="o">=</span> <span class="mi">12</span>
+</span></span><span class="line"><span class="cl"><span class="n">SEED_BITS</span> <span class="o">=</span> <span class="mi">48</span>
+</span></span><span class="line"><span class="cl"><span class="n">LABEL_BITS</span> <span class="o">=</span> <span class="mi">15</span>
+</span></span><span class="line"><span class="cl"><span class="n">CORE_BITS</span> <span class="o">=</span> <span class="mi">28</span>
+</span></span><span class="line"><span class="cl"><span class="n">ROUNDS</span> <span class="o">=</span> <span class="mi">5</span>
+</span></span></code></pre></div><p>这不是标准 SHA-3，是一份缩小到Keccak-f[200]规模的变种：</p>
+<ul>
+<li>状态宽度200bit</li>
+<li>rate 120bit</li>
+<li>输出96 bit</li>
+<li>输入自由度48 bit</li>
+<li>轮数只有5</li>
+</ul>
+<p>继续往下看keccak_f_200_5()，theta、rho/pi、chi、iota 这些典型步骤都还在，说明这题不是一个胡乱拼起来的toy hash，而是明显保留了Keccak内部结构，只是把参数压小了。</p>
+<p>这时论文的作用也出来了。题面不是随便塞一篇论文，而是直接把你往SHA-3的collision / internal differential方向引。</p>
+<p>关键点一：输入不是任意消息</p>
+<p>最值得盯的是lift_seed()：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">lift_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">block</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">BASE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SEED_BITS</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">seed</span> <span class="o">&gt;&gt;</span> <span class="n">i</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">vec</span> <span class="o">=</span> <span class="n">BASIS</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">BLOCK_BYTES</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">                <span class="n">block</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">^=</span> <span class="n">vec</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+</span></span></code></pre></div><p>它说明第二个消息块m1不是直接由seed编码出来，而是从一个固定BASE出发，再按位异或若干个BASIS[i]。换句话说，选手控制的不是全部15-byte消息块，而是一个48维仿射空间里的点：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">BASE xor 若干个 BASIS[i]
+</span></span></code></pre></div><p>这会直接改变解题思路。既然输入本身带结构，那就不应该把它当成普通黑盒哈希去做生日碰撞，而应该想办法利用这个仿射空间。</p>
+<p>关键点二：digest 不是简单截断</p>
+<p>题目消息只有两块：</p>
+<ol>
+<li>第一块m0固定</li>
+<li>第二块m1由seed经lift_seed()生成</li>
+</ol>
+<p>然后第二次置换时，代码特地保留了一份倒数第二轮的状态快照：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">if</span> <span class="n">keep_round4</span> <span class="ow">and</span> <span class="n">rnd</span> <span class="o">==</span> <span class="n">ROUNDS</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">round4_state</span> <span class="o">=</span> <span class="n">state</span><span class="p">[:]</span>
+</span></span></code></pre></div><p>后面真正输出digest时，也不是把最终状态随手截一段出来，而是把两部分信息混在了一起：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">final_state</span><span class="p">,</span> <span class="n">round4_state</span> <span class="o">=</span> <span class="n">_absorb_two_blocks</span><span class="p">(</span><span class="n">M0</span><span class="p">,</span> <span class="n">m1</span><span class="p">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">round4_rate</span> <span class="o">=</span> <span class="n">_state_to_bytes</span><span class="p">(</span><span class="n">round4_state</span><span class="p">)[:</span><span class="n">RATE_BYTES</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">gate</span> <span class="o">=</span> <span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">LABEL_BITS</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">final_rate</span> <span class="o">=</span> <span class="n">_state_to_bytes</span><span class="p">(</span><span class="n">final_state</span><span class="p">)[:</span><span class="n">RATE_BYTES</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">core</span> <span class="o">=</span> <span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">CORE_BITS</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">x</span> <span class="o">^</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_stream_pad</span><span class="p">(</span><span class="n">gate</span><span class="p">),</span> <span class="n">_fanout</span><span class="p">(</span><span class="n">core</span><span class="p">)))</span>
+</span></span></code></pre></div><p>所以从代码直接能看出来两件事：</p>
+<ul>
+<li>这个digest混入了中间轮信息。</li>
+<li>出题人明显不希望你把它当成一个随机96-bit黑盒输出。</li>
+</ul>
+<p>题目为什么不像普通碰撞题？</p>
+<p>如果只是一个普通 hash 碰撞题，最自然的想法就是围着输出长度打生日攻击。但这里有几个地方都在告诉我们，题目重点不在“瞎撞 digest”：</p>
+<ul>
+<li>输入不是任意消息，而是仿射消息族</li>
+<li>轮数只有5</li>
+<li>输出和中间状态耦合</li>
+<li>题面还额外给了一篇讲SHA-3 collision / internal differential的论文</li>
+</ul>
+<p>论文里的关键词包括：</p>
+<ul>
+<li>internal differentials</li>
+<li>collision subsets</li>
+<li>probabilistic linearization</li>
+<li>TIDA</li>
+</ul>
+<p>这几个词和公开代码正好是对得上的。输入空间是结构化的，轮数又被压低，输出还带了中间状态特征，这非常像在给internal differential一类方法创造落点。</p>
+<p>所以这题更自然的理解应该是：</p>
+<ul>
+<li>先在公开代码里找内部结构</li>
+<li>再把论文里的攻击框架当提示</li>
+<li>最后借助远程接口去做筛选和验证</li>
+</ul>
+<p>trace 接口意味着什么</p>
+<p>远程除了digest之外，还给了：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">trace &lt;mode&gt; &lt;seed&gt;
+</span></span></code></pre></div><p>这玩意显然不是装饰。challenge.py本地根本没有trace的实现，说明远程额外暴露了某种内部观测值。题目到这里的味道就很明显了：本地代码负责告诉你结构，远程接口负责给你一些看不见但能测出来的信号。</p>
+<p>因此一个很自然的做法是：</p>
+<ol>
+<li>先在本地把seed -&gt; m1 -&gt; state -&gt; digest这条链吃透。</li>
+<li>再把远程trace当成额外标签，去观察不同seed在不同模式下的表现。</li>
+<li>通过大量样本比较digest和trace的关联，筛出更有希望属于同一类的候选。</li>
+</ol>
+<p>这条思路并不花哨，但和题目给出的材料是完全一致的。</p>
+<p>submit 在整条链里的位置</p>
+<p>README.md还告诉我们，最后要：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">submit &lt;seed_a&gt; &lt;seed_b&gt; &lt;proof&gt;
+</span></span></code></pre></div><p>并且proof 依赖当前连接的nonce，不能复用旧连接的数据。</p>
+<p>这说明整道题不是“离线把答案算完再一次性提交”，而是：</p>
+<ul>
+<li>先在本地和远程交互里找到候选对</li>
+<li>最后在真实会话里结合当前nonce完成提交</li>
+</ul>
+<p>整体解题路线</p>
+<p>把这些信息串起来，这题比较顺的做法应该就是：</p>
+<ol>
+<li>从challenge.py看出这是一个缩减版Keccak结构，而不是普通toy hash。</li>
+<li>注意到输入是仿射消息族，不能把它当任意消息空间。</li>
+<li>注意到digest混入了中间状态，不是最终状态平凡截断。</li>
+<li>结合论文，把注意力放到internal differential/collision subset这类结构性思路上。</li>
+<li>利用远程trace接口做实验，把候选seed分层、分组、筛选。</li>
+<li>找到满足要求的种子对后，在当前连接下结合nonce完成submit。</li>
+</ol>
+<p>总结</p>
+<p>challenge.py告诉你输入空间和输出结构，论文告诉你该往哪类攻击上想，远程trace再给你做实验所需的额外信号。
+所以真正的解题思路不是去撞 digest，而是先看懂这套缩减版Keccak结构，再利用远程观测把搜索压到更有希望的区域，最后完成带nonce的提交。</p>
 <h3 id="missing-bits">
 <a class="header-anchor" href="#missing-bits"></a>
 Missing Bits
