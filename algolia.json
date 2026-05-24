@@ -6,6 +6,12 @@
     "updated": "2026-05-07 17:00:00"
   }, 
   {
+    "objectID": "2b37c01c47fe34ee0f894046ae74076b96c4aef6",
+    "permalink": "/post/2026-01cuzwp/",
+    "title": "2026cuz第一次校赛wp","content": " 2026cuz第一次校赛wp 本wp由She11ud0联合战队联合撰写，M15tak3主编，yunli，hp，YuuJ13r，opureye，洪声越Jeff，沁deer_不哈一同撰写。\nMISC 圣经（签到） 通过010edit可以直接找到flag\nflag{th1s_is_a_flag_S0_easy}\nTIF 通过010edit打开找到疑似flag，尝试发现不是，后发现有hint，说是64，猜测可能有base64加密，尝试发现成功\nflag{sulphone0729}\nZIP 解压发现失败，密码也招募到，猜测可能有伪加密，在010edit中打开\n打开后发现确实有伪加密的情况，讲0x6的位置的09修改\n在最后发现文件结尾多出一段，猜测藏东西了\n用binwalk提取获得一张空白的图片，猜测可能lsb，用stegsolve看一下，找到flag\nflag{sulphone0956}\nWAV 给了一段音频（听歌放松一下）\n发现频谱图里面藏了flag，但提交后不正确，猜测可能还有，或者不正确\n将音频听完或看波形图\n有摩斯，厨师一下\n感觉像是一部分，拼接提交成功\nflag{CTFLeeathKSKBLZDJD}\n流量包审计 题目描述：内网的备份主机每天凌晨都会产生一些访问日志。管理员发现其中一台机器的 DNS 查询行为不太正常，但 HTTP 访问看起来只是普通巡检。 请从附件流量包中找出被带出的信息。\n题面提到“备份主机”“DNS 查询行为不太正常”，同时又说 HTTP 访问看起来像普通巡检。因此第一反应可以把重点放在 DNS 流量上：HTTP 很可能只是干扰，真正的数据通过 DNS 查询带出。\nDNS 隧道题常见特征有：\n查询域名里出现较长、随机感较强的 label；\n多个查询使用同一个可疑域名后缀；\nlabel 里包含 base32 / base64 / hex 这类编码字符；\n数据被拆成多个分片，需要重新排序后拼接。\n打开 office_backup.pcap 后，可以先看协议统计或直接在 Wireshark 里过滤 DNS：\ndns 会看到一些正常查询，例如：\nwww.example.com api.weather.local cdn.hzh-lab.local time.windows.com printer-01.office.local 同时还会看到一批格式很 …","date": "2026-05-24 17:00:00",
+    "updated": "2026-05-24 17:00:00"
+  }, 
+  {
     "objectID": "8853dbdef72e1f9972b77c00c6e2b79892fade0d",
     "permalink": "/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/",
     "title": "CTF 流量包","content": " CTF 流量包：从 PCAP 里把 flag 捞出来 CTF 里的流量包题，一般会给你一个 .pcap、.pcapng 或者压缩包，要求你从网络通信记录里找到 flag。\n这类题通常归在 Misc、Forensics 或者流量分析方向，核心不是背命令，而是还原“当时网络里发生了什么”。\n简单来说，流量包题就是在问你：\n谁和谁通信了？用了什么协议？传了什么内容？有没有被编码、压缩、拆分或者隐藏？\n只要能按这个思路一步步排查，大多数入门到中等难度的流量题都能处理。\n1. 常用工具 1.1 Wireshark Wireshark 是做流量包题最常用的图形化工具。\n它可以查看每一个数据包，也可以按协议、IP、端口、关键字进行过滤。\n常用功能：\n查看协议统计 查看 IP 会话 过滤 HTTP、DNS、FTP、ICMP 等协议 追踪 TCP 流 导出 HTTP 传输文件 查看数据包中的明文内容 打开流量包后，最常用的两个入口是：\nStatistics -\u0026amp;gt; Protocol Hierarchy Statistics -\u0026amp;gt; Conversations 第一个用来看有哪些协议，第二个用来看哪些主机之间有通信。\n1.2 tshark tshark 是 Wireshark 的命令行版本，适合批量提取字段。\n查看流量包基本内容：\ntshark -r traffic.pcap 查看 HTTP 请求：\ntshark -r traffic.pcap -Y \u0026amp;#34;http.request\u0026amp;#34; 提取 DNS 查询域名：\ntshark -r traffic.pcap -Y \u0026amp;#34;dns.qry.name\u0026amp;#34; -T fields -e dns.qry.name 提取 ICMP 数据字段：\ntshark -r traffic.pcap -Y \u0026amp;#34;icmp\u0026amp;#34; -T fields -e data 1.3 strings strings 适合第一时间粗略搜索明文内容。\nstrings traffic.pcap | grep -i flag strings traffic.pcap | grep -i password strings traffic.pcap | grep -i admin strings traffic.pcap | grep -i …","date": "2026-05-15 18:30:00",
