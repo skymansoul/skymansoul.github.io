@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CSV on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/tags/csv/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>zh-CN</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
+    
+    <lastBuildDate>Fri, 15 May 2026 11:00:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/tags/csv/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>CTF CSV题目教程</title>
+      <link>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <description>
+        <![CDATA[<h1>CTF CSV题目教程</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="ctf-csv题目教程题目想让你干嘛以及python脚本怎么写">
+<a class="header-anchor" href="#ctf-csv%e9%a2%98%e7%9b%ae%e6%95%99%e7%a8%8b%e9%a2%98%e7%9b%ae%e6%83%b3%e8%ae%a9%e4%bd%a0%e5%b9%b2%e5%98%9b%e4%bb%a5%e5%8f%8apython%e8%84%9a%e6%9c%ac%e6%80%8e%e4%b9%88%e5%86%99"></a>
+CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
+</h1><p>CSV题在CTF里通常会被归到Misc、数据分析、取证或者脚本题里面。它看起来像一个很普通的表格文件，但题目真正考的不是Excel用得熟不熟，而是：你能不能从大量结构化数据里找到规律，把有效信息提取出来，最后还原出flag。</p>
+<p>一句话概括：<strong>CSV题就是让你写脚本批量处理数据，而不是用肉眼一行一行看。</strong></p>
+<hr>
+<h2 id="1-csv题目一般想让你干嘛">
+<a class="header-anchor" href="#1-csv%e9%a2%98%e7%9b%ae%e4%b8%80%e8%88%ac%e6%83%b3%e8%ae%a9%e4%bd%a0%e5%b9%b2%e5%98%9b"></a>
+1. CSV题目一般想让你干嘛
+</h2><p>CSV文件本质上就是“用逗号分隔字段的文本文件”，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">char</span><span class="p">,</span><span class="s">index</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">2</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">3</span><span class="p">
+</span></span></span></code></pre></div><p>CTF题目会把flag拆散、打乱、隐藏或者编码后放进表格里。常见目标有下面几种。</p>
+<h3 id="11直接搜索flag">
+<a class="header-anchor" href="#11%e7%9b%b4%e6%8e%a5%e6%90%9c%e7%b4%a2flag"></a>
+1.1直接搜索flag
+</h3><p>最简单的情况是flag被藏在某一行、某一列、某个备注字段里。题目可能给你一个很大的CSV，让你不能靠肉眼快速找到。</p>
+<p>你要做的是：</p>
+<ol>
+<li>读取CSV。</li>
+<li>遍历每一行。</li>
+<li>在每个字段里搜索<code>flag{</code>、<code>ctf{</code>、<code>FLAG{</code>之类的关键词。</li>
+</ol>
+<h3 id="12按某一列排序后拼接字符">
+<a class="header-anchor" href="#12%e6%8c%89%e6%9f%90%e4%b8%80%e5%88%97%e6%8e%92%e5%ba%8f%e5%90%8e%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6"></a>
+1.2按某一列排序后拼接字符
+</h3><p>很多题会把flag拆成一个一个字符，然后打乱顺序，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">pos</span><span class="p">,</span><span class="s">ch</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>这时题目想让你根据<code>pos</code>排序，再把<code>ch</code>拼起来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>这种题的关键是找出“顺序列”和“字符列”。</p>
+<h3 id="13按条件筛选有效行">
+<a class="header-anchor" href="#13%e6%8c%89%e6%9d%a1%e4%bb%b6%e7%ad%9b%e9%80%89%e6%9c%89%e6%95%88%e8%a1%8c"></a>
+1.3按条件筛选有效行
+</h3><p>有些CSV会放大量干扰数据，只有满足条件的行才是真的。例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">?</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">6</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>题目想让你筛选<code>valid=1</code>的行，再拼接<code>value</code>。</p>
+<p>这种题的核心是：<strong>先过滤，再提取，再拼接。</strong></p>
+<h3 id="14对字段做编码转换">
+<a class="header-anchor" href="#14%e5%af%b9%e5%ad%97%e6%ae%b5%e5%81%9a%e7%bc%96%e7%a0%81%e8%bd%ac%e6%8d%a2"></a>
+1.4对字段做编码转换
+</h3><p>CSV里面可能存的不是直接字符，而是ASCII、十六进制、二进制、Base64等编码。</p>
+<p>例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">ascii</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">102</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">108</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">97</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">103</span><span class="p">
+</span></span></span></code></pre></div><p>这里<code>102 108 97 103</code>对应ASCII字符：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>所以你需要把数字转成字符：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">chr</span><span class="p">(</span><span class="mi">102</span><span class="p">)</span>  <span class="c1"># f</span>
+</span></span></code></pre></div><h3 id="15用坐标还原图片或二维码">
+<a class="header-anchor" href="#15%e7%94%a8%e5%9d%90%e6%a0%87%e8%bf%98%e5%8e%9f%e5%9b%be%e7%89%87%e6%88%96%e4%ba%8c%e7%bb%b4%e7%a0%81"></a>
+1.5用坐标还原图片或二维码
+</h3><p>稍微进阶一点的CSV题会给你坐标和颜色，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">x</span><span class="p">,</span><span class="s">y</span><span class="p">,</span><span class="s">color</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span></code></pre></div><p>这种题可能想让你把CSV还原成一张图片、二维码或者像素图。你要做的是：</p>
+<ol>
+<li>读取<code>x</code>、<code>y</code>坐标。</li>
+<li>根据颜色值画点。</li>
+<li>保存成图片。</li>
+<li>扫二维码或者看图得到flag。</li>
+</ol>
+<hr>
+<h2 id="2拿到csv文件后先看什么">
+<a class="header-anchor" href="#2%e6%8b%bf%e5%88%b0csv%e6%96%87%e4%bb%b6%e5%90%8e%e5%85%88%e7%9c%8b%e4%bb%80%e4%b9%88"></a>
+2.拿到CSV文件后先看什么
+</h2><p>不要一上来就写复杂脚本。先做基本观察。</p>
+<h3 id="21看表头">
+<a class="header-anchor" href="#21%e7%9c%8b%e8%a1%a8%e5%a4%b4"></a>
+2.1看表头
+</h3><p>表头通常会暴露题目思路，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">index, char, order, ascii, hex, x, y, r, g, b, valid
+</span></span></code></pre></div><p>看到不同字段，可以大概判断方向：</p>
+<table>
+  <thead>
+      <tr>
+          <th>字段名</th>
+          <th>可能含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>index</code> / <code>pos</code> / <code>order</code></td>
+          <td>排序</td>
+      </tr>
+      <tr>
+          <td><code>char</code> / <code>ch</code> / <code>value</code></td>
+          <td>拼接字符</td>
+      </tr>
+      <tr>
+          <td><code>ascii</code></td>
+          <td>ASCII转字符</td>
+      </tr>
+      <tr>
+          <td><code>hex</code></td>
+          <td>十六进制解码</td>
+      </tr>
+      <tr>
+          <td><code>bin</code></td>
+          <td>二进制解码</td>
+      </tr>
+      <tr>
+          <td><code>x</code> / <code>y</code></td>
+          <td>坐标画图</td>
+      </tr>
+      <tr>
+          <td><code>r</code> / <code>g</code> / <code>b</code></td>
+          <td>RGB图片</td>
+      </tr>
+      <tr>
+          <td><code>valid</code> / <code>flag</code> / <code>is_true</code></td>
+          <td>筛选有效数据</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="22看数据量">
+<a class="header-anchor" href="#22%e7%9c%8b%e6%95%b0%e6%8d%ae%e9%87%8f"></a>
+2.2看数据量
+</h3><p>如果只有几十行，可以手动观察规律。如果有几千、几万行，就必须写脚本。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;data.csv&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;行数:&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;表头:&#34;</span><span class="p">,</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;前 5 行:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="23看有没有异常值">
+<a class="header-anchor" href="#23%e7%9c%8b%e6%9c%89%e6%b2%a1%e6%9c%89%e5%bc%82%e5%b8%b8%e5%80%bc"></a>
+2.3看有没有异常值
+</h3><p>CTF题经常把关键信息藏在异常值里，比如：</p>
+<ul>
+<li>某一列只有一行特别长。</li>
+<li>某一行包含<code>{</code>或<code>}</code>。</li>
+<li>某些数字明显是ASCII范围：<code>32</code>到<code>126</code>。</li>
+<li>某些字段像十六进制：<code>66 6c 61 67</code>。</li>
+<li>某些字段像Base64：结尾可能有<code>=</code>。</li>
+</ul>
+<hr>
+<h2 id="3-python读取csv的基础写法">
+<a class="header-anchor" href="#3-python%e8%af%bb%e5%8f%96csv%e7%9a%84%e5%9f%ba%e7%a1%80%e5%86%99%e6%b3%95"></a>
+3. Python读取CSV的基础写法
+</h2><p>推荐优先使用Python标准库里的<code>csv</code>，不需要安装第三方库。</p>
+<h3 id="31按字典方式读取">
+<a class="header-anchor" href="#31%e6%8c%89%e5%ad%97%e5%85%b8%e6%96%b9%e5%bc%8f%e8%af%bb%e5%8f%96"></a>
+3.1按字典方式读取
+</h3><p>如果CSV有表头，用<code>DictReader</code>最方便。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><p>假设CSV是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">char</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>读出来的每一行就是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="p">{</span><span class="s2">&#34;index&#34;</span><span class="p">:</span> <span class="s2">&#34;0&#34;</span><span class="p">,</span> <span class="s2">&#34;char&#34;</span><span class="p">:</span> <span class="s2">&#34;f&#34;</span><span class="p">}</span>
+</span></span></code></pre></div><p>注意：<strong>CSV读出来的内容默认都是字符串。</strong><br>
+如果要排序或者计算，需要手动转成<code>int</code>。</p>
+<hr>
+<h2 id="4脚本模板一直接搜索flag">
+<a class="header-anchor" href="#4%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%b8%80%e7%9b%b4%e6%8e%a5%e6%90%9c%e7%b4%a2flag"></a>
+4.脚本模板一：直接搜索flag
+</h2><p>适用于题目给了一个很大的CSV，你怀疑flag直接藏在里面。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;flag\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">col_no</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="k">match</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[+] 第 </span><span class="si">{</span><span class="n">line_no</span><span class="si">}</span><span class="s2"> 行，第 </span><span class="si">{</span><span class="n">col_no</span><span class="si">}</span><span class="s2"> 列找到 flag:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="k">match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+</span></span></code></pre></div><p>如果比赛的flag格式不是<code>flag{}</code>，就改这里：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;你的比赛前缀\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="5脚本模板二排序后拼接字符">
+<a class="header-anchor" href="#5%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%ba%8c%e6%8e%92%e5%ba%8f%e5%90%8e%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6"></a>
+5.脚本模板二：排序后拼接字符
+</h2><p>适用于CSV里有<code>index</code>和<code>char</code>之类的列。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;char&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>这类题最常见的改动点是列名。比如题目里叫<code>pos</code>和<code>value</code>，就改成：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span></code></pre></div><hr>
+<h2 id="6脚本模板三筛选有效行后拼接">
+<a class="header-anchor" href="#6%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%b8%89%e7%ad%9b%e9%80%89%e6%9c%89%e6%95%88%e8%a1%8c%e5%90%8e%e6%8b%bc%e6%8e%a5"></a>
+6.脚本模板三：筛选有效行后拼接
+</h2><p>适用于CSV里有一列用来标记是否有效，例如<code>valid</code>、<code>is_flag</code>、<code>status</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果还需要排序，就把筛选和排序结合起来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">]),</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="7脚本模板四ascii转字符">
+<a class="header-anchor" href="#7%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e5%9b%9bascii%e8%bd%ac%e5%ad%97%e7%ac%a6"></a>
+7.脚本模板四：ASCII转字符
+</h2><p>适用于字段里是一堆数字，例如<code>102,108,97,103</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">chars</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果CSV里面还有顺序列：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="8脚本模板五十六进制解码">
+<a class="header-anchor" href="#8%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%ba%94%e5%8d%81%e5%85%ad%e8%bf%9b%e5%88%b6%e8%a7%a3%e7%a0%81"></a>
+8.脚本模板五：十六进制解码
+</h2><p>CSV中可能有类似<code>66</code>、<code>6c</code>、<code>61</code>、<code>67</code>这样的十六进制数据。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_parts</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_string</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hex_parts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果每一行是完整的一段十六进制，也可以逐行解码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span></code></pre></div><hr>
+<h2 id="9脚本模板六坐标还原图片">
+<a class="header-anchor" href="#9%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e5%85%ad%e5%9d%90%e6%a0%87%e8%bf%98%e5%8e%9f%e5%9b%be%e7%89%87"></a>
+9.脚本模板六：坐标还原图片
+</h2><p>如果CSV里有<code>x</code>、<code>y</code>、<code>value</code>或者<code>r</code>、<code>g</code>、<code>b</code>，大概率是让你画图。</p>
+<p>先安装Pillow：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install pillow
+</span></span></code></pre></div><p>黑白图还原：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;L&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="mi">255</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">color</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">255</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">color</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] 已保存 result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>RGB彩色图还原：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;r&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;g&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;b&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] 已保存 result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>保存出来以后，如果是二维码，可以直接扫码；如果图像方向不对，可以尝试旋转、翻转或者放大。</p>
+<hr>
+<h2 id="10一个完整解题示例">
+<a class="header-anchor" href="#10%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e8%a7%a3%e9%a2%98%e7%a4%ba%e4%be%8b"></a>
+10.一个完整解题示例
+</h2><p>假设题目给了<code>data.csv</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">pos</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">9</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>题目没有多余提示，只说“find the flag”。</p>
+<p>我们先观察字段：</p>
+<ul>
+<li><code>pos</code>：像是顺序。</li>
+<li><code>value</code>：像是字符。</li>
+<li><code>valid</code>：像是筛选条件。</li>
+</ul>
+<p>所以思路就是：</p>
+<ol>
+<li>读取CSV。</li>
+<li>只保留<code>valid=1</code>的行。</li>
+<li>按<code>pos</code>从小到大排序。</li>
+<li>拼接<code>value</code>。</li>
+</ol>
+<p>最终脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python solve.py
+</span></span></code></pre></div><p>输出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>真实比赛里输出一般会是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{xxxxxxxxxxxxxxxx}
+</span></span></code></pre></div><hr>
+<h2 id="11解csv题的通用套路">
+<a class="header-anchor" href="#11%e8%a7%a3csv%e9%a2%98%e7%9a%84%e9%80%9a%e7%94%a8%e5%a5%97%e8%b7%af"></a>
+11.解CSV题的通用套路
+</h2><p>遇到CSV题，可以按这个流程走：</p>
+<ol>
+<li><strong>看文件名和题目描述</strong>：有没有提示排序、坐标、颜色、编码、日志、流量等关键词。</li>
+<li><strong>看表头</strong>：字段名通常就是题目给你的解题方向。</li>
+<li><strong>打印前几行</strong>：确认每列数据长什么样。</li>
+<li><strong>统计行数和字段范围</strong>：判断是不是图片坐标、ASCII、时间序列。</li>
+<li><strong>先写最小脚本</strong>：能读、能打印、能筛选就行。</li>
+<li><strong>逐步加功能</strong>：排序、拼接、解码、画图。</li>
+<li><strong>搜索flag格式</strong>：最后用正则提取<code>flag{...}</code>。</li>
+</ol>
+<hr>
+<h2 id="12常见坑">
+<a class="header-anchor" href="#12%e5%b8%b8%e8%a7%81%e5%9d%91"></a>
+12.常见坑
+</h2><h3 id="121编码错误">
+<a class="header-anchor" href="#121%e7%bc%96%e7%a0%81%e9%94%99%e8%af%af"></a>
+12.1编码错误
+</h3><p>如果<code>utf-8</code>报错，可以试试：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;gbk&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>或者：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8-sig&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p><code>utf-8-sig</code>可以处理带BOM的CSV文件。</p>
+<h3 id="122数字排序变成字符串排序">
+<a class="header-anchor" href="#122%e6%95%b0%e5%ad%97%e6%8e%92%e5%ba%8f%e5%8f%98%e6%88%90%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8e%92%e5%ba%8f"></a>
+12.2数字排序变成字符串排序
+</h3><p>错误示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span></code></pre></div><p>如果<code>x[0]</code>是字符串，会出现：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1, 10, 11, 2, 3
+</span></span></code></pre></div><p>所以要转成整数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span></code></pre></div><h3 id="123分隔符不是逗号">
+<a class="header-anchor" href="#123%e5%88%86%e9%9a%94%e7%ac%a6%e4%b8%8d%e6%98%af%e9%80%97%e5%8f%b7"></a>
+12.3分隔符不是逗号
+</h3><p>有些文件虽然叫CSV，但实际用的是分号、Tab或竖线分隔。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Tab分隔：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;</span><span class="se">\t</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="124表头有空格">
+<a class="header-anchor" href="#124%e8%a1%a8%e5%a4%b4%e6%9c%89%e7%a9%ba%e6%a0%bc"></a>
+12.4表头有空格
+</h3><p>有些表头可能是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s"> index </span><span class="p">,</span><span class="s"> char</span><span class="p">
+</span></span></span></code></pre></div><p>这会导致<code>row[&quot;index&quot;]</code>取不到。可以先打印：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span></code></pre></div><p>或者读取后把key清理一下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span></span></code></pre></div>
+        
+        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

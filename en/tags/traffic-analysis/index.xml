@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Traffic Analysis on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/en/tags/traffic-analysis/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Fri, 15 May 2026 18:30:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/en/tags/traffic-analysis/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>CTF Traffic Capture Analysis</title>
+      <link>https://blog.m15tak3.com/en/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
+      <pubDate>Fri, 15 May 2026 18:30:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
+      <description>
+        <![CDATA[<h1>CTF Traffic Capture Analysis</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="ctf-traffic-capture-extracting-the-flag-from-pcap">
+<a class="header-anchor" href="#ctf-traffic-capture-extracting-the-flag-from-pcap"></a>
+CTF Traffic Capture: Extracting the Flag from PCAP
+</h1><p>In CTF traffic challenges, you are usually given a <code>.pcap</code>, <code>.pcapng</code>, or a compressed archive, and asked to recover a <code>flag</code> from network communication records.</p>
+<p>These problems are usually classified under Misc, Forensics, or Traffic Analysis. The core skill is not memorizing commands, but reconstructing what happened on the network.</p>
+<p>In short, traffic challenges ask:</p>
+<blockquote>
+<p>Who talked to whom? Which protocol was used? What data was sent? Was it encoded, compressed, split, or hidden?</p>
+</blockquote>
+<p>As long as you follow this logic step by step, you can solve most beginner-to-intermediate traffic tasks.</p>
+<hr>
+<h2 id="1-common-tools">
+<a class="header-anchor" href="#1-common-tools"></a>
+1. Common Tools
+</h2><h3 id="11-wireshark">
+<a class="header-anchor" href="#11-wireshark"></a>
+1.1 Wireshark
+</h3><p>Wireshark is the most common GUI tool for traffic challenges.</p>
+<p>It lets you inspect each packet and filter by protocol, IP, port, or keywords.</p>
+<p>Common features:</p>
+<ul>
+<li>Protocol statistics</li>
+<li>IP conversations</li>
+<li>Filters for HTTP, DNS, FTP, ICMP, etc.</li>
+<li>Follow TCP stream</li>
+<li>Export HTTP transferred files</li>
+<li>Inspect plaintext in packets</li>
+</ul>
+<p>After opening a capture, two key entries are:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>The first shows which protocols exist; the second shows which hosts communicated.</p>
+<h3 id="12-tshark">
+<a class="header-anchor" href="#12-tshark"></a>
+1.2 tshark
+</h3><p><code>tshark</code> is the CLI version of Wireshark, great for batch extraction.</p>
+<p>Show basic capture content:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap
+</span></span></code></pre></div><p>Show HTTP requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;http.request&#34;</span>
+</span></span></code></pre></div><p>Extract DNS query names:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>Extract ICMP data field:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><h3 id="13-strings">
+<a class="header-anchor" href="#13-strings"></a>
+1.3 strings
+</h3><p><code>strings</code> is useful for quick plaintext keyword scanning.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i flag
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i password
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i admin
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i upload
+</span></span></code></pre></div><p>For easy tasks, <code>strings</code> may directly find the flag. If not, it can still reveal suspicious requests, credentials, or filenames.</p>
+<h3 id="14-binwalk-and-foremost">
+<a class="header-anchor" href="#14-binwalk-and-foremost"></a>
+1.4 binwalk and foremost
+</h3><p>If file content was transferred in the capture (images, archives, docs), try file carving:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">binwalk traffic.pcap
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">foremost traffic.pcap
+</span></span></code></pre></div><p>These are supporting tools. In traffic analysis, protocol and conversation analysis usually come first.</p>
+<hr>
+<h2 id="2-basic-workflow-after-getting-a-capture">
+<a class="header-anchor" href="#2-basic-workflow-after-getting-a-capture"></a>
+2. Basic Workflow After Getting a Capture
+</h2><h3 id="21-read-the-challenge-description-first">
+<a class="header-anchor" href="#21-read-the-challenge-description-first"></a>
+2.1 Read the challenge description first
+</h3><p>The description usually gives direction, for example:</p>
+<ul>
+<li>Password leaked during admin login</li>
+<li>Hacker uploaded a file</li>
+<li>Secret hidden in DNS queries</li>
+<li>Flag sent through ICMP</li>
+<li>Recover keyboard input</li>
+<li>Find what attacker downloaded</li>
+</ul>
+<p>If it mentions HTTP, prioritize HTTP requests and responses.
+If it mentions DNS, prioritize domain extraction.
+If it mentions keyboard, consider USB HID traffic.
+If it mentions upload/download, pay attention to exported files.</p>
+<p>Often the description already tells you the key protocol.</p>
+<h3 id="22-check-protocol-statistics">
+<a class="header-anchor" href="#22-check-protocol-statistics"></a>
+2.2 Check protocol statistics
+</h3><p>In Wireshark:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span></code></pre></div><p>Focus on:</p>
+<ul>
+<li>Plaintext protocols such as HTTP, FTP, DNS, ICMP</li>
+<li>Special traffic such as USB, Bluetooth, 802.11</li>
+<li>TCP/UDP ratio anomalies</li>
+<li>Presence of encrypted TLS traffic</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>Heavy HTTP proportion: likely web requests/responses matter</li>
+<li>Many strange long DNS names: possible DNS tunneling</li>
+<li>Many ICMP packets: inspect <code>data</code></li>
+<li>FTP present: look for plaintext credentials and transferred files</li>
+</ul>
+<h3 id="23-check-conversations">
+<a class="header-anchor" href="#23-check-conversations"></a>
+2.3 Check conversations
+</h3><p>Open:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>Focus on:</p>
+<ul>
+<li>Which IP pair has the most traffic</li>
+<li>External suspicious IPs</li>
+<li>Large data-volume connections</li>
+<li>Suspicious ports</li>
+<li>Obvious upload/download behavior</li>
+</ul>
+<p>Common ports to remember:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">21    FTP
+</span></span><span class="line"><span class="cl">22    SSH
+</span></span><span class="line"><span class="cl">25    SMTP
+</span></span><span class="line"><span class="cl">53    DNS
+</span></span><span class="line"><span class="cl">80    HTTP
+</span></span><span class="line"><span class="cl">110   POP3
+</span></span><span class="line"><span class="cl">143   IMAP
+</span></span><span class="line"><span class="cl">443   HTTPS
+</span></span><span class="line"><span class="cl">3306  MySQL
+</span></span><span class="line"><span class="cl">6379  Redis
+</span></span></code></pre></div><p>If one TCP conversation is much larger than others, it may contain file transfer or critical data.</p>
+<hr>
+<h2 id="3-common-wireshark-filters">
+<a class="header-anchor" href="#3-common-wireshark-filters"></a>
+3. Common Wireshark Filters
+</h2><h3 id="31-filter-by-protocol">
+<a class="header-anchor" href="#31-filter-by-protocol"></a>
+3.1 Filter by protocol
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span><span class="line"><span class="cl">dns
+</span></span><span class="line"><span class="cl">ftp
+</span></span><span class="line"><span class="cl">icmp
+</span></span><span class="line"><span class="cl">tcp
+</span></span><span class="line"><span class="cl">udp
+</span></span><span class="line"><span class="cl">usb
+</span></span></code></pre></div><h3 id="32-filter-by-ip">
+<a class="header-anchor" href="#32-filter-by-ip"></a>
+3.2 Filter by IP
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ip.addr == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.src == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.dst == 192.168.1.10
+</span></span></code></pre></div><h3 id="33-filter-by-port">
+<a class="header-anchor" href="#33-filter-by-port"></a>
+3.3 Filter by port
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.port == 80
+</span></span><span class="line"><span class="cl">tcp.srcport == 8080
+</span></span><span class="line"><span class="cl">tcp.dstport == 21
+</span></span><span class="line"><span class="cl">udp.port == 53
+</span></span></code></pre></div><h3 id="34-search-by-keyword">
+<a class="header-anchor" href="#34-search-by-keyword"></a>
+3.4 Search by keyword
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">frame contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;password&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;admin&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;ctf&#34;
+</span></span></code></pre></div><p>For HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">http contains &#34;password&#34;
+</span></span></code></pre></div><h3 id="35-inspect-one-tcp-stream">
+<a class="header-anchor" href="#35-inspect-one-tcp-stream"></a>
+3.5 Inspect one TCP stream
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>Right-click a TCP packet:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>This is one of the most important operations in traffic tasks.
+A single packet might be incomplete, but stream reassembly shows full request/response content.</p>
+<hr>
+<h2 id="4-http-traffic-analysis">
+<a class="header-anchor" href="#4-http-traffic-analysis"></a>
+4. HTTP Traffic Analysis
+</h2><p>HTTP is very common in CTF traffic because it is often plaintext.</p>
+<h3 id="41-filter-http-requests">
+<a class="header-anchor" href="#41-filter-http-requests"></a>
+4.1 Filter HTTP requests
+</h3><p>Only HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span></code></pre></div><p>Only HTTP requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request
+</span></span></code></pre></div><p>Only GET requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;GET&#34;
+</span></span></code></pre></div><p>Only POST requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;POST&#34;
+</span></span></code></pre></div><p>POST is especially important for logins, form submissions, and uploads.</p>
+<h3 id="42-what-to-inspect-in-http">
+<a class="header-anchor" href="#42-what-to-inspect-in-http"></a>
+4.2 What to inspect in HTTP
+</h3><p>Common clue locations:</p>
+<ul>
+<li>URL parameters</li>
+<li>POST body</li>
+<li>Cookie</li>
+<li>Authorization header</li>
+<li>Referer</li>
+<li>User-Agent</li>
+<li>Response body</li>
+<li>Uploaded file content</li>
+<li>Returned archives/images/scripts</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="nf">POST</span> <span class="nn">/login.php</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span><span class="o">:</span> <span class="l">example.com</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Type</span><span class="o">:</span> <span class="l">application/x-www-form-urlencoded</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">username=admin&amp;password=YWRtaW4xMjM=
+</span></span></code></pre></div><p><code>YWRtaW4xMjM=</code> looks like Base64. Decoded value:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin123
+</span></span></code></pre></div><p>This credential may be the key for archive extraction, panel login, or flag submission.</p>
+<h3 id="43-export-http-objects">
+<a class="header-anchor" href="#43-export-http-objects"></a>
+4.3 Export HTTP objects
+</h3><p>If files were transferred via HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">File -&gt; Export Objects -&gt; HTTP
+</span></span></code></pre></div><p>Then check file type:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">file suspicious_file
+</span></span></code></pre></div><p>If archive: try extract.
+If image: consider steganography.
+If script: inspect source code.
+If filename/response/comment contains strange strings: attempt decoding.</p>
+<hr>
+<h2 id="5-ftp-traffic-analysis">
+<a class="header-anchor" href="#5-ftp-traffic-analysis"></a>
+5. FTP Traffic Analysis
+</h2><p>FTP is often friendly for CTF because usernames, passwords, and commands may be plaintext.</p>
+<p>Filter FTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp
+</span></span></code></pre></div><p>Common content:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">USER admin
+</span></span><span class="line"><span class="cl">PASS 123456
+</span></span></code></pre></div><p>If file transfer exists, inspect:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp-data
+</span></span></code></pre></div><p>You can follow related TCP streams to reconstruct transmitted content.</p>
+<p>Typical FTP task goals:</p>
+<ul>
+<li>Find credentials</li>
+<li>Find uploaded/downloaded filenames</li>
+<li>Restore transferred files</li>
+<li>Continue decryption or hidden-content analysis on extracted files</li>
+</ul>
+<hr>
+<h2 id="6-dns-tunneling-analysis">
+<a class="header-anchor" href="#6-dns-tunneling-analysis"></a>
+6. DNS Tunneling Analysis
+</h2><p>DNS challenges often split data into subdomains.</p>
+<p>Filter DNS:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">dns
+</span></span></code></pre></div><p>Extract query names:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>You may see:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3s.example.com
+</span></span><span class="line"><span class="cl">ZG5zXw.example.com
+</span></span><span class="line"><span class="cl">c2VjcmV0fQ.example.com
+</span></span></code></pre></div><p>Take and concatenate the left parts:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3sZG5zXwc2VjcmV0fQ
+</span></span></code></pre></div><p>Then try Base64, Hex, URL decode, etc.</p>
+<p>Common DNS tunneling signs:</p>
+<ul>
+<li>Very long subdomains</li>
+<li>Random-looking domain labels</li>
+<li>Fragments that can be concatenated across many requests</li>
+<li>Clear Base64-like character sets</li>
+<li>Abnormally high query frequency</li>
+</ul>
+<p>If the domain contains <code>-</code>, <code>_</code>, digits, mixed case, consider Base64 URL-safe variants.</p>
+<hr>
+<h2 id="7-icmp-traffic-analysis">
+<a class="header-anchor" href="#7-icmp-traffic-analysis"></a>
+7. ICMP Traffic Analysis
+</h2><p>ICMP is the protocol used by ping.
+In CTF, data is often hidden in ICMP <code>data</code> fields.</p>
+<p>Filter ICMP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp
+</span></span></code></pre></div><p>Extract ICMP data:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><p>If you get hex like:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b69636d705f7365637265747d
+</span></span></code></pre></div><p>Decode with Python:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;666c61677b69636d705f7365637265747d&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{icmp_secret}
+</span></span></code></pre></div><p>Remember deduplication.
+Ping usually has request and reply; concatenating all ICMP payloads may duplicate data.</p>
+<p>Only requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 8
+</span></span></code></pre></div><p>Only replies:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 0
+</span></span></code></pre></div><hr>
+<h2 id="8-tcp-stream-following">
+<a class="header-anchor" href="#8-tcp-stream-following"></a>
+8. TCP Stream Following
+</h2><p>TCP stream following is a core operation in traffic challenges.</p>
+<p>In Wireshark, select a TCP packet and right-click:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>This shows full client-server communication for that connection.</p>
+<p>Switch streams with:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>Prioritize stream-following when:</p>
+<ul>
+<li>HTTP content appears incomplete</li>
+<li>FTP transfers files</li>
+<li>Suspicious port has large data</li>
+<li>You only see a partial flag or encoded fragment</li>
+<li>Data is split into many packets</li>
+</ul>
+<p>After opening a stream, try display formats:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ASCII
+</span></span><span class="line"><span class="cl">Raw
+</span></span><span class="line"><span class="cl">Hex Dump
+</span></span></code></pre></div><p>If needed, choose <code>Raw</code> and save original data.</p>
+<hr>
+<h2 id="9-usb-keyboard-traffic-analysis">
+<a class="header-anchor" href="#9-usb-keyboard-traffic-analysis"></a>
+9. USB Keyboard Traffic Analysis
+</h2><p>Some challenges are not network captures but USB captures.
+A common task is reconstructing keyboard input.</p>
+<p>Filter USB data:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">usb.capdata
+</span></span></code></pre></div><p>Extract field:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r usb.pcap -T fields -e usb.capdata
+</span></span></code></pre></div><p>Keyboard HID data often looks like:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">00:00:04:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:05:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:06:00:00:00:00:00
+</span></span></code></pre></div><p>The third byte usually indicates key code:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">04 -&gt; a
+</span></span><span class="line"><span class="cl">05 -&gt; b
+</span></span><span class="line"><span class="cl">06 -&gt; c
+</span></span></code></pre></div><p>If first byte is <code>02</code> or <code>20</code>, Shift is typically pressed, so convert to uppercase/symbols.</p>
+<p>Typical USB keyboard workflow:</p>
+<ol>
+<li>Extract <code>usb.capdata</code></li>
+<li>Remove empty entries</li>
+<li>Take key codes</li>
+<li>Map using HID keyboard table</li>
+<li>Handle special keys: Shift, Backspace, Enter</li>
+</ol>
+<hr>
+<h2 id="10-common-encodings-and-decoding-ideas">
+<a class="header-anchor" href="#10-common-encodings-and-decoding-ideas"></a>
+10. Common Encodings and Decoding Ideas
+</h2><p>Flags in captures are not always directly visible. They are often encoded.</p>
+<h3 id="101-base64">
+<a class="header-anchor" href="#101-base64"></a>
+10.1 Base64
+</h3><p>Features:</p>
+<ul>
+<li>Usually letters, digits, <code>+</code>, <code>/</code></li>
+<li>May end with <code>=</code></li>
+<li>Length often multiple of 4</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3t0ZXN0X2ZsYWd9
+</span></span></code></pre></div><p>Decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> ZmxhZ3t0ZXN0X2ZsYWd9 <span class="p">|</span> base64 -d
+</span></span></code></pre></div><h3 id="102-hex">
+<a class="header-anchor" href="#102-hex"></a>
+10.2 Hex
+</h3><p>Features:</p>
+<ul>
+<li>Only <code>0-9a-fA-F</code></li>
+<li>Length usually even</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b6865785f656e636f64657d
+</span></span></code></pre></div><p>Python decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="s2">&#34;666c61677b6865785f656e636f64657d&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><h3 id="103-url-encoding">
+<a class="header-anchor" href="#103-url-encoding"></a>
+10.3 URL encoding
+</h3><p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">%66%6c%61%67%7b%75%72%6c%7d
+</span></span></code></pre></div><p>Python decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">unquote</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">unquote</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%66%</span><span class="s2">6c</span><span class="si">%61%</span><span class="s2">67%7b</span><span class="si">%75%</span><span class="s2">72</span><span class="si">%6c%7d</span><span class="s2">&#34;</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="104-compressed-data-signatures">
+<a class="header-anchor" href="#104-compressed-data-signatures"></a>
+10.4 Compressed data signatures
+</h3><p>If you see these magic bytes, consider decompression or file recovery:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1f 8b       gzip
+</span></span><span class="line"><span class="cl">78 9c       zlib
+</span></span><span class="line"><span class="cl">50 4b       zip
+</span></span><span class="line"><span class="cl">89 50 4e 47 png
+</span></span><span class="line"><span class="cl">ff d8 ff    jpg
+</span></span></code></pre></div><p>Be sensitive to magic bytes.
+Sometimes transferred data is a real file, even if extension is fake.</p>
+<hr>
+<h2 id="11-a-general-troubleshooting-checklist">
+<a class="header-anchor" href="#11-a-general-troubleshooting-checklist"></a>
+11. A General Troubleshooting Checklist
+</h2><p>After receiving a capture, follow this order:</p>
+<ol>
+<li>Read challenge description and infer likely protocols.</li>
+<li>Use <code>strings</code> to search <code>flag</code>, <code>admin</code>, <code>password</code>, <code>ctf</code>.</li>
+<li>In Wireshark, inspect <code>Protocol Hierarchy</code>.</li>
+<li>Use <code>Conversations</code> to find high-volume sessions.</li>
+<li>Filter common protocols: HTTP, FTP, DNS, ICMP.</li>
+<li>For suspicious TCP connections, use <code>Follow TCP Stream</code>.</li>
+<li>If HTTP transferred files, use <code>Export Objects</code>.</li>
+<li>Try Base64/Hex/URL decode on suspicious strings.</li>
+<li>Continue with stego/decompression/script analysis on exported files.</li>
+<li>If data is fragmented, extract fields with <code>tshark</code> and merge via script.</li>
+</ol>
+<p>Not every challenge requires every step, but this flow prevents blind random clicking.</p>
+<hr>
+<h2 id="12-practical-experience-tips">
+<a class="header-anchor" href="#12-practical-experience-tips"></a>
+12. Practical Experience Tips
+</h2><h3 id="121-do-not-only-search-for-flag">
+<a class="header-anchor" href="#121-do-not-only-search-for-flag"></a>
+12.1 Do not only search for <code>flag</code>
+</h3><p>Many tasks do not directly expose <code>flag{}</code>.
+You may first find a password, archive, image, script, or key.</p>
+<p>Besides <code>flag</code>, also search:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin
+</span></span><span class="line"><span class="cl">password
+</span></span><span class="line"><span class="cl">pass
+</span></span><span class="line"><span class="cl">login
+</span></span><span class="line"><span class="cl">upload
+</span></span><span class="line"><span class="cl">download
+</span></span><span class="line"><span class="cl">secret
+</span></span><span class="line"><span class="cl">key
+</span></span><span class="line"><span class="cl">token
+</span></span><span class="line"><span class="cl">ctf
+</span></span></code></pre></div><h3 id="122-prioritize-large-data-connections">
+<a class="header-anchor" href="#122-prioritize-large-data-connections"></a>
+12.2 Prioritize large-data connections
+</h3><p>If one TCP connection has significantly more data than others, it often carries key content or files.</p>
+<h3 id="123-prioritize-plaintext-protocols">
+<a class="header-anchor" href="#123-prioritize-plaintext-protocols"></a>
+12.3 Prioritize plaintext protocols
+</h3><p>HTTP, FTP, DNS, ICMP are often the fastest path in CTF traffic problems.
+If these protocols exist, analyze them first before heavy TLS-focused work.</p>
+<h3 id="124-decode-abnormal-long-strings-immediately">
+<a class="header-anchor" href="#124-decode-abnormal-long-strings-immediately"></a>
+12.4 Decode abnormal long strings immediately
+</h3><p>Unusually long strings in URL, Cookie, POST params, DNS subdomains, or ICMP data are often intentional clues.</p>
+<h3 id="125-script-repetitive-work">
+<a class="header-anchor" href="#125-script-repetitive-work"></a>
+12.5 Script repetitive work
+</h3><p>If you need to combine hundreds of DNS queries, ICMP payloads, or USB key events, do not do it manually.
+Extract with <code>tshark</code>, process with Python, and reduce mistakes.</p>
+<hr>
+<h2 id="13-summary">
+<a class="header-anchor" href="#13-summary"></a>
+13. Summary
+</h2><p>Typical traffic-analysis route in CTF:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Description -&gt; Protocol Statistics -&gt; Conversation Analysis -&gt; Protocol Filtering -&gt; TCP Stream Following -&gt; Data Extraction -&gt; Decoding -&gt; File Analysis
+</span></span></code></pre></div><p>For HTTP: inspect requests, responses, cookies, POST body, and exported files.
+For FTP: look for credentials and transferred files.
+For DNS: extract domain labels and attempt concatenation/decoding.
+For ICMP: inspect <code>data</code> fields.
+For USB: reconstruct input with HID keyboard mapping.</p>
+
+        
+        <hr><p>Published on 2026-05-15 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-15</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

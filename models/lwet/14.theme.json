@@ -1,0 +1,128 @@
+{
+  "type": "Live2D Model Setting",
+  "name": "Violet",
+  "model": "Violet.moc",
+  "textures": [
+    "Violet.1024/texture_00.png"
+  ],
+  "layout": {
+    "width": 4.25,
+    "center_x": -0.08,
+    "center_y": -1.35
+  },
+  "motions": {
+    "idle": [
+      {
+        "file": "motions/idle01.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle02.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle03.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle04.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "start": [
+      {
+        "file": "motions/start.mtn",
+        "sound": "sound/start.mp3",
+        "text": "Good day. I am Violet, an Auto Memory Doll.",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_head": [
+      {
+        "file": "motions/tap_face.mtn",
+        "text": "Do you have words you wish me to write?",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_body": [
+      {
+        "file": "motions/tap_body.mtn",
+        "sound": "sound/tap_body.mp3",
+        "text": "I am here. Please speak slowly; I will listen.",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_arm_left": [
+      {
+        "file": "motions/tap_Lhand.mtn",
+        "sound": "sound/tap_Lhand.mp3",
+        "text": "These hands exist to turn feelings into words.",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_arm_right": [
+      {
+        "file": "motions/tap_Rhand.mtn",
+        "sound": "sound/tap_Rhand.mp3",
+        "text": "If you wish, I can write on your behalf.",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_skirt": [
+      {
+        "file": "motions/tap_qunzi.mtn",
+        "text": "Please keep proper manners. It would put me at ease.",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "new_msg": [
+      {
+        "file": "motions/tap_Lhand.mtn",
+        "sound": "sound/tap_Lhand.mp3",
+        "text": "Are there new words that need to be delivered?",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ]
+  },
+  "hit_areas": [
+    {
+      "name": "head",
+      "id": "D_REF.face"
+    },
+    {
+      "name": "body",
+      "id": "D_REF.body"
+    },
+    {
+      "name": "arm_left",
+      "id": "D_REF.Lhand"
+    },
+    {
+      "name": "arm_right",
+      "id": "D_REF.Rhand"
+    },
+    {
+      "name": "skirt",
+      "id": "D_REF.QUNZI"
+    }
+  ],
+  "loop_params": [
+    {
+      "id": "PARAM_HBPL",
+      "duration": 8000,
+      "type": 0,
+      "weight": 1.0
+    }
+  ]
+}

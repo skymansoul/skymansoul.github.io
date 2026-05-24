@@ -1,0 +1,259 @@
+{
+  "mouseover": [
+    {
+      "selector": "#live2d",
+      "text": [
+        "Good day. I am Violet, an Auto Memory Doll.",
+        "If there are feelings you wish to convey, I will put them into words.",
+        "Please take your time. Important words deserve care.",
+        "Are there words you would like me to write for you?"
+      ]
+    },
+    {
+      "selector": "#live2d-tool-hitokoto",
+      "text": [
+        "A single sentence can sometimes travel very far.",
+        "I will bring you a fitting line."
+      ]
+    },
+    {
+      "selector": "#live2d-tool-photo",
+      "text": [
+        "A photograph? I will stand properly.",
+        "If this is a memory, I shall treat it with care."
+      ]
+    },
+    {
+      "selector": "#live2d-tool-info",
+      "text": [
+        "This records a little information about me.",
+        "If you wish to know, I will answer plainly."
+      ]
+    },
+    {
+      "selector": "#live2d-tool-quit",
+      "text": [
+        "If this is farewell, may we meet again in the next letter.",
+        "I will wait here for your next visit."
+      ]
+    },
+    {
+      "selector": "a[href='/'], a[href='/zh-cn/'], a[href='/zh-CN/']",
+      "text": [
+        "Returning home is like turning a letter back to its first line.",
+        "Please begin again from here."
+      ]
+    },
+    {
+      "selector": "a[href$='/about']",
+      "text": [
+        "This page tells a little about the Major.",
+        "To know the Major is also to read a long letter."
+      ]
+    },
+    {
+      "selector": "a[href='/friend'], a[href$='/friend/'], a[href='/en/friend'], a[href$='/en/friend/']",
+      "text": [
+        "These are the Major's friends.",
+        "Those important to the Major are recorded here with care."
+      ]
+    },
+    {
+      "selector": "a[href='/tags'], a[href$='/tags/']",
+      "text": [
+        "Tags gather similar words together.",
+        "Please follow the clues to the articles you need."
+      ]
+    },
+    {
+      "selector": "a[href='/categories'], a[href$='/categories/']",
+      "text": [
+        "The categories have been arranged.",
+        "An orderly index makes the journey easier."
+      ]
+    },
+    {
+      "selector": "a[href='/archives'], a[href$='/archives/']",
+      "text": [
+        "The archive keeps what was written before.",
+        "Time passes, but words remain."
+      ]
+    },
+    {
+      "selector": ".copy-btn",
+      "text": [
+        "Copied. Please remember to keep the source.",
+        "May these words be useful to you."
+      ]
+    },
+    {
+      "selector": "a[href^='mailto']",
+      "text": [
+        "A letter will be delivered. Please do not worry.",
+        "If it is important, please write it carefully."
+      ]
+    },
+    {
+      "selector": "a[href^='/tags/'], a[href*='/tags/']",
+      "text": [
+        "Would you like to read articles under <span>{text}</span>?",
+        "This tag may lead you to the words you need."
+      ]
+    },
+    {
+      "selector": "a[href^='/categories/'], a[href*='/categories/']",
+      "text": [
+        "Would you like to view <span>{text}</span>?",
+        "The articles in this category have been arranged."
+      ]
+    },
+    {
+      "selector": "#post-list > div",
+      "text": [
+        "Would you like to read <span>{text}</span>?",
+        "If the title moved you, please continue."
+      ]
+    },
+    {
+      "selector": "a[rel='contents']",
+      "text": [
+        "Please continue reading.",
+        "The main text begins here."
+      ]
+    },
+    {
+      "selector": ".container a[href^='http'], .nav-link .nav-text",
+      "text": [
+        "Would you like to visit <span>{text}</span>?",
+        "This will open another page."
+      ]
+    },
+    {
+      "selector": ".back-to-top",
+      "text": [
+        "Let us return to the top.",
+        "Like smoothing out a sheet of paper."
+      ]
+    },
+    {
+      "selector": ".rounded-base",
+      "text": [
+        "If you wish to leave a message, I will listen.",
+        "Please write down what you want to say."
+      ]
+    },
+    {
+      "selector": ".btn-secondary",
+      "text": [
+        "Are you ready to send it?",
+        "Please check your words once more."
+      ]
+    },
+    {
+      "selector": ".comment-item",
+      "text": [
+        "Someone has left words here.",
+        "Every message is a small arrival."
+      ]
+    }
+  ],
+  "click": [
+    {
+      "selector": "#live2d",
+      "text": [
+        "Do you need me to write for you?",
+        "I am here. Please tell me what you wish to convey.",
+        "Please be gentle.",
+        "If there is something you want to say, I will hear it through."
+      ]
+    },
+    {
+      "selector": ".rounded-base",
+      "text": [
+        "Please write your message.",
+        "Words may be clumsy, but feelings do not disappear."
+      ]
+    },
+    {
+      "selector": ".btn-secondary",
+      "text": [
+        "Your message is about to be sent."
+      ]
+    }
+  ],
+  "seasons": [
+    {
+      "date": "01/01",
+      "text": "<span>New year</span>. May there be many things worth writing down."
+    },
+    {
+      "date": "02/14",
+      "text": "It is <span>Valentine's Day</span>. If there are feelings you cannot speak, I can write them."
+    },
+    {
+      "date": "04/01",
+      "text": "It is <span>April Fools' Day</span>. A joke may be light, but sincerity should still be kept safe."
+    },
+    {
+      "date": "09/10",
+      "text": "It is <span>Teachers' Day</span>. Thank you to those who taught us how to express ourselves."
+    },
+    {
+      "date": "10/01",
+      "text": "It is <span>National Day</span>. May people far away be safe."
+    },
+    {
+      "date": "12/20-12/31",
+      "text": "The year is ending. If there are important words, please do not forget to write them."
+    }
+  ],
+  "time": [
+    {
+      "hour": "6-7",
+      "text": "Good morning. A new day has begun."
+    },
+    {
+      "hour": "8-11",
+      "text": "Good morning. May your thoughts be clear and your keyboard steady."
+    },
+    {
+      "hour": "12-13",
+      "text": "It is noon. Please eat on time; rest is also important work."
+    },
+    {
+      "hour": "14-17",
+      "text": "Good afternoon. If you are tired, please drink some water first."
+    },
+    {
+      "hour": "18-19",
+      "text": "Evening has come. The words of the day may slowly settle."
+    },
+    {
+      "hour": "20-21",
+      "text": "Good evening. You have worked hard today."
+    },
+    {
+      "hour": "22-23",
+      "text": [
+        "It is late. Please do not push yourself too hard.",
+        "If something remains unfinished, tomorrow is still waiting."
+      ]
+    },
+    {
+      "hour": "0-5",
+      "text": "You are still awake so late. Please take care of yourself."
+    }
+  ],
+  "message": {
+    "default": [
+      "Good day. I am Violet, an Auto Memory Doll.",
+      "If there are feelings you wish to convey, I will write them down.",
+      "Words are sometimes difficult. I will help you search for them.",
+      "Welcome back. Please guide me again today.",
+      "Please entrust important feelings to words."
+    ],
+    "console": "You opened the console. It records another side of this page.",
+    "copy": "The text has been copied. Please remember to cite the source.",
+    "visibilitychange": "Welcome back. I have been waiting here."
+  }
+}

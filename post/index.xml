@@ -1,0 +1,1584 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/post/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>zh-CN</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
+    
+    <lastBuildDate>Fri, 15 May 2026 18:30:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/post/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>CTF 流量包</title>
+      <link>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
+      <pubDate>Fri, 15 May 2026 18:30:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
+      <description>
+        <![CDATA[<h1>CTF 流量包</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="ctf-流量包从-pcap-里把-flag-捞出来">
+<a class="header-anchor" href="#ctf-%e6%b5%81%e9%87%8f%e5%8c%85%e4%bb%8e-pcap-%e9%87%8c%e6%8a%8a-flag-%e6%8d%9e%e5%87%ba%e6%9d%a5"></a>
+CTF 流量包：从 PCAP 里把 flag 捞出来
+</h1><p>CTF 里的流量包题，一般会给你一个 <code>.pcap</code>、<code>.pcapng</code> 或者压缩包，要求你从网络通信记录里找到 flag。<br>
+这类题通常归在 Misc、Forensics 或者流量分析方向，核心不是背命令，而是还原“当时网络里发生了什么”。</p>
+<p>简单来说，流量包题就是在问你：</p>
+<blockquote>
+<p>谁和谁通信了？用了什么协议？传了什么内容？有没有被编码、压缩、拆分或者隐藏？</p>
+</blockquote>
+<p>只要能按这个思路一步步排查，大多数入门到中等难度的流量题都能处理。</p>
+<hr>
+<h2 id="1-常用工具">
+<a class="header-anchor" href="#1-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+1. 常用工具
+</h2><h3 id="11-wireshark">
+<a class="header-anchor" href="#11-wireshark"></a>
+1.1 Wireshark
+</h3><p>Wireshark 是做流量包题最常用的图形化工具。<br>
+它可以查看每一个数据包，也可以按协议、IP、端口、关键字进行过滤。</p>
+<p>常用功能：</p>
+<ul>
+<li>查看协议统计</li>
+<li>查看 IP 会话</li>
+<li>过滤 HTTP、DNS、FTP、ICMP 等协议</li>
+<li>追踪 TCP 流</li>
+<li>导出 HTTP 传输文件</li>
+<li>查看数据包中的明文内容</li>
+</ul>
+<p>打开流量包后，最常用的两个入口是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>第一个用来看有哪些协议，第二个用来看哪些主机之间有通信。</p>
+<h3 id="12-tshark">
+<a class="header-anchor" href="#12-tshark"></a>
+1.2 tshark
+</h3><p><code>tshark</code> 是 Wireshark 的命令行版本，适合批量提取字段。</p>
+<p>查看流量包基本内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap
+</span></span></code></pre></div><p>查看 HTTP 请求：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;http.request&#34;</span>
+</span></span></code></pre></div><p>提取 DNS 查询域名：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>提取 ICMP 数据字段：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><h3 id="13-strings">
+<a class="header-anchor" href="#13-strings"></a>
+1.3 strings
+</h3><p><code>strings</code> 适合第一时间粗略搜索明文内容。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i flag
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i password
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i admin
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i upload
+</span></span></code></pre></div><p>如果题目比较简单，直接用 <code>strings</code> 就可能搜到 flag。<br>
+如果搜不到，也可以通过关键词找到可疑请求、账号密码或者文件名。</p>
+<h3 id="14-binwalk-和-foremost">
+<a class="header-anchor" href="#14-binwalk-%e5%92%8c-foremost"></a>
+1.4 binwalk 和 foremost
+</h3><p>如果流量包里传输过图片、压缩包、文档等文件，可以尝试分离文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">binwalk traffic.pcap
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">foremost traffic.pcap
+</span></span></code></pre></div><p>不过这类工具更适合作为辅助。做流量分析时，优先还是应该先看协议和会话。</p>
+<hr>
+<h2 id="2-拿到流量包后的基本流程">
+<a class="header-anchor" href="#2-%e6%8b%bf%e5%88%b0%e6%b5%81%e9%87%8f%e5%8c%85%e5%90%8e%e7%9a%84%e5%9f%ba%e6%9c%ac%e6%b5%81%e7%a8%8b"></a>
+2. 拿到流量包后的基本流程
+</h2><h3 id="21-先看题目描述">
+<a class="header-anchor" href="#21-%e5%85%88%e7%9c%8b%e9%a2%98%e7%9b%ae%e6%8f%8f%e8%bf%b0"></a>
+2.1 先看题目描述
+</h3><p>题目描述往往会给方向，比如：</p>
+<ul>
+<li>“管理员登录时泄露了密码”</li>
+<li>“黑客上传了一个文件”</li>
+<li>“DNS 请求里藏着秘密”</li>
+<li>“有人通过 ICMP 传输了 flag”</li>
+<li>“还原键盘输入”</li>
+<li>“找到攻击者下载的文件”</li>
+</ul>
+<p>如果题目提到 HTTP，就优先看 HTTP 请求和响应。<br>
+如果题目提到 DNS，就优先提取域名。<br>
+如果题目提到键盘，就考虑 USB HID 流量。<br>
+如果题目提到上传、下载，就要注意文件导出。</p>
+<p>很多时候，题目描述已经把最重要的协议告诉你了。</p>
+<h3 id="22-看协议统计">
+<a class="header-anchor" href="#22-%e7%9c%8b%e5%8d%8f%e8%ae%ae%e7%bb%9f%e8%ae%a1"></a>
+2.2 看协议统计
+</h3><p>在 Wireshark 中打开：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span></code></pre></div><p>重点观察：</p>
+<ul>
+<li>有没有 HTTP、FTP、DNS、ICMP 等明文协议</li>
+<li>有没有 USB、Bluetooth、802.11 等特殊流量</li>
+<li>TCP、UDP 流量比例是否异常</li>
+<li>是否存在 TLS 加密流量</li>
+</ul>
+<p>如果 HTTP 占比很高，大概率要看网页请求。<br>
+如果 DNS 查询很多，而且域名看起来很长、很乱，就要怀疑 DNS 隐写。<br>
+如果 ICMP 包很多，就要看 data 字段。<br>
+如果出现 FTP，优先找明文账号密码和传输文件。</p>
+<h3 id="23-看通信会话">
+<a class="header-anchor" href="#23-%e7%9c%8b%e9%80%9a%e4%bf%a1%e4%bc%9a%e8%af%9d"></a>
+2.3 看通信会话
+</h3><p>打开：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>重点关注：</p>
+<ul>
+<li>哪两个 IP 之间通信最多</li>
+<li>是否有异常外部 IP</li>
+<li>是否有大流量连接</li>
+<li>是否出现可疑端口</li>
+<li>是否有明显的上传或下载行为</li>
+</ul>
+<p>常见端口可以先记住这些：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">21    FTP
+</span></span><span class="line"><span class="cl">22    SSH
+</span></span><span class="line"><span class="cl">25    SMTP
+</span></span><span class="line"><span class="cl">53    DNS
+</span></span><span class="line"><span class="cl">80    HTTP
+</span></span><span class="line"><span class="cl">110   POP3
+</span></span><span class="line"><span class="cl">143   IMAP
+</span></span><span class="line"><span class="cl">443   HTTPS
+</span></span><span class="line"><span class="cl">3306  MySQL
+</span></span><span class="line"><span class="cl">6379  Redis
+</span></span></code></pre></div><p>如果发现某条 TCP 会话数据量特别大，很可能里面传了文件或者关键内容。</p>
+<hr>
+<h2 id="3-wireshark-常用过滤语法">
+<a class="header-anchor" href="#3-wireshark-%e5%b8%b8%e7%94%a8%e8%bf%87%e6%bb%a4%e8%af%ad%e6%b3%95"></a>
+3. Wireshark 常用过滤语法
+</h2><p>做题时过滤器用得越熟，找线索越快。</p>
+<h3 id="31-按协议过滤">
+<a class="header-anchor" href="#31-%e6%8c%89%e5%8d%8f%e8%ae%ae%e8%bf%87%e6%bb%a4"></a>
+3.1 按协议过滤
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span><span class="line"><span class="cl">dns
+</span></span><span class="line"><span class="cl">ftp
+</span></span><span class="line"><span class="cl">icmp
+</span></span><span class="line"><span class="cl">tcp
+</span></span><span class="line"><span class="cl">udp
+</span></span><span class="line"><span class="cl">usb
+</span></span></code></pre></div><h3 id="32-按-ip-过滤">
+<a class="header-anchor" href="#32-%e6%8c%89-ip-%e8%bf%87%e6%bb%a4"></a>
+3.2 按 IP 过滤
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ip.addr == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.src == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.dst == 192.168.1.10
+</span></span></code></pre></div><h3 id="33-按端口过滤">
+<a class="header-anchor" href="#33-%e6%8c%89%e7%ab%af%e5%8f%a3%e8%bf%87%e6%bb%a4"></a>
+3.3 按端口过滤
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.port == 80
+</span></span><span class="line"><span class="cl">tcp.srcport == 8080
+</span></span><span class="line"><span class="cl">tcp.dstport == 21
+</span></span><span class="line"><span class="cl">udp.port == 53
+</span></span></code></pre></div><h3 id="34-按关键字搜索">
+<a class="header-anchor" href="#34-%e6%8c%89%e5%85%b3%e9%94%ae%e5%ad%97%e6%90%9c%e7%b4%a2"></a>
+3.4 按关键字搜索
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">frame contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;password&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;admin&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;ctf&#34;
+</span></span></code></pre></div><p>如果是 HTTP，也可以写得更具体：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">http contains &#34;password&#34;
+</span></span></code></pre></div><h3 id="35-查看某一条-tcp-流">
+<a class="header-anchor" href="#35-%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%80%e6%9d%a1-tcp-%e6%b5%81"></a>
+3.5 查看某一条 TCP 流
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>右键某个 TCP 包：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>这是流量题里最常用的操作之一。<br>
+因为单个数据包可能只是一小段内容，追踪 TCP 流才能看到完整请求和响应。</p>
+<hr>
+<h2 id="4-http-流量分析">
+<a class="header-anchor" href="#4-http-%e6%b5%81%e9%87%8f%e5%88%86%e6%9e%90"></a>
+4. HTTP 流量分析
+</h2><p>HTTP 是最常见的流量题协议，因为它经常是明文。</p>
+<h3 id="41-过滤-http-请求">
+<a class="header-anchor" href="#41-%e8%bf%87%e6%bb%a4-http-%e8%af%b7%e6%b1%82"></a>
+4.1 过滤 HTTP 请求
+</h3><p>只看 HTTP：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span></code></pre></div><p>只看 HTTP 请求：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request
+</span></span></code></pre></div><p>只看 GET 请求：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;GET&#34;
+</span></span></code></pre></div><p>只看 POST 请求：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;POST&#34;
+</span></span></code></pre></div><p>POST 请求尤其值得关注，因为登录、提交表单、上传文件经常使用 POST。</p>
+<h3 id="42-重点看哪些位置">
+<a class="header-anchor" href="#42-%e9%87%8d%e7%82%b9%e7%9c%8b%e5%93%aa%e4%ba%9b%e4%bd%8d%e7%bd%ae"></a>
+4.2 重点看哪些位置
+</h3><p>HTTP 流量中常见线索位置：</p>
+<ul>
+<li>URL 参数</li>
+<li>POST 表单</li>
+<li>Cookie</li>
+<li>Authorization 头</li>
+<li>Referer</li>
+<li>User-Agent</li>
+<li>响应正文</li>
+<li>文件上传内容</li>
+<li>返回的压缩包、图片、脚本</li>
+</ul>
+<p>例如看到请求：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="nf">POST</span> <span class="nn">/login.php</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span><span class="o">:</span> <span class="l">example.com</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Type</span><span class="o">:</span> <span class="l">application/x-www-form-urlencoded</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">username=admin&amp;password=YWRtaW4xMjM=
+</span></span></code></pre></div><p><code>YWRtaW4xMjM=</code> 看起来像 Base64，解码后是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin123
+</span></span></code></pre></div><p>这类账号密码可能就是后续解压文件、登录后台或者提交 flag 的关键。</p>
+<h3 id="43-导出-http-文件">
+<a class="header-anchor" href="#43-%e5%af%bc%e5%87%ba-http-%e6%96%87%e4%bb%b6"></a>
+4.3 导出 HTTP 文件
+</h3><p>如果 HTTP 中传输了文件，可以在 Wireshark 中导出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">File -&gt; Export Objects -&gt; HTTP
+</span></span></code></pre></div><p>导出后检查文件类型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">file suspicious_file
+</span></span></code></pre></div><p>如果是压缩包，就尝试解压。<br>
+如果是图片，就考虑图片隐写。<br>
+如果是脚本，就查看源码。<br>
+如果文件名、响应内容或注释里有奇怪字符串，也要尝试解码。</p>
+<hr>
+<h2 id="5-ftp-流量分析">
+<a class="header-anchor" href="#5-ftp-%e6%b5%81%e9%87%8f%e5%88%86%e6%9e%90"></a>
+5. FTP 流量分析
+</h2><p>FTP 在 CTF 中非常友好，因为用户名、密码和命令很多时候都是明文。</p>
+<p>过滤 FTP：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp
+</span></span></code></pre></div><p>常见内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">USER admin
+</span></span><span class="line"><span class="cl">PASS 123456
+</span></span></code></pre></div><p>如果发现传输文件，继续看：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp-data
+</span></span></code></pre></div><p>可以右键追踪 TCP 流，尝试还原传输内容。</p>
+<p>FTP 题常见考点：</p>
+<ul>
+<li>找登录账号密码</li>
+<li>找上传或下载的文件名</li>
+<li>还原传输文件</li>
+<li>从文件中继续解密或隐写分析</li>
+</ul>
+<hr>
+<h2 id="6-dns-隐写分析">
+<a class="header-anchor" href="#6-dns-%e9%9a%90%e5%86%99%e5%88%86%e6%9e%90"></a>
+6. DNS 隐写分析
+</h2><p>DNS 题经常把数据拆开放在子域名里。</p>
+<p>过滤 DNS：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">dns
+</span></span></code></pre></div><p>提取查询域名：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>可能会看到类似内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3s.example.com
+</span></span><span class="line"><span class="cl">ZG5zXw.example.com
+</span></span><span class="line"><span class="cl">c2VjcmV0fQ.example.com
+</span></span></code></pre></div><p>取出前面的子域名并拼接：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3sZG5zXwc2VjcmV0fQ
+</span></span></code></pre></div><p>然后尝试 Base64、Hex、URL 编码等方式解码。</p>
+<p>DNS 隐写常见特征：</p>
+<ul>
+<li>子域名很长</li>
+<li>域名由大量随机字符组成</li>
+<li>多个请求的子域名可以拼接</li>
+<li>出现明显的 Base64 字符集</li>
+<li>查询频率异常高</li>
+</ul>
+<p>如果域名里出现 <code>-</code>、<code>_</code>、数字和大小写字母混合，也可以考虑 Base64 URL Safe 编码。</p>
+<hr>
+<h2 id="7-icmp-流量分析">
+<a class="header-anchor" href="#7-icmp-%e6%b5%81%e9%87%8f%e5%88%86%e6%9e%90"></a>
+7. ICMP 流量分析
+</h2><p>ICMP 就是常见的 ping 协议。<br>
+CTF 中经常把信息藏在 ICMP 的 data 字段里。</p>
+<p>过滤 ICMP：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp
+</span></span></code></pre></div><p>提取 ICMP 数据：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><p>如果得到的是十六进制字符串，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b69636d705f7365637265747d
+</span></span></code></pre></div><p>可以用 Python 转换：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;666c61677b69636d705f7365637265747d&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><p>输出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{icmp_secret}
+</span></span></code></pre></div><p>ICMP 题要注意去重。<br>
+因为 ping 通常有 request 和 reply，如果直接把所有 ICMP 数据都拼接，可能会重复一遍。</p>
+<p>可以只看请求包：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 8
+</span></span></code></pre></div><p>或者只看响应包：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 0
+</span></span></code></pre></div><hr>
+<h2 id="8-tcp-流追踪">
+<a class="header-anchor" href="#8-tcp-%e6%b5%81%e8%bf%bd%e8%b8%aa"></a>
+8. TCP 流追踪
+</h2><p>TCP 流追踪是流量包题的核心操作。</p>
+<p>在 Wireshark 中选中一个 TCP 包，右键：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>然后可以看到这条连接中完整的客户端和服务器通信。</p>
+<p>如果想看不同 TCP 流，可以使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>遇到下面这些情况，优先追踪 TCP 流：</p>
+<ul>
+<li>HTTP 请求内容显示不完整</li>
+<li>FTP 传输文件</li>
+<li>可疑端口上有大量数据</li>
+<li>看到一部分 flag 或编码字符串</li>
+<li>数据包被拆成很多段</li>
+</ul>
+<p>追踪 TCP 流后，可以切换显示方式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ASCII
+</span></span><span class="line"><span class="cl">Raw
+</span></span><span class="line"><span class="cl">Hex Dump
+</span></span></code></pre></div><p>如果要导出原始数据，可以选择 <code>Raw</code> 后保存。</p>
+<hr>
+<h2 id="9-usb-键盘流量分析">
+<a class="header-anchor" href="#9-usb-%e9%94%ae%e7%9b%98%e6%b5%81%e9%87%8f%e5%88%86%e6%9e%90"></a>
+9. USB 键盘流量分析
+</h2><p>有些题给的不是网络流量，而是 USB 抓包。<br>
+常见题型是还原键盘输入。</p>
+<p>过滤 USB 数据：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">usb.capdata
+</span></span></code></pre></div><p>提取字段：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r usb.pcap -T fields -e usb.capdata
+</span></span></code></pre></div><p>键盘 HID 数据通常类似：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">00:00:04:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:05:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:06:00:00:00:00:00
+</span></span></code></pre></div><p>第三个字节通常表示按键码。<br>
+例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">04 -&gt; a
+</span></span><span class="line"><span class="cl">05 -&gt; b
+</span></span><span class="line"><span class="cl">06 -&gt; c
+</span></span></code></pre></div><p>如果第一个字节是 <code>02</code> 或 <code>20</code>，通常表示按下了 Shift，需要转换成大写或符号。</p>
+<p>USB 键盘题常见流程：</p>
+<ol>
+<li>提取 <code>usb.capdata</code></li>
+<li>过滤空数据</li>
+<li>取出按键码</li>
+<li>根据 HID 键盘映射表还原字符</li>
+<li>处理 Shift、Backspace、Enter 等特殊按键</li>
+</ol>
+<hr>
+<h2 id="10-常见编码和解码思路">
+<a class="header-anchor" href="#10-%e5%b8%b8%e8%a7%81%e7%bc%96%e7%a0%81%e5%92%8c%e8%a7%a3%e7%a0%81%e6%80%9d%e8%b7%af"></a>
+10. 常见编码和解码思路
+</h2><p>流量包里的 flag 不一定直接出现，经常会被编码。</p>
+<h3 id="101-base64">
+<a class="header-anchor" href="#101-base64"></a>
+10.1 Base64
+</h3><p>特征：</p>
+<ul>
+<li>常见字符是大小写字母、数字、<code>+</code>、<code>/</code></li>
+<li>末尾可能有 <code>=</code></li>
+<li>长度通常是 4 的倍数</li>
+</ul>
+<p>示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3t0ZXN0X2ZsYWd9
+</span></span></code></pre></div><p>解码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> ZmxhZ3t0ZXN0X2ZsYWd9 <span class="p">|</span> base64 -d
+</span></span></code></pre></div><h3 id="102-hex">
+<a class="header-anchor" href="#102-hex"></a>
+10.2 Hex
+</h3><p>特征：</p>
+<ul>
+<li>只包含 <code>0-9a-fA-F</code></li>
+<li>长度通常是偶数</li>
+</ul>
+<p>示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b6865785f656e636f64657d
+</span></span></code></pre></div><p>Python 解码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="s2">&#34;666c61677b6865785f656e636f64657d&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><h3 id="103-url-编码">
+<a class="header-anchor" href="#103-url-%e7%bc%96%e7%a0%81"></a>
+10.3 URL 编码
+</h3><p>特征：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">%66%6c%61%67%7b%75%72%6c%7d
+</span></span></code></pre></div><p>Python 解码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">unquote</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">unquote</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%66%</span><span class="s2">6c</span><span class="si">%61%</span><span class="s2">67%7b</span><span class="si">%75%</span><span class="s2">72</span><span class="si">%6c%7d</span><span class="s2">&#34;</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="104-压缩数据">
+<a class="header-anchor" href="#104-%e5%8e%8b%e7%bc%a9%e6%95%b0%e6%8d%ae"></a>
+10.4 压缩数据
+</h3><p>如果看到文件头或数据特征，可以考虑压缩：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1f 8b       gzip
+</span></span><span class="line"><span class="cl">78 9c       zlib
+</span></span><span class="line"><span class="cl">50 4b       zip
+</span></span><span class="line"><span class="cl">89 50 4e 47 png
+</span></span><span class="line"><span class="cl">ff d8 ff    jpg
+</span></span></code></pre></div><p>做题时要对 magic bytes 敏感。<br>
+有时候流量里传输的是文件内容，但是后缀名可能是假的。</p>
+<hr>
+<h2 id="11-一个通用排查清单">
+<a class="header-anchor" href="#11-%e4%b8%80%e4%b8%aa%e9%80%9a%e7%94%a8%e6%8e%92%e6%9f%a5%e6%b8%85%e5%8d%95"></a>
+11. 一个通用排查清单
+</h2><p>拿到流量包后，可以按这个顺序做：</p>
+<ol>
+<li>看题目描述，判断可能协议。</li>
+<li>用 <code>strings</code> 搜索 <code>flag</code>、<code>admin</code>、<code>password</code>、<code>ctf</code>。</li>
+<li>用 Wireshark 看 <code>Protocol Hierarchy</code>。</li>
+<li>用 <code>Conversations</code> 找大流量会话。</li>
+<li>过滤 HTTP、FTP、DNS、ICMP 等常见协议。</li>
+<li>对可疑 TCP 连接执行 <code>Follow TCP Stream</code>。</li>
+<li>如果有 HTTP 文件传输，使用 <code>Export Objects</code> 导出。</li>
+<li>对可疑字符串尝试 Base64、Hex、URL 编码。</li>
+<li>对导出的文件继续做隐写、解压、脚本分析。</li>
+<li>如果数据被拆分，用 tshark 提取字段后写脚本拼接。</li>
+</ol>
+<p>这个流程不一定每题都完整走一遍，但它能帮你避免一上来就乱翻包。</p>
+<hr>
+<h2 id="12-做题时的经验">
+<a class="header-anchor" href="#12-%e5%81%9a%e9%a2%98%e6%97%b6%e7%9a%84%e7%bb%8f%e9%aa%8c"></a>
+12. 做题时的经验
+</h2><h3 id="121-不要只盯着-flag">
+<a class="header-anchor" href="#121-%e4%b8%8d%e8%a6%81%e5%8f%aa%e7%9b%af%e7%9d%80-flag"></a>
+12.1 不要只盯着 flag
+</h3><p>很多题不会直接出现 <code>flag{}</code>。<br>
+它可能先给你一个密码、一个压缩包、一个图片、一个脚本或者一个 key。</p>
+<p>所以除了搜索 <code>flag</code>，还要搜索：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin
+</span></span><span class="line"><span class="cl">password
+</span></span><span class="line"><span class="cl">pass
+</span></span><span class="line"><span class="cl">login
+</span></span><span class="line"><span class="cl">upload
+</span></span><span class="line"><span class="cl">download
+</span></span><span class="line"><span class="cl">secret
+</span></span><span class="line"><span class="cl">key
+</span></span><span class="line"><span class="cl">token
+</span></span><span class="line"><span class="cl">ctf
+</span></span></code></pre></div><h3 id="122-数据量大的连接优先看">
+<a class="header-anchor" href="#122-%e6%95%b0%e6%8d%ae%e9%87%8f%e5%a4%a7%e7%9a%84%e8%bf%9e%e6%8e%a5%e4%bc%98%e5%85%88%e7%9c%8b"></a>
+12.2 数据量大的连接优先看
+</h3><p>如果某条 TCP 连接明显比其他连接大，里面很可能传了文件。<br>
+这种连接通常比零散的小请求更有价值。</p>
+<h3 id="123-明文协议优先看">
+<a class="header-anchor" href="#123-%e6%98%8e%e6%96%87%e5%8d%8f%e8%ae%ae%e4%bc%98%e5%85%88%e7%9c%8b"></a>
+12.3 明文协议优先看
+</h3><p>HTTP、FTP、DNS、ICMP 这类协议更容易出题。<br>
+如果流量里存在这些协议，先分析它们，通常比一开始研究 TLS 更高效。</p>
+<h3 id="124-看到异常长字符串就尝试解码">
+<a class="header-anchor" href="#124-%e7%9c%8b%e5%88%b0%e5%bc%82%e5%b8%b8%e9%95%bf%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%b0%b1%e5%b0%9d%e8%af%95%e8%a7%a3%e7%a0%81"></a>
+12.4 看到异常长字符串就尝试解码
+</h3><p>CTF 题目里，异常长的字符串往往不是随机出现的。<br>
+如果它出现在 URL、Cookie、POST 参数、DNS 子域名、ICMP data 字段中，就很值得拿出来解码。</p>
+<h3 id="125-能脚本化就脚本化">
+<a class="header-anchor" href="#125-%e8%83%bd%e8%84%9a%e6%9c%ac%e5%8c%96%e5%b0%b1%e8%84%9a%e6%9c%ac%e5%8c%96"></a>
+12.5 能脚本化就脚本化
+</h3><p>如果要拼接几百条 DNS 查询、ICMP 数据或者 USB 键盘输入，不要手工复制。<br>
+用 <code>tshark</code> 提取字段，再用 Python 处理，会稳定很多。</p>
+<hr>
+<h2 id="13-总结">
+<a class="header-anchor" href="#13-%e6%80%bb%e7%bb%93"></a>
+13. 总结
+</h2><p>CTF 流量包题的的分析路线：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">题目描述 -&gt; 协议统计 -&gt; 会话分析 -&gt; 协议过滤 -&gt; TCP 流追踪 -&gt; 数据提取 -&gt; 编码解码 -&gt; 文件分析
+</span></span></code></pre></div><p>遇到 HTTP，就看请求、响应、Cookie、POST 和文件导出。<br>
+遇到 FTP，就找账号密码和传输文件。<br>
+遇到 DNS，就提取域名并尝试拼接解码。<br>
+遇到 ICMP，就看 data 字段。<br>
+遇到 USB，就按 HID 键盘数据还原输入。</p>
+
+        
+        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>CTF CSV题目教程</title>
+      <link>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <description>
+        <![CDATA[<h1>CTF CSV题目教程</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="ctf-csv题目教程题目想让你干嘛以及python脚本怎么写">
+<a class="header-anchor" href="#ctf-csv%e9%a2%98%e7%9b%ae%e6%95%99%e7%a8%8b%e9%a2%98%e7%9b%ae%e6%83%b3%e8%ae%a9%e4%bd%a0%e5%b9%b2%e5%98%9b%e4%bb%a5%e5%8f%8apython%e8%84%9a%e6%9c%ac%e6%80%8e%e4%b9%88%e5%86%99"></a>
+CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
+</h1><p>CSV题在CTF里通常会被归到Misc、数据分析、取证或者脚本题里面。它看起来像一个很普通的表格文件，但题目真正考的不是Excel用得熟不熟，而是：你能不能从大量结构化数据里找到规律，把有效信息提取出来，最后还原出flag。</p>
+<p>一句话概括：<strong>CSV题就是让你写脚本批量处理数据，而不是用肉眼一行一行看。</strong></p>
+<hr>
+<h2 id="1-csv题目一般想让你干嘛">
+<a class="header-anchor" href="#1-csv%e9%a2%98%e7%9b%ae%e4%b8%80%e8%88%ac%e6%83%b3%e8%ae%a9%e4%bd%a0%e5%b9%b2%e5%98%9b"></a>
+1. CSV题目一般想让你干嘛
+</h2><p>CSV文件本质上就是“用逗号分隔字段的文本文件”，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">char</span><span class="p">,</span><span class="s">index</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">2</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">3</span><span class="p">
+</span></span></span></code></pre></div><p>CTF题目会把flag拆散、打乱、隐藏或者编码后放进表格里。常见目标有下面几种。</p>
+<h3 id="11直接搜索flag">
+<a class="header-anchor" href="#11%e7%9b%b4%e6%8e%a5%e6%90%9c%e7%b4%a2flag"></a>
+1.1直接搜索flag
+</h3><p>最简单的情况是flag被藏在某一行、某一列、某个备注字段里。题目可能给你一个很大的CSV，让你不能靠肉眼快速找到。</p>
+<p>你要做的是：</p>
+<ol>
+<li>读取CSV。</li>
+<li>遍历每一行。</li>
+<li>在每个字段里搜索<code>flag{</code>、<code>ctf{</code>、<code>FLAG{</code>之类的关键词。</li>
+</ol>
+<h3 id="12按某一列排序后拼接字符">
+<a class="header-anchor" href="#12%e6%8c%89%e6%9f%90%e4%b8%80%e5%88%97%e6%8e%92%e5%ba%8f%e5%90%8e%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6"></a>
+1.2按某一列排序后拼接字符
+</h3><p>很多题会把flag拆成一个一个字符，然后打乱顺序，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">pos</span><span class="p">,</span><span class="s">ch</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>这时题目想让你根据<code>pos</code>排序，再把<code>ch</code>拼起来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>这种题的关键是找出“顺序列”和“字符列”。</p>
+<h3 id="13按条件筛选有效行">
+<a class="header-anchor" href="#13%e6%8c%89%e6%9d%a1%e4%bb%b6%e7%ad%9b%e9%80%89%e6%9c%89%e6%95%88%e8%a1%8c"></a>
+1.3按条件筛选有效行
+</h3><p>有些CSV会放大量干扰数据，只有满足条件的行才是真的。例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">?</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">6</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>题目想让你筛选<code>valid=1</code>的行，再拼接<code>value</code>。</p>
+<p>这种题的核心是：<strong>先过滤，再提取，再拼接。</strong></p>
+<h3 id="14对字段做编码转换">
+<a class="header-anchor" href="#14%e5%af%b9%e5%ad%97%e6%ae%b5%e5%81%9a%e7%bc%96%e7%a0%81%e8%bd%ac%e6%8d%a2"></a>
+1.4对字段做编码转换
+</h3><p>CSV里面可能存的不是直接字符，而是ASCII、十六进制、二进制、Base64等编码。</p>
+<p>例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">ascii</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">102</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">108</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">97</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">103</span><span class="p">
+</span></span></span></code></pre></div><p>这里<code>102 108 97 103</code>对应ASCII字符：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>所以你需要把数字转成字符：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">chr</span><span class="p">(</span><span class="mi">102</span><span class="p">)</span>  <span class="c1"># f</span>
+</span></span></code></pre></div><h3 id="15用坐标还原图片或二维码">
+<a class="header-anchor" href="#15%e7%94%a8%e5%9d%90%e6%a0%87%e8%bf%98%e5%8e%9f%e5%9b%be%e7%89%87%e6%88%96%e4%ba%8c%e7%bb%b4%e7%a0%81"></a>
+1.5用坐标还原图片或二维码
+</h3><p>稍微进阶一点的CSV题会给你坐标和颜色，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">x</span><span class="p">,</span><span class="s">y</span><span class="p">,</span><span class="s">color</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span></code></pre></div><p>这种题可能想让你把CSV还原成一张图片、二维码或者像素图。你要做的是：</p>
+<ol>
+<li>读取<code>x</code>、<code>y</code>坐标。</li>
+<li>根据颜色值画点。</li>
+<li>保存成图片。</li>
+<li>扫二维码或者看图得到flag。</li>
+</ol>
+<hr>
+<h2 id="2拿到csv文件后先看什么">
+<a class="header-anchor" href="#2%e6%8b%bf%e5%88%b0csv%e6%96%87%e4%bb%b6%e5%90%8e%e5%85%88%e7%9c%8b%e4%bb%80%e4%b9%88"></a>
+2.拿到CSV文件后先看什么
+</h2><p>不要一上来就写复杂脚本。先做基本观察。</p>
+<h3 id="21看表头">
+<a class="header-anchor" href="#21%e7%9c%8b%e8%a1%a8%e5%a4%b4"></a>
+2.1看表头
+</h3><p>表头通常会暴露题目思路，例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">index, char, order, ascii, hex, x, y, r, g, b, valid
+</span></span></code></pre></div><p>看到不同字段，可以大概判断方向：</p>
+<table>
+  <thead>
+      <tr>
+          <th>字段名</th>
+          <th>可能含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>index</code> / <code>pos</code> / <code>order</code></td>
+          <td>排序</td>
+      </tr>
+      <tr>
+          <td><code>char</code> / <code>ch</code> / <code>value</code></td>
+          <td>拼接字符</td>
+      </tr>
+      <tr>
+          <td><code>ascii</code></td>
+          <td>ASCII转字符</td>
+      </tr>
+      <tr>
+          <td><code>hex</code></td>
+          <td>十六进制解码</td>
+      </tr>
+      <tr>
+          <td><code>bin</code></td>
+          <td>二进制解码</td>
+      </tr>
+      <tr>
+          <td><code>x</code> / <code>y</code></td>
+          <td>坐标画图</td>
+      </tr>
+      <tr>
+          <td><code>r</code> / <code>g</code> / <code>b</code></td>
+          <td>RGB图片</td>
+      </tr>
+      <tr>
+          <td><code>valid</code> / <code>flag</code> / <code>is_true</code></td>
+          <td>筛选有效数据</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="22看数据量">
+<a class="header-anchor" href="#22%e7%9c%8b%e6%95%b0%e6%8d%ae%e9%87%8f"></a>
+2.2看数据量
+</h3><p>如果只有几十行，可以手动观察规律。如果有几千、几万行，就必须写脚本。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;data.csv&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;行数:&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;表头:&#34;</span><span class="p">,</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;前 5 行:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="23看有没有异常值">
+<a class="header-anchor" href="#23%e7%9c%8b%e6%9c%89%e6%b2%a1%e6%9c%89%e5%bc%82%e5%b8%b8%e5%80%bc"></a>
+2.3看有没有异常值
+</h3><p>CTF题经常把关键信息藏在异常值里，比如：</p>
+<ul>
+<li>某一列只有一行特别长。</li>
+<li>某一行包含<code>{</code>或<code>}</code>。</li>
+<li>某些数字明显是ASCII范围：<code>32</code>到<code>126</code>。</li>
+<li>某些字段像十六进制：<code>66 6c 61 67</code>。</li>
+<li>某些字段像Base64：结尾可能有<code>=</code>。</li>
+</ul>
+<hr>
+<h2 id="3-python读取csv的基础写法">
+<a class="header-anchor" href="#3-python%e8%af%bb%e5%8f%96csv%e7%9a%84%e5%9f%ba%e7%a1%80%e5%86%99%e6%b3%95"></a>
+3. Python读取CSV的基础写法
+</h2><p>推荐优先使用Python标准库里的<code>csv</code>，不需要安装第三方库。</p>
+<h3 id="31按字典方式读取">
+<a class="header-anchor" href="#31%e6%8c%89%e5%ad%97%e5%85%b8%e6%96%b9%e5%bc%8f%e8%af%bb%e5%8f%96"></a>
+3.1按字典方式读取
+</h3><p>如果CSV有表头，用<code>DictReader</code>最方便。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><p>假设CSV是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">char</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>读出来的每一行就是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="p">{</span><span class="s2">&#34;index&#34;</span><span class="p">:</span> <span class="s2">&#34;0&#34;</span><span class="p">,</span> <span class="s2">&#34;char&#34;</span><span class="p">:</span> <span class="s2">&#34;f&#34;</span><span class="p">}</span>
+</span></span></code></pre></div><p>注意：<strong>CSV读出来的内容默认都是字符串。</strong><br>
+如果要排序或者计算，需要手动转成<code>int</code>。</p>
+<hr>
+<h2 id="4脚本模板一直接搜索flag">
+<a class="header-anchor" href="#4%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%b8%80%e7%9b%b4%e6%8e%a5%e6%90%9c%e7%b4%a2flag"></a>
+4.脚本模板一：直接搜索flag
+</h2><p>适用于题目给了一个很大的CSV，你怀疑flag直接藏在里面。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;flag\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">col_no</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="k">match</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[+] 第 </span><span class="si">{</span><span class="n">line_no</span><span class="si">}</span><span class="s2"> 行，第 </span><span class="si">{</span><span class="n">col_no</span><span class="si">}</span><span class="s2"> 列找到 flag:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="k">match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+</span></span></code></pre></div><p>如果比赛的flag格式不是<code>flag{}</code>，就改这里：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;你的比赛前缀\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="5脚本模板二排序后拼接字符">
+<a class="header-anchor" href="#5%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%ba%8c%e6%8e%92%e5%ba%8f%e5%90%8e%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6"></a>
+5.脚本模板二：排序后拼接字符
+</h2><p>适用于CSV里有<code>index</code>和<code>char</code>之类的列。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;char&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>这类题最常见的改动点是列名。比如题目里叫<code>pos</code>和<code>value</code>，就改成：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span></code></pre></div><hr>
+<h2 id="6脚本模板三筛选有效行后拼接">
+<a class="header-anchor" href="#6%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%b8%89%e7%ad%9b%e9%80%89%e6%9c%89%e6%95%88%e8%a1%8c%e5%90%8e%e6%8b%bc%e6%8e%a5"></a>
+6.脚本模板三：筛选有效行后拼接
+</h2><p>适用于CSV里有一列用来标记是否有效，例如<code>valid</code>、<code>is_flag</code>、<code>status</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果还需要排序，就把筛选和排序结合起来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">]),</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="7脚本模板四ascii转字符">
+<a class="header-anchor" href="#7%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e5%9b%9bascii%e8%bd%ac%e5%ad%97%e7%ac%a6"></a>
+7.脚本模板四：ASCII转字符
+</h2><p>适用于字段里是一堆数字，例如<code>102,108,97,103</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">chars</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果CSV里面还有顺序列：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="8脚本模板五十六进制解码">
+<a class="header-anchor" href="#8%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e4%ba%94%e5%8d%81%e5%85%ad%e8%bf%9b%e5%88%b6%e8%a7%a3%e7%a0%81"></a>
+8.脚本模板五：十六进制解码
+</h2><p>CSV中可能有类似<code>66</code>、<code>6c</code>、<code>61</code>、<code>67</code>这样的十六进制数据。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_parts</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_string</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hex_parts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></div><p>如果每一行是完整的一段十六进制，也可以逐行解码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span></code></pre></div><hr>
+<h2 id="9脚本模板六坐标还原图片">
+<a class="header-anchor" href="#9%e8%84%9a%e6%9c%ac%e6%a8%a1%e6%9d%bf%e5%85%ad%e5%9d%90%e6%a0%87%e8%bf%98%e5%8e%9f%e5%9b%be%e7%89%87"></a>
+9.脚本模板六：坐标还原图片
+</h2><p>如果CSV里有<code>x</code>、<code>y</code>、<code>value</code>或者<code>r</code>、<code>g</code>、<code>b</code>，大概率是让你画图。</p>
+<p>先安装Pillow：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install pillow
+</span></span></code></pre></div><p>黑白图还原：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;L&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="mi">255</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">color</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">255</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">color</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] 已保存 result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>RGB彩色图还原：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;r&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;g&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;b&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] 已保存 result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>保存出来以后，如果是二维码，可以直接扫码；如果图像方向不对，可以尝试旋转、翻转或者放大。</p>
+<hr>
+<h2 id="10一个完整解题示例">
+<a class="header-anchor" href="#10%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e8%a7%a3%e9%a2%98%e7%a4%ba%e4%be%8b"></a>
+10.一个完整解题示例
+</h2><p>假设题目给了<code>data.csv</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">pos</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">9</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>题目没有多余提示，只说“find the flag”。</p>
+<p>我们先观察字段：</p>
+<ul>
+<li><code>pos</code>：像是顺序。</li>
+<li><code>value</code>：像是字符。</li>
+<li><code>valid</code>：像是筛选条件。</li>
+</ul>
+<p>所以思路就是：</p>
+<ol>
+<li>读取CSV。</li>
+<li>只保留<code>valid=1</code>的行。</li>
+<li>按<code>pos</code>从小到大排序。</li>
+<li>拼接<code>value</code>。</li>
+</ol>
+<p>最终脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python solve.py
+</span></span></code></pre></div><p>输出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>真实比赛里输出一般会是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{xxxxxxxxxxxxxxxx}
+</span></span></code></pre></div><hr>
+<h2 id="11解csv题的通用套路">
+<a class="header-anchor" href="#11%e8%a7%a3csv%e9%a2%98%e7%9a%84%e9%80%9a%e7%94%a8%e5%a5%97%e8%b7%af"></a>
+11.解CSV题的通用套路
+</h2><p>遇到CSV题，可以按这个流程走：</p>
+<ol>
+<li><strong>看文件名和题目描述</strong>：有没有提示排序、坐标、颜色、编码、日志、流量等关键词。</li>
+<li><strong>看表头</strong>：字段名通常就是题目给你的解题方向。</li>
+<li><strong>打印前几行</strong>：确认每列数据长什么样。</li>
+<li><strong>统计行数和字段范围</strong>：判断是不是图片坐标、ASCII、时间序列。</li>
+<li><strong>先写最小脚本</strong>：能读、能打印、能筛选就行。</li>
+<li><strong>逐步加功能</strong>：排序、拼接、解码、画图。</li>
+<li><strong>搜索flag格式</strong>：最后用正则提取<code>flag{...}</code>。</li>
+</ol>
+<hr>
+<h2 id="12常见坑">
+<a class="header-anchor" href="#12%e5%b8%b8%e8%a7%81%e5%9d%91"></a>
+12.常见坑
+</h2><h3 id="121编码错误">
+<a class="header-anchor" href="#121%e7%bc%96%e7%a0%81%e9%94%99%e8%af%af"></a>
+12.1编码错误
+</h3><p>如果<code>utf-8</code>报错，可以试试：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;gbk&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>或者：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8-sig&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p><code>utf-8-sig</code>可以处理带BOM的CSV文件。</p>
+<h3 id="122数字排序变成字符串排序">
+<a class="header-anchor" href="#122%e6%95%b0%e5%ad%97%e6%8e%92%e5%ba%8f%e5%8f%98%e6%88%90%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8e%92%e5%ba%8f"></a>
+12.2数字排序变成字符串排序
+</h3><p>错误示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span></code></pre></div><p>如果<code>x[0]</code>是字符串，会出现：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1, 10, 11, 2, 3
+</span></span></code></pre></div><p>所以要转成整数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span></code></pre></div><h3 id="123分隔符不是逗号">
+<a class="header-anchor" href="#123%e5%88%86%e9%9a%94%e7%ac%a6%e4%b8%8d%e6%98%af%e9%80%97%e5%8f%b7"></a>
+12.3分隔符不是逗号
+</h3><p>有些文件虽然叫CSV，但实际用的是分号、Tab或竖线分隔。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Tab分隔：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;</span><span class="se">\t</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="124表头有空格">
+<a class="header-anchor" href="#124%e8%a1%a8%e5%a4%b4%e6%9c%89%e7%a9%ba%e6%a0%bc"></a>
+12.4表头有空格
+</h3><p>有些表头可能是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s"> index </span><span class="p">,</span><span class="s"> char</span><span class="p">
+</span></span></span></code></pre></div><p>这会导致<code>row[&quot;index&quot;]</code>取不到。可以先打印：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span></code></pre></div><p>或者读取后把key清理一下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span></span></code></pre></div>
+        
+        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>CTF 方向详解</title>
+      <link>https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</link>
+      <pubDate>Thu, 14 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</guid>
+      <description>
+        <![CDATA[<h1>CTF 方向详解</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="ctf-方向详解">
+<a class="header-anchor" href="#ctf-%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3"></a>
+CTF 方向详解
+</h1><h2 id="1-ctf-是什么">
+<a class="header-anchor" href="#1-ctf-%e6%98%af%e4%bb%80%e4%b9%88"></a>
+1. CTF 是什么
+</h2><p>CTF（Capture The Flag）是一种信息安全竞赛形式，参赛者通过分析、利用、解密、逆向、取证等技术手段，获取题目中的 <code>flag</code>（通常是一段特定格式字符串）来得分。<br>
+CTF 的核心不是“背工具命令”，而是通过题目场景考察对系统原理、安全机制和攻击防护思维的综合理解。</p>
+<h3 id="11-常见比赛形式">
+<a class="header-anchor" href="#11-%e5%b8%b8%e8%a7%81%e6%af%94%e8%b5%9b%e5%bd%a2%e5%bc%8f"></a>
+1.1 常见比赛形式
+</h3><ul>
+<li>Jeopardy（解题赛）：按题目分类（Web、Pwn、Reverse、Crypto、Misc 等）逐题提交 flag。</li>
+<li>Attack-Defense（攻防赛）：既要攻击他队服务，也要防守自己服务。</li>
+<li>King of the Hill（夺旗赛）：持续占领目标点获取分数。</li>
+</ul>
+<h3 id="12-ctf-的价值">
+<a class="header-anchor" href="#12-ctf-%e7%9a%84%e4%bb%b7%e5%80%bc"></a>
+1.2 CTF 的价值
+</h3><ul>
+<li>提升实战能力：把零散知识串成完整攻击链与防护链。</li>
+<li>训练工程能力：脚本自动化、调试、日志分析、复盘沉淀。</li>
+<li>强化协作能力：团队分工、并行推进、时间管理与策略决策。</li>
+</ul>
+<h3 id="13-常见题目特征">
+<a class="header-anchor" href="#13-%e5%b8%b8%e8%a7%81%e9%a2%98%e7%9b%ae%e7%89%b9%e5%be%81"></a>
+1.3 常见题目特征
+</h3><ul>
+<li>题目往往围绕“一个可利用缺陷”设计，不完全等同真实生产环境。</li>
+<li>题目会刻意加入干扰信息，要求选手识别有效线索。</li>
+<li>很多高分题是“多步骤串联”，需要跨方向知识协同。</li>
+</ul>
+<hr>
+<h2 id="2-web-方向">
+<a class="header-anchor" href="#2-web-%e6%96%b9%e5%90%91"></a>
+2. Web 方向
+</h2><h3 id="11-核心定位">
+<a class="header-anchor" href="#11-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+1.1 核心定位
+</h3><p>Web 方向的核心是：<strong>理解 Web 应用如何工作，并利用设计或实现缺陷获取敏感信息（如 flag）</strong>。<br>
+题目一般围绕网站、API、认证授权、文件处理、模板渲染、服务间调用等场景展开。</p>
+<h3 id="12-常见题型">
+<a class="header-anchor" href="#12-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+1.2 常见题型
+</h3><ul>
+<li>SQL 注入（联合查询、报错注入、盲注、堆叠查询）</li>
+<li>XSS（反射型、存储型、DOM 型）</li>
+<li>文件上传漏洞（后缀绕过、MIME 绕过、解析漏洞）</li>
+<li>反序列化（PHP/Python/Java 常见）</li>
+<li>SSRF（探测内网、打云元数据服务）</li>
+<li>命令执行（RCE）</li>
+<li>认证与会话问题（弱口令、JWT 伪造、Session 固定）</li>
+<li>访问控制缺陷（越权、水平/垂直权限绕过）</li>
+<li>模板注入（SSTI）</li>
+<li>路径穿越 / 本地文件包含（LFI/RFI）</li>
+</ul>
+<h3 id="13-需要掌握的知识">
+<a class="header-anchor" href="#13-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+1.3 需要掌握的知识
+</h3><ul>
+<li>HTTP/HTTPS 基础（请求方法、状态码、Cookie、Header）</li>
+<li>常见后端框架基本行为（Flask、Django、PHP、Node 等）</li>
+<li>数据库基础（MySQL/PostgreSQL 常见语法）</li>
+<li>Web 安全基本模型（输入、处理、输出链路）</li>
+<li>编码与解码（URL/Base64/Unicode/HTML 实体）</li>
+</ul>
+<h3 id="14-常用工具">
+<a class="header-anchor" href="#14-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+1.4 常用工具
+</h3><ul>
+<li>Burp Suite（抓包、改包、重放、爆破）</li>
+<li>浏览器开发者工具（Network/Console/Storage）</li>
+<li>sqlmap（注入自动化辅助）</li>
+<li>ffuf / dirsearch（目录与接口探测）</li>
+<li>Postman / curl（API 调试）</li>
+</ul>
+<h3 id="15-解题通用方法">
+<a class="header-anchor" href="#15-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+1.5 解题通用方法
+</h3><ol>
+<li>先做资产梳理：页面、接口、参数、鉴权逻辑。</li>
+<li>找输入点：URL 参数、POST body、Header、文件上传、WebSocket。</li>
+<li>测试可控输入的“边界行为”：特殊字符、超长输入、类型错配。</li>
+<li>结合报错与回显判断漏洞类型，再构造 payload。</li>
+<li>拿到初始突破后，继续横向扩展（读文件、提权、内网探测）。</li>
+</ol>
+<hr>
+<h2 id="3-misc-方向">
+<a class="header-anchor" href="#3-misc-%e6%96%b9%e5%90%91"></a>
+3. Misc 方向
+</h2><h3 id="21-核心定位">
+<a class="header-anchor" href="#21-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+2.1 核心定位
+</h3><p>Misc 是综合题型，强调<strong>信息处理能力、脚本自动化能力和跨领域联想能力</strong>。<br>
+通常不是“单一漏洞”，而是多个线索拼接。</p>
+<h3 id="22-常见题型">
+<a class="header-anchor" href="#22-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+2.2 常见题型
+</h3><ul>
+<li>编码与解码（Base 系列、URL、栅栏、培根等）</li>
+<li>隐写（图片、音频、文本、文件尾）</li>
+<li>流量分析（pcap、HTTP/TCP 提取）</li>
+<li>取证杂项（日志、压缩包、元数据）</li>
+<li>自动化小游戏 / 协议交互题</li>
+<li>二维码、条形码、键盘流量、摩斯码等</li>
+</ul>
+<h3 id="23-需要掌握的知识">
+<a class="header-anchor" href="#23-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+2.3 需要掌握的知识
+</h3><ul>
+<li>常见文件格式结构（PNG/JPG/ZIP/PDF）</li>
+<li>网络基础（TCP、HTTP、DNS）</li>
+<li>Linux 命令行与批处理能力</li>
+<li>Python 脚本处理（正则、字节流、批量处理）</li>
+</ul>
+<h3 id="24-常用工具">
+<a class="header-anchor" href="#24-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+2.4 常用工具
+</h3><ul>
+<li>CyberChef（快速编码解码与数据变换）</li>
+<li>Wireshark / tshark（流量分析）</li>
+<li>binwalk / foremost（文件分离和恢复）</li>
+<li>stegsolve / zsteg / exiftool（隐写与元数据分析）</li>
+<li>Python（自动化解题）</li>
+</ul>
+<h3 id="25-解题通用方法">
+<a class="header-anchor" href="#25-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+2.5 解题通用方法
+</h3><ol>
+<li>先识别题目资产类型（图、音频、流量、压缩包、日志）。</li>
+<li>检查元数据与文件结构（头、尾、magic bytes）。</li>
+<li>进行可逆变换尝试（编码链、位运算、字符替换）。</li>
+<li>发现重复操作后立刻脚本化，避免手工消耗时间。</li>
+</ol>
+<hr>
+<h2 id="4-crypto密码方向">
+<a class="header-anchor" href="#4-crypto%e5%af%86%e7%a0%81%e6%96%b9%e5%90%91"></a>
+4. Crypto（密码）方向
+</h2><h3 id="31-核心定位">
+<a class="header-anchor" href="#31-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+3.1 核心定位
+</h3><p>Crypto 在 CTF 中通常不是“硬破现代密码算法”，而是<strong>利用错误实现、弱参数或不安全使用方式</strong>拿到明文/私钥/flag。</p>
+<h3 id="32-常见题型">
+<a class="header-anchor" href="#32-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+3.2 常见题型
+</h3><ul>
+<li>古典密码（凯撒、维吉尼亚、栅栏等）</li>
+<li>RSA 相关漏洞（小指数、共模、低熵素数、泄露部分信息）</li>
+<li>对称加密误用（ECB 模式、IV 重用、padding oracle）</li>
+<li>哈希相关（长度扩展、弱碰撞场景）</li>
+<li>随机数问题（可预测 seed）</li>
+</ul>
+<h3 id="33-需要掌握的知识">
+<a class="header-anchor" href="#33-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+3.3 需要掌握的知识
+</h3><ul>
+<li>模运算、欧几里得算法、同余与逆元</li>
+<li>素数、欧拉函数、快速幂</li>
+<li>常见加密模式（ECB/CBC/CTR/GCM）</li>
+<li>签名与认证基础（HMAC、RSA/ECDSA 基础概念）</li>
+</ul>
+<h3 id="34-常用工具">
+<a class="header-anchor" href="#34-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+3.4 常用工具
+</h3><ul>
+<li>Python + <code>pycryptodome</code></li>
+<li>SageMath（数论与代数计算）</li>
+<li>factordb / yafu（因数分解辅助）</li>
+<li>RsaCtfTool（RSA 场景辅助）</li>
+</ul>
+<h3 id="35-解题通用方法">
+<a class="header-anchor" href="#35-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+3.5 解题通用方法
+</h3><ol>
+<li>先判断是“算法题”还是“实现缺陷题”。</li>
+<li>梳理已知量与未知量（公钥、密文、参数、oracle 接口）。</li>
+<li>尝试建立数学关系，确认可解条件。</li>
+<li>优先从参数弱点和复用问题切入（很多题突破口在这里）。</li>
+</ol>
+<hr>
+<h2 id="5-pwn-方向">
+<a class="header-anchor" href="#5-pwn-%e6%96%b9%e5%90%91"></a>
+5. Pwn 方向
+</h2><h3 id="41-核心定位">
+<a class="header-anchor" href="#41-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+4.1 核心定位
+</h3><p>Pwn 的目标是：<strong>利用二进制程序的内存安全漏洞，控制程序执行流程，最终读取 flag 或拿到 shell</strong>。</p>
+<h3 id="42-常见题型">
+<a class="header-anchor" href="#42-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+4.2 常见题型
+</h3><ul>
+<li>栈溢出（ret2win、ret2libc、ROP）</li>
+<li>堆利用（UAF、double free、tcache poisoning）</li>
+<li>格式化字符串漏洞</li>
+<li>整数溢出导致的越界读写</li>
+<li>沙箱逃逸（高阶题）</li>
+</ul>
+<h3 id="43-需要掌握的知识">
+<a class="header-anchor" href="#43-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+4.3 需要掌握的知识
+</h3><ul>
+<li>C 语言内存模型（栈、堆、全局区）</li>
+<li>汇编基础（x86/x64 调用约定）</li>
+<li>ELF 文件结构与动态链接</li>
+<li>Linux 基础与系统调用</li>
+<li>常见保护机制：NX、Canary、PIE、RELRO、ASLR</li>
+</ul>
+<h3 id="44-常用工具">
+<a class="header-anchor" href="#44-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+4.4 常用工具
+</h3><ul>
+<li>gdb + pwndbg/gef</li>
+<li>pwntools（exp 编写）</li>
+<li>checksec（保护机制识别）</li>
+<li>IDA / Ghidra（静态分析）</li>
+<li>one_gadget / ropper（ROP 辅助）</li>
+</ul>
+<h3 id="45-解题通用方法">
+<a class="header-anchor" href="#45-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+4.5 解题通用方法
+</h3><ol>
+<li><code>checksec</code> 看保护机制。</li>
+<li>逆向定位可控输入与危险函数。</li>
+<li>验证崩溃点与覆盖能力（offset 计算）。</li>
+<li>按保护机制选攻击链（ret2win/ROP/堆链）。</li>
+<li>本地打通后切远程，处理 libc 版本差异与时序问题。</li>
+</ol>
+<hr>
+<h2 id="6-reverse">
+<a class="header-anchor" href="#6-reverse"></a>
+6. Reverse
+</h2><h3 id="51-核心定位">
+<a class="header-anchor" href="#51-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+5.1 核心定位
+</h3><p>Reverse 的核心是：<strong>通过静态与动态分析还原程序逻辑，提取关键数据、校验算法或密钥</strong>。</p>
+<h3 id="52-常见题型">
+<a class="header-anchor" href="#52-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+5.2 常见题型
+</h3><ul>
+<li>简单字符串校验与混淆</li>
+<li>控制流平坦化/虚假分支</li>
+<li>反调试与反沙箱</li>
+<li>自定义加密算法还原</li>
+<li>APK/so/脚本混合逆向</li>
+</ul>
+<h3 id="53-需要掌握的知识">
+<a class="header-anchor" href="#53-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+5.3 需要掌握的知识
+</h3><ul>
+<li>汇编基础（寄存器、栈帧、跳转逻辑）</li>
+<li>常见编译器优化影响（内联、寄存器分配）</li>
+<li>PE/ELF/APK 基础结构</li>
+<li>动态调试与断点跟踪思路</li>
+</ul>
+<h3 id="54-常用工具">
+<a class="header-anchor" href="#54-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
+5.4 常用工具
+</h3><ul>
+<li>IDA Pro / Ghidra（静态分析）</li>
+<li>x64dbg / OllyDbg（Windows 调试）</li>
+<li>gdb（Linux 调试）</li>
+<li>JADX / apktool（Android 逆向）</li>
+<li>Frida（动态 Hook）</li>
+</ul>
+<h3 id="55-解题通用方法">
+<a class="header-anchor" href="#55-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+5.5 解题通用方法
+</h3><ol>
+<li>先跑程序看输入输出行为和校验位置。</li>
+<li>静态定位关键函数（字符串引用、比较点、加解密函数）。</li>
+<li>动态下断验证猜测，观察关键变量变化。</li>
+<li>还原算法或直接 patch 绕过关键校验。</li>
+</ol>
+<hr>
+<h2 id="7-ai-安全方向">
+<a class="header-anchor" href="#7-ai-%e5%ae%89%e5%85%a8%e6%96%b9%e5%90%91"></a>
+7. AI 安全方向
+</h2><h3 id="61-核心定位">
+<a class="header-anchor" href="#61-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
+6.1 核心定位
+</h3><p>AI 安全在 CTF 中主要关注：<strong>模型、数据、推理链路与应用集成层的攻击与防护</strong>。<br>
+这类题融合了传统安全和 LLM/ML 特性，是近年增长很快的新方向。</p>
+<h3 id="62-常见题型">
+<a class="header-anchor" href="#62-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
+6.2 常见题型
+</h3><ul>
+<li>Prompt Injection（提示词注入）</li>
+<li>Jailbreak（越狱绕过安全策略）</li>
+<li>Data Leakage（系统提示词/隐私数据泄露）</li>
+<li>Tool Abuse（工具调用滥用、权限越权）</li>
+<li>RAG 攻击（检索污染、上下文投毒）</li>
+<li>Model Extraction / Membership Inference（高阶）</li>
+<li>对抗样本（视觉/文本误导）</li>
+</ul>
+<h3 id="63-需要掌握的知识">
+<a class="header-anchor" href="#63-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
+6.3 需要掌握的知识
+</h3><ul>
+<li>LLM 基础（system/user/assistant 指令层级）</li>
+<li>RAG 架构（检索、重排、上下文拼接）</li>
+<li>Agent 工具调用流程（函数调用、权限边界）</li>
+<li>常见安全框架（输入过滤、输出审计、策略引擎）</li>
+</ul>
+<h3 id="64-常用工具与方法">
+<a class="header-anchor" href="#64-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7%e4%b8%8e%e6%96%b9%e6%b3%95"></a>
+6.4 常用工具与方法
+</h3><ul>
+<li>手工构造提示词 payload（多轮、角色扮演、编码绕过）</li>
+<li>日志审计（查看模型输入输出与工具调用轨迹）</li>
+<li>安全评测基准（红队提示集、越狱测试集）</li>
+<li>自动化测试脚本（批量注入、成功率统计）</li>
+</ul>
+<h3 id="65-解题通用方法">
+<a class="header-anchor" href="#65-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
+6.5 解题通用方法
+</h3><ol>
+<li>识别系统边界：模型能访问什么、不能访问什么。</li>
+<li>先做“低风险探测注入”，确认防护类型。</li>
+<li>分层突破：指令冲突、上下文污染、工具调用绕过。</li>
+<li>成功后验证可复现性，确认不是偶发。</li>
+<li>同时给出修复思路（最小权限、上下文隔离、策略校验）。</li>
+</ol>
+<h3 id="76-防护思路实战很关键">
+<a class="header-anchor" href="#76-%e9%98%b2%e6%8a%a4%e6%80%9d%e8%b7%af%e5%ae%9e%e6%88%98%e5%be%88%e5%85%b3%e9%94%ae"></a>
+7.6 防护思路（实战很关键）
+</h3><ul>
+<li>明确优先级：<code>System</code> 指令不可被用户输入覆盖。</li>
+<li>检索内容与用户输入分区，并做可信度标记。</li>
+<li>对工具调用做权限网关（参数白名单、动作审计）。</li>
+<li>对高风险输出进行策略检查与人工复核。</li>
+<li>保留完整链路日志，支持回放和溯源。</li>
+</ul>
+<hr>
+<h2 id="8-团队分工建议">
+<a class="header-anchor" href="#8-%e5%9b%a2%e9%98%9f%e5%88%86%e5%b7%a5%e5%bb%ba%e8%ae%ae"></a>
+8. 团队分工建议
+</h2><ul>
+<li>Web：主攻接口和业务逻辑漏洞</li>
+<li>Pwn：主攻二进制利用链</li>
+<li>Reverse：负责还原算法和补齐关键脚本</li>
+<li>Crypto：处理数学/密码题并做脚本验证</li>
+<li>Misc：负责流量、隐写、杂项快速清题</li>
+<li>AI 安全：负责新型模型/Agent 攻击面题目</li>
+</ul>
+<p>一个成熟队伍通常需要“主攻 + 备份”机制：每个方向至少 1 名主力，另有 1 名能接力的副手。</p>
+<hr>
+<h2 id="9-总结">
+<a class="header-anchor" href="#9-%e6%80%bb%e7%bb%93"></a>
+9. 总结
+</h2><p>CTF 不是单纯比“工具使用”，而是比<strong>知识结构 + 分析方法 + 自动化能力 + 团队协作</strong>。<br>
+在学习的过程中，建议大家选择1~2 个方向深耕，形成稳定得分点，再逐步补齐其余方向，整体提升会更快。<br>
+更加详细的学习大家可以参考CTF WIKI</p>
+
+        
+        <hr><p>本文2026-05-14首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-14</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>当AI开始替我们靠近伊萨卡...</title>
+      <link>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <description>
+        <![CDATA[<h1>当AI开始替我们靠近伊萨卡...</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="当ai开始替我们靠近伊萨卡">
+<a class="header-anchor" href="#%e5%bd%93ai%e5%bc%80%e5%a7%8b%e6%9b%bf%e6%88%91%e4%bb%ac%e9%9d%a0%e8%bf%91%e4%bc%8a%e8%90%a8%e5%8d%a1"></a>
+当AI开始替我们靠近伊萨卡&hellip;
+</h1><p>​	我不知道从什么时候开始，遇到问题后的第一个动作，变成了问AI。</p>
+<p>​	一开始，这当然让人兴奋。它像一盏随手可点亮的灯，照进那些曾经需要自己摸索很久的角落。代码看不懂，可以问它；报错不知道原因，可以问它；CTF题没有思路，也可以问它。Web、Reverse、Pwn、Crypto，那些过去让人反复查资料、熬夜试错的东西，突然都变得没有那么遥远。</p>
+<p>​	这确实是一种进步。我不想轻易否认它。AI降低了很多门槛，也替我们拿走了许多无意义的阻力。那些被环境配置、陌生术语、碎片资料挡在门外的人，终于可以更顺利地走进去。对网络安全学习者来说，这种帮助是真实的。它让复杂的知识有了更柔软的入口，也让很多孤独的学习时刻，像是多了一个不会疲倦的同伴。</p>
+<p>​	可是，有些东西也在悄悄变轻。</p>
+<p>​	以前打CTF，卡住是一件很普通的事。你盯着一段代码，看不出漏洞；你反复构造payload，只换来沉默的回显；你在反编译结果里迷路，在流量包里寻找一处异常，在寄存器和栈之间猜测程序的下一次转身。那时候的学习很慢。很多夜晚并没有漂亮的结果，只剩下一堆失败的尝试。</p>
+<p>​	但后来回头看，真正留下来的，恰恰是那些慢。是那些没有立刻得到答案的时刻，让人开始学会观察。是那些错误的猜想，让人知道边界在哪里。是那些迟迟解不开的题，让人明白安全不是记住几个漏洞名字，而是在不确定里保持怀疑。</p>
+<p>​	现在，答案来得太快了。快到我们还没来得及和问题相处，就已经急着把它交出去。快到一段流畅的解释，可以替代半小时沉默的推理。快到一个看似完整的解题路径，会让人误以为自己已经理解了它。</p>
+<p>​	这让我有一点悲哀。不是因为AI太强，而是因为我们似乎越来越难忍受“不会”的状态。不会，本来是学习最自然的入口。它迫使人停下来，迫使人承认空白，迫使人一点点靠近未知。可现在，“不会”很快就被填满了。屏幕上出现一段答案，语气笃定，结构完整，甚至带着某种温柔的耐心。于是空白消失了，焦虑也暂时消失了。</p>
+<p>​	但理解也可能一起消失了。CTF里最重要的从来不只是flag。flag可能是一个终点，也可能是一个信号。但真正改变人的，是走向它的过程。你为什么怀疑这里？为什么这条路径成立？为什么另一个方向失败？为什么同样的payload换个环境就失效？这些问题如果没有亲自走过，只看见最后的字符串，心里其实是空的。</p>
+<p>​	AI很适合给出答案，却未必能让人拥有答案。尤其在网络安全里，这件事更加危险。安全是一种判断力，是对边界的敏感，是对“看起来正常”的不信任。AI 可以解释漏洞，可以生成脚本，可以说出很多专业词汇。但它也会错，而且常常错得很像对的。它的流畅会让错误变得体面，让猜测看起来像结论。如果人没有验证的能力，就很容易把这种体面当作真实。我有时觉得，AI像一条更快的路，带我们绕过了很多泥泞。可问题是，有些脚力正是在泥泞里长出来的。我们少走了弯路，也少了一些与问题僵持的时间；我们更快到达了结果，却未必更靠近本质。</p>
+<p>​	这不是反对AI。我仍然会用它，也知道自己离不开它。它确实能帮我看见盲区，帮我节省时间，帮我从混乱中找到一个起点。只是希望自己不要忘记：工具可以照亮道路，但不能替我长出眼睛。</p>
+<p>​	在 CTF 中使用AI，也许最好的状态不是让它代替我解题，而是让它陪我停在问题面前。它可以提醒我看向某个方向，但我仍然要自己判断那里是否真的有路。它可以帮我写下一段脚本，但我仍然要知道每一行为什么存在。它可以给我一个答案，但我仍然要问：这是不是我真正理解之后的答案？我们正在进入一个答案越来越廉价的时代。也正因为如此，慢下来才显得更珍贵。慢不是落后，也不是无能。慢是一种对问题的尊重，是一种把理解留给自己的方式。在所有东西都被压缩成进度、结果、截图和总结的时候，慢下来反而需要勇气。我们习惯了更快地完成一件事。更快写出一段代码，更快交出一篇报告，更快生成一个方案，更快得到一个看起来不错的结论。很多时候，事情还没有真正被理解，就已经变成了可以提交、可以展示、可以发布的东西。速度给了人一种安慰，好像只要不断向前，就不会显得停滞。AI进一步放大了这种安慰。它让我们可以更快写出答案，更快完成作业，更快生成报告，更快拿到flag。但如果人只是跟着这种速度往前跑，就会越来越没有时间停下来确认：我是否真的理解？我是否真的判断过？我是否只是把一个看似正确的结果，匆忙地交给了世界？</p>
+<p>​	在网络安全里，这种匆忙尤其危险。因为安全不是抢答，而是验证。不是谁先说出一个漏洞名，谁就更接近真相；不是谁先跑出一个payload，谁就真正理解系统。安全需要耐心，需要怀疑，需要在看似合理的地方多停一会儿。很多漏洞不是被速度发现的，而是被反复观察、反复验证、反复追问逼出来的。</p>
+<p>​	所以希望还能学会慢下来。</p>
+<p>​	不是拒绝AI，也不是退回过去，而是在使用它的时候保留一段属于自己的距离。先看一眼题目，先想一想边界，先让问题在脑子里停留一会儿。不要急着让答案覆盖空白，也不要急着用生成的内容填满自己的不安。</p>
+<p>​	有些空白值得保留一阵。因为人正是在那里开始思考的。</p>
+<p>​	AI可以让我们更快抵达伊萨卡。</p>
+<p>​	但我更想知道，在抵达之前，我们有没有真正见过海。</p>
+
+        
+        <hr><p>本文2026-05-07首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-07</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>随笔</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>linux-python管理（pyenv的安装与使用）</title>
+      <link>https://blog.m15tak3.com/post/pyenv/</link>
+      <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/pyenv/</guid>
+      <description>
+        <![CDATA[<h1>linux-python管理（pyenv的安装与使用）</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="linux-python管理pyenv的安装与使用">
+<a class="header-anchor" href="#linux-python%e7%ae%a1%e7%90%86pyenv%e7%9a%84%e5%ae%89%e8%a3%85%e4%b8%8e%e4%bd%bf%e7%94%a8"></a>
+linux-python管理（pyenv的安装与使用）
+</h1><p>由于在高版本的Linux（例如Ubuntu 24.04）在使用pip管理时会出现<code>externally-managed-environment</code>的问题，即系统不允许直接使用<code>pip</code>安装全局包。我们为了避免对系统的python环境破环以及方便管理python版本，这里我推荐使用pyenv来管理python与虚拟环境。</p>
+<h2 id="安装编译依赖项">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85%e7%bc%96%e8%af%91%e4%be%9d%e8%b5%96%e9%a1%b9"></a>
+安装编译依赖项
+</h2><p><strong>对于Ubuntu/Debian系统</strong>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+</span></span></code></pre></div><p><strong>对于Centos等系统</strong>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
+</span></span></code></pre></div><h2 id="安装pyenv">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85pyenv"></a>
+安装pyenv
+</h2><p>​	我们使用官方脚本安装</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
+</span></span></code></pre></div><h2 id="配置shell并应用">
+<a class="header-anchor" href="#%e9%85%8d%e7%bd%aeshell%e5%b9%b6%e5%ba%94%e7%94%a8"></a>
+配置shell并应用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果使用Zsh，请将上面的.bashrc替换为.zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#验证</span>
+</span></span><span class="line"><span class="cl">pyenv --version
+</span></span></code></pre></div><h2 id="pyenv基本使用">
+<a class="header-anchor" href="#pyenv%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8"></a>
+pyenv基本使用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1">#pyenv install python-version 例如安装3.13.3 </span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv global python-version 例如设置全局python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv local python-version 例如设置当前本地python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
+</span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv shell python-version 例如对当前shell设置python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv shell python-version
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv virtualenv python-version myproject-env 例如创建ctf虚拟环境python版本为3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv activate myproject-env 例如激活ctf虚拟环境</span>
+</span></span><span class="line"><span class="cl">pyenv activate ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#pyenv deactivate 退出虚拟环境</span>
+</span></span><span class="line"><span class="cl">pyenv deactivate
+</span></span></code></pre></div>
+        
+        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>技术</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>从零安装WSL2--Ubuntu</title>
+      <link>https://blog.m15tak3.com/post/wsl1/</link>
+      <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/wsl1/</guid>
+      <description>
+        <![CDATA[<h1>从零安装WSL2--Ubuntu</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="从零安装wsl2ubuntu">
+<a class="header-anchor" href="#%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85wsl2ubuntu"></a>
+从零安装WSL2&ndash;Ubuntu
+</h1><h2 id="写在前面">
+<a class="header-anchor" href="#%e5%86%99%e5%9c%a8%e5%89%8d%e9%9d%a2"></a>
+写在前面
+</h2><p>​	wsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。
+<strong>注意</strong>：在安装完子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。</p>
+<h2 id="wsl的安装">
+<a class="header-anchor" href="#wsl%e7%9a%84%e5%ae%89%e8%a3%85"></a>
+wsl的安装
+</h2><h3 id="环境配置与安装">
+<a class="header-anchor" href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae%e4%b8%8e%e5%ae%89%e8%a3%85"></a>
+环境配置与安装
+</h3><p>​	打开windows设置-系统-可选功能-更多Windows功能</p>
+<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
+<p>​	将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。<img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<h2 id="安装wsl-ubuntu">
+<a class="header-anchor" href="#%e5%ae%89%e8%a3%85wsl-ubuntu"></a>
+安装WSL-Ubuntu
+</h2><p>​	打开命令行终端，输入指令</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p>​	系统会自动拉取Ubuntu24.04，我们等待进度条结束即可</p>
+<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
+<p>​	安装完成后，会自动打开该子系统，进行用户名的设置。不同的linux系统对于用户名的要求略有不同，所以如果发现提示用户名不合法，大家按要求修改即可。
+<img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
+<h2 id="将子系统转移到其他位置">
+<a class="header-anchor" href="#%e5%b0%86%e5%ad%90%e7%b3%bb%e7%bb%9f%e8%bd%ac%e7%a7%bb%e5%88%b0%e5%85%b6%e4%bb%96%e4%bd%8d%e7%bd%ae"></a>
+将子系统转移到其他位置
+</h2><p>​	WSL自行拉取的linux系统会自动安装在C盘，有因此我们需要将它转移。我们在命令行中输入<code>exit</code>退出系统。</p>
+<p>接着输入下方命令，关闭所有虚拟机。接着我们先导出刚才安装好的Ubuntu22.04,<code>export</code>命令是用来导出子系统的，可用于备份。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
+<p>​	最后的路径大家可自行选择但文件名字结尾必须为.tar结尾</p>
+<p>​	然后我们注销掉当前的子系统，并导入刚才我们导出的文件，引导它安装到我们想让他安装的位置。同样的路径可自行选择。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
+<p>我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。</p>
+
+        
+        <hr><p>本文2026-05-06首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-06</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>技术</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

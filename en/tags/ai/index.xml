@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AI on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/en/tags/ai/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Thu, 07 May 2026 17:00:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/en/tags/ai/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>When AI Starts Bringing Us Closer to Ithaca...</title>
+      <link>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <description>
+        <![CDATA[<h1>When AI Starts Bringing Us Closer to Ithaca...</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="when-ai-starts-bringing-us-closer-to-ithaca">
+<a class="header-anchor" href="#when-ai-starts-bringing-us-closer-to-ithaca"></a>
+When AI Starts Bringing Us Closer to Ithaca&hellip;
+</h1><p>At some point, I realized my first reaction to a problem had become: ask AI.</p>
+<p>At first, that felt exciting. AI was like a lamp you can switch on at any moment, lighting up corners that once took a long time to explore alone. If I did not understand code, I asked it. If I could not explain an error, I asked it. If I had no idea how to start a CTF challenge, I asked it. Web, Reverse, Pwn, Crypto: things that used to require endless searching and trial-and-error suddenly felt much closer.</p>
+<p>This is real progress, and I do not want to deny that. AI lowers barriers and removes a lot of meaningless friction. People who were blocked by environment setup, unfamiliar terms, and fragmented documentation can now enter the field more smoothly. For security learners, that help is real. It gives difficult knowledge a softer entry point, and in lonely study hours, it can feel like a tireless companion.</p>
+<p>But at the same time, something else is quietly becoming lighter.</p>
+<p>In the past, getting stuck in CTF was normal. You could stare at a code fragment and see nothing. You could build payload after payload and get silence. You could get lost in decompiled output, search through traffic captures for one anomaly, and guess the next move of a program from registers and stack frames. Learning was slow. Many nights ended with no beautiful result, only a pile of failed attempts.</p>
+<p>Yet when I look back, what stayed with me was exactly that slowness. The moments without immediate answers taught me how to observe. Wrong guesses taught me where the boundaries were. Problems I could not solve for a long time taught me that security is not remembering vulnerability names, but holding on to doubt inside uncertainty.</p>
+<p>Now answers arrive too quickly. Sometimes before we have even sat with the question, we rush to submit something. A fluent explanation can replace half an hour of silent reasoning. A complete-looking solution path can make us believe we already understand.</p>
+<p>That makes me a little sad. Not because AI is too powerful, but because we are becoming less able to tolerate the state of &ldquo;not knowing.&rdquo; Not knowing used to be the most natural entry to learning. It forced us to pause, to admit blank space, to move step by step toward the unknown. Now that blank space gets filled almost instantly. A confident answer appears on screen, well-structured, patient, polished. Anxiety fades for a while.</p>
+<p>But understanding may fade with it.</p>
+<p>In CTF, the most important thing was never only the flag. The flag can be an endpoint, or just a signal. What truly changes us is the path we walk toward it. Why did you suspect this point? Why does this route work? Why did the other direction fail? Why does the same payload break in a different environment? If we skip that journey and only see the final string, what remains inside is often empty.</p>
+<p>AI is excellent at giving answers, but not always at helping people own answers. In cybersecurity, this is especially risky. Security is judgment. It is sensitivity to boundaries. It is distrust of things that &ldquo;look normal.&rdquo; AI can explain vulnerabilities, generate scripts, and speak with technical fluency. But it can also be wrong, and often wrong in ways that look right. Smoothness can make errors look respectable, and guesses look like conclusions. Without verification ability, it is easy to mistake that polish for truth.</p>
+<p>Sometimes AI feels like a faster road that helps us avoid muddy paths. But some of our strength is built in that mud. We avoid detours, but we also lose time wrestling with real questions. We reach results faster, but not always the essence.</p>
+<p>This is not an anti-AI argument. I will keep using it, and I know I depend on it. It helps me see blind spots, save time, and find a starting point in chaos. I just hope I do not forget this: tools can light the road, but they cannot grow eyes for me.</p>
+<p>In CTF, maybe the best way to use AI is not to let it replace problem-solving, but to let it accompany us while we stay in front of the problem. It can suggest a direction, but we still need to decide whether there is really a path. It can help write a script, but we still need to know why every line exists. It can produce an answer, but we still need to ask: is this an answer I truly understand?</p>
+<p>We are entering an age where answers are cheaper than ever. Precisely because of that, slowing down becomes more precious. Slow is not backward, and it is not incompetence. Slow is respect for the problem. Slow is a way to keep understanding for ourselves.</p>
+<p>When everything is compressed into progress bars, outcomes, screenshots, and summaries, slowing down takes courage.</p>
+<p>In cybersecurity, rushing is dangerous. Security is not a speed quiz; it is verification. Saying a vulnerability name first does not mean being closer to truth. Producing a payload first does not mean truly understanding the system. Security needs patience, skepticism, and the willingness to pause where things seem reasonable. Many vulnerabilities are not discovered by speed, but by repeated observation, repeated verification, and repeated questioning.</p>
+<p>So I hope we can still learn to slow down.</p>
+<p>Not to reject AI. Not to return to the past. But to keep a healthy distance while using it. Look at the challenge first. Think about boundaries first. Let the question stay in your head for a while.</p>
+<p>Do not rush to cover all blank space with answers, and do not rush to use generated content to silence your insecurity.</p>
+<p>Some blank space is worth keeping.</p>
+<p>Because that is where thinking begins.</p>
+<p>AI can bring us to Ithaca faster.</p>
+<p>But before arrival, I still want to know whether we truly saw the sea.</p>
+
+        
+        <hr><p>Published on 2026-05-07 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-07</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Essay</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

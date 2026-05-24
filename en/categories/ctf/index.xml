@@ -1,0 +1,1585 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CTF on M15tak3のBlog</title>
+    <link>https://blog.m15tak3.com/en/categories/ctf/</link>
+    <description>Recent content from M15tak3のBlog</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    
+    <managingEditor>skyman.soul@gmail.com (M15tak3)</managingEditor>
+    <webMaster>skyman.soul@gmail.com (M15tak3)</webMaster>
+    
+    <copyright>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</copyright>
+    
+    <lastBuildDate>Fri, 15 May 2026 18:30:00 +0800</lastBuildDate>
+    
+    
+    <atom:link href="https://blog.m15tak3.com/en/categories/ctf/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+      
+    
+
+    <item>
+      <title>CTF Traffic Capture Analysis</title>
+      <link>https://blog.m15tak3.com/en/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
+      <pubDate>Fri, 15 May 2026 18:30:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
+      <description>
+        <![CDATA[<h1>CTF Traffic Capture Analysis</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="ctf-traffic-capture-extracting-the-flag-from-pcap">
+<a class="header-anchor" href="#ctf-traffic-capture-extracting-the-flag-from-pcap"></a>
+CTF Traffic Capture: Extracting the Flag from PCAP
+</h1><p>In CTF traffic challenges, you are usually given a <code>.pcap</code>, <code>.pcapng</code>, or a compressed archive, and asked to recover a <code>flag</code> from network communication records.</p>
+<p>These problems are usually classified under Misc, Forensics, or Traffic Analysis. The core skill is not memorizing commands, but reconstructing what happened on the network.</p>
+<p>In short, traffic challenges ask:</p>
+<blockquote>
+<p>Who talked to whom? Which protocol was used? What data was sent? Was it encoded, compressed, split, or hidden?</p>
+</blockquote>
+<p>As long as you follow this logic step by step, you can solve most beginner-to-intermediate traffic tasks.</p>
+<hr>
+<h2 id="1-common-tools">
+<a class="header-anchor" href="#1-common-tools"></a>
+1. Common Tools
+</h2><h3 id="11-wireshark">
+<a class="header-anchor" href="#11-wireshark"></a>
+1.1 Wireshark
+</h3><p>Wireshark is the most common GUI tool for traffic challenges.</p>
+<p>It lets you inspect each packet and filter by protocol, IP, port, or keywords.</p>
+<p>Common features:</p>
+<ul>
+<li>Protocol statistics</li>
+<li>IP conversations</li>
+<li>Filters for HTTP, DNS, FTP, ICMP, etc.</li>
+<li>Follow TCP stream</li>
+<li>Export HTTP transferred files</li>
+<li>Inspect plaintext in packets</li>
+</ul>
+<p>After opening a capture, two key entries are:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>The first shows which protocols exist; the second shows which hosts communicated.</p>
+<h3 id="12-tshark">
+<a class="header-anchor" href="#12-tshark"></a>
+1.2 tshark
+</h3><p><code>tshark</code> is the CLI version of Wireshark, great for batch extraction.</p>
+<p>Show basic capture content:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap
+</span></span></code></pre></div><p>Show HTTP requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;http.request&#34;</span>
+</span></span></code></pre></div><p>Extract DNS query names:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>Extract ICMP data field:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><h3 id="13-strings">
+<a class="header-anchor" href="#13-strings"></a>
+1.3 strings
+</h3><p><code>strings</code> is useful for quick plaintext keyword scanning.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i flag
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i password
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i admin
+</span></span><span class="line"><span class="cl">strings traffic.pcap <span class="p">|</span> grep -i upload
+</span></span></code></pre></div><p>For easy tasks, <code>strings</code> may directly find the flag. If not, it can still reveal suspicious requests, credentials, or filenames.</p>
+<h3 id="14-binwalk-and-foremost">
+<a class="header-anchor" href="#14-binwalk-and-foremost"></a>
+1.4 binwalk and foremost
+</h3><p>If file content was transferred in the capture (images, archives, docs), try file carving:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">binwalk traffic.pcap
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">foremost traffic.pcap
+</span></span></code></pre></div><p>These are supporting tools. In traffic analysis, protocol and conversation analysis usually come first.</p>
+<hr>
+<h2 id="2-basic-workflow-after-getting-a-capture">
+<a class="header-anchor" href="#2-basic-workflow-after-getting-a-capture"></a>
+2. Basic Workflow After Getting a Capture
+</h2><h3 id="21-read-the-challenge-description-first">
+<a class="header-anchor" href="#21-read-the-challenge-description-first"></a>
+2.1 Read the challenge description first
+</h3><p>The description usually gives direction, for example:</p>
+<ul>
+<li>Password leaked during admin login</li>
+<li>Hacker uploaded a file</li>
+<li>Secret hidden in DNS queries</li>
+<li>Flag sent through ICMP</li>
+<li>Recover keyboard input</li>
+<li>Find what attacker downloaded</li>
+</ul>
+<p>If it mentions HTTP, prioritize HTTP requests and responses.
+If it mentions DNS, prioritize domain extraction.
+If it mentions keyboard, consider USB HID traffic.
+If it mentions upload/download, pay attention to exported files.</p>
+<p>Often the description already tells you the key protocol.</p>
+<h3 id="22-check-protocol-statistics">
+<a class="header-anchor" href="#22-check-protocol-statistics"></a>
+2.2 Check protocol statistics
+</h3><p>In Wireshark:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Protocol Hierarchy
+</span></span></code></pre></div><p>Focus on:</p>
+<ul>
+<li>Plaintext protocols such as HTTP, FTP, DNS, ICMP</li>
+<li>Special traffic such as USB, Bluetooth, 802.11</li>
+<li>TCP/UDP ratio anomalies</li>
+<li>Presence of encrypted TLS traffic</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>Heavy HTTP proportion: likely web requests/responses matter</li>
+<li>Many strange long DNS names: possible DNS tunneling</li>
+<li>Many ICMP packets: inspect <code>data</code></li>
+<li>FTP present: look for plaintext credentials and transferred files</li>
+</ul>
+<h3 id="23-check-conversations">
+<a class="header-anchor" href="#23-check-conversations"></a>
+2.3 Check conversations
+</h3><p>Open:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Statistics -&gt; Conversations
+</span></span></code></pre></div><p>Focus on:</p>
+<ul>
+<li>Which IP pair has the most traffic</li>
+<li>External suspicious IPs</li>
+<li>Large data-volume connections</li>
+<li>Suspicious ports</li>
+<li>Obvious upload/download behavior</li>
+</ul>
+<p>Common ports to remember:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">21    FTP
+</span></span><span class="line"><span class="cl">22    SSH
+</span></span><span class="line"><span class="cl">25    SMTP
+</span></span><span class="line"><span class="cl">53    DNS
+</span></span><span class="line"><span class="cl">80    HTTP
+</span></span><span class="line"><span class="cl">110   POP3
+</span></span><span class="line"><span class="cl">143   IMAP
+</span></span><span class="line"><span class="cl">443   HTTPS
+</span></span><span class="line"><span class="cl">3306  MySQL
+</span></span><span class="line"><span class="cl">6379  Redis
+</span></span></code></pre></div><p>If one TCP conversation is much larger than others, it may contain file transfer or critical data.</p>
+<hr>
+<h2 id="3-common-wireshark-filters">
+<a class="header-anchor" href="#3-common-wireshark-filters"></a>
+3. Common Wireshark Filters
+</h2><h3 id="31-filter-by-protocol">
+<a class="header-anchor" href="#31-filter-by-protocol"></a>
+3.1 Filter by protocol
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span><span class="line"><span class="cl">dns
+</span></span><span class="line"><span class="cl">ftp
+</span></span><span class="line"><span class="cl">icmp
+</span></span><span class="line"><span class="cl">tcp
+</span></span><span class="line"><span class="cl">udp
+</span></span><span class="line"><span class="cl">usb
+</span></span></code></pre></div><h3 id="32-filter-by-ip">
+<a class="header-anchor" href="#32-filter-by-ip"></a>
+3.2 Filter by IP
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ip.addr == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.src == 192.168.1.10
+</span></span><span class="line"><span class="cl">ip.dst == 192.168.1.10
+</span></span></code></pre></div><h3 id="33-filter-by-port">
+<a class="header-anchor" href="#33-filter-by-port"></a>
+3.3 Filter by port
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.port == 80
+</span></span><span class="line"><span class="cl">tcp.srcport == 8080
+</span></span><span class="line"><span class="cl">tcp.dstport == 21
+</span></span><span class="line"><span class="cl">udp.port == 53
+</span></span></code></pre></div><h3 id="34-search-by-keyword">
+<a class="header-anchor" href="#34-search-by-keyword"></a>
+3.4 Search by keyword
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">frame contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;password&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;admin&#34;
+</span></span><span class="line"><span class="cl">frame contains &#34;ctf&#34;
+</span></span></code></pre></div><p>For HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http contains &#34;flag&#34;
+</span></span><span class="line"><span class="cl">http contains &#34;password&#34;
+</span></span></code></pre></div><h3 id="35-inspect-one-tcp-stream">
+<a class="header-anchor" href="#35-inspect-one-tcp-stream"></a>
+3.5 Inspect one TCP stream
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>Right-click a TCP packet:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>This is one of the most important operations in traffic tasks.
+A single packet might be incomplete, but stream reassembly shows full request/response content.</p>
+<hr>
+<h2 id="4-http-traffic-analysis">
+<a class="header-anchor" href="#4-http-traffic-analysis"></a>
+4. HTTP Traffic Analysis
+</h2><p>HTTP is very common in CTF traffic because it is often plaintext.</p>
+<h3 id="41-filter-http-requests">
+<a class="header-anchor" href="#41-filter-http-requests"></a>
+4.1 Filter HTTP requests
+</h3><p>Only HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http
+</span></span></code></pre></div><p>Only HTTP requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request
+</span></span></code></pre></div><p>Only GET requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;GET&#34;
+</span></span></code></pre></div><p>Only POST requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">http.request.method == &#34;POST&#34;
+</span></span></code></pre></div><p>POST is especially important for logins, form submissions, and uploads.</p>
+<h3 id="42-what-to-inspect-in-http">
+<a class="header-anchor" href="#42-what-to-inspect-in-http"></a>
+4.2 What to inspect in HTTP
+</h3><p>Common clue locations:</p>
+<ul>
+<li>URL parameters</li>
+<li>POST body</li>
+<li>Cookie</li>
+<li>Authorization header</li>
+<li>Referer</li>
+<li>User-Agent</li>
+<li>Response body</li>
+<li>Uploaded file content</li>
+<li>Returned archives/images/scripts</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="nf">POST</span> <span class="nn">/login.php</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span><span class="o">:</span> <span class="l">example.com</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Type</span><span class="o">:</span> <span class="l">application/x-www-form-urlencoded</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">username=admin&amp;password=YWRtaW4xMjM=
+</span></span></code></pre></div><p><code>YWRtaW4xMjM=</code> looks like Base64. Decoded value:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin123
+</span></span></code></pre></div><p>This credential may be the key for archive extraction, panel login, or flag submission.</p>
+<h3 id="43-export-http-objects">
+<a class="header-anchor" href="#43-export-http-objects"></a>
+4.3 Export HTTP objects
+</h3><p>If files were transferred via HTTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">File -&gt; Export Objects -&gt; HTTP
+</span></span></code></pre></div><p>Then check file type:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">file suspicious_file
+</span></span></code></pre></div><p>If archive: try extract.
+If image: consider steganography.
+If script: inspect source code.
+If filename/response/comment contains strange strings: attempt decoding.</p>
+<hr>
+<h2 id="5-ftp-traffic-analysis">
+<a class="header-anchor" href="#5-ftp-traffic-analysis"></a>
+5. FTP Traffic Analysis
+</h2><p>FTP is often friendly for CTF because usernames, passwords, and commands may be plaintext.</p>
+<p>Filter FTP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp
+</span></span></code></pre></div><p>Common content:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">USER admin
+</span></span><span class="line"><span class="cl">PASS 123456
+</span></span></code></pre></div><p>If file transfer exists, inspect:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ftp-data
+</span></span></code></pre></div><p>You can follow related TCP streams to reconstruct transmitted content.</p>
+<p>Typical FTP task goals:</p>
+<ul>
+<li>Find credentials</li>
+<li>Find uploaded/downloaded filenames</li>
+<li>Restore transferred files</li>
+<li>Continue decryption or hidden-content analysis on extracted files</li>
+</ul>
+<hr>
+<h2 id="6-dns-tunneling-analysis">
+<a class="header-anchor" href="#6-dns-tunneling-analysis"></a>
+6. DNS Tunneling Analysis
+</h2><p>DNS challenges often split data into subdomains.</p>
+<p>Filter DNS:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">dns
+</span></span></code></pre></div><p>Extract query names:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;dns.qry.name&#34;</span> -T fields -e dns.qry.name
+</span></span></code></pre></div><p>You may see:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3s.example.com
+</span></span><span class="line"><span class="cl">ZG5zXw.example.com
+</span></span><span class="line"><span class="cl">c2VjcmV0fQ.example.com
+</span></span></code></pre></div><p>Take and concatenate the left parts:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3sZG5zXwc2VjcmV0fQ
+</span></span></code></pre></div><p>Then try Base64, Hex, URL decode, etc.</p>
+<p>Common DNS tunneling signs:</p>
+<ul>
+<li>Very long subdomains</li>
+<li>Random-looking domain labels</li>
+<li>Fragments that can be concatenated across many requests</li>
+<li>Clear Base64-like character sets</li>
+<li>Abnormally high query frequency</li>
+</ul>
+<p>If the domain contains <code>-</code>, <code>_</code>, digits, mixed case, consider Base64 URL-safe variants.</p>
+<hr>
+<h2 id="7-icmp-traffic-analysis">
+<a class="header-anchor" href="#7-icmp-traffic-analysis"></a>
+7. ICMP Traffic Analysis
+</h2><p>ICMP is the protocol used by ping.
+In CTF, data is often hidden in ICMP <code>data</code> fields.</p>
+<p>Filter ICMP:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp
+</span></span></code></pre></div><p>Extract ICMP data:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r traffic.pcap -Y <span class="s2">&#34;icmp&#34;</span> -T fields -e data
+</span></span></code></pre></div><p>If you get hex like:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b69636d705f7365637265747d
+</span></span></code></pre></div><p>Decode with Python:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="s2">&#34;666c61677b69636d705f7365637265747d&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{icmp_secret}
+</span></span></code></pre></div><p>Remember deduplication.
+Ping usually has request and reply; concatenating all ICMP payloads may duplicate data.</p>
+<p>Only requests:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 8
+</span></span></code></pre></div><p>Only replies:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">icmp.type == 0
+</span></span></code></pre></div><hr>
+<h2 id="8-tcp-stream-following">
+<a class="header-anchor" href="#8-tcp-stream-following"></a>
+8. TCP Stream Following
+</h2><p>TCP stream following is a core operation in traffic challenges.</p>
+<p>In Wireshark, select a TCP packet and right-click:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Follow -&gt; TCP Stream
+</span></span></code></pre></div><p>This shows full client-server communication for that connection.</p>
+<p>Switch streams with:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tcp.stream eq 0
+</span></span><span class="line"><span class="cl">tcp.stream eq 1
+</span></span><span class="line"><span class="cl">tcp.stream eq 2
+</span></span></code></pre></div><p>Prioritize stream-following when:</p>
+<ul>
+<li>HTTP content appears incomplete</li>
+<li>FTP transfers files</li>
+<li>Suspicious port has large data</li>
+<li>You only see a partial flag or encoded fragment</li>
+<li>Data is split into many packets</li>
+</ul>
+<p>After opening a stream, try display formats:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ASCII
+</span></span><span class="line"><span class="cl">Raw
+</span></span><span class="line"><span class="cl">Hex Dump
+</span></span></code></pre></div><p>If needed, choose <code>Raw</code> and save original data.</p>
+<hr>
+<h2 id="9-usb-keyboard-traffic-analysis">
+<a class="header-anchor" href="#9-usb-keyboard-traffic-analysis"></a>
+9. USB Keyboard Traffic Analysis
+</h2><p>Some challenges are not network captures but USB captures.
+A common task is reconstructing keyboard input.</p>
+<p>Filter USB data:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">usb.capdata
+</span></span></code></pre></div><p>Extract field:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">tshark -r usb.pcap -T fields -e usb.capdata
+</span></span></code></pre></div><p>Keyboard HID data often looks like:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">00:00:04:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:05:00:00:00:00:00
+</span></span><span class="line"><span class="cl">00:00:06:00:00:00:00:00
+</span></span></code></pre></div><p>The third byte usually indicates key code:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">04 -&gt; a
+</span></span><span class="line"><span class="cl">05 -&gt; b
+</span></span><span class="line"><span class="cl">06 -&gt; c
+</span></span></code></pre></div><p>If first byte is <code>02</code> or <code>20</code>, Shift is typically pressed, so convert to uppercase/symbols.</p>
+<p>Typical USB keyboard workflow:</p>
+<ol>
+<li>Extract <code>usb.capdata</code></li>
+<li>Remove empty entries</li>
+<li>Take key codes</li>
+<li>Map using HID keyboard table</li>
+<li>Handle special keys: Shift, Backspace, Enter</li>
+</ol>
+<hr>
+<h2 id="10-common-encodings-and-decoding-ideas">
+<a class="header-anchor" href="#10-common-encodings-and-decoding-ideas"></a>
+10. Common Encodings and Decoding Ideas
+</h2><p>Flags in captures are not always directly visible. They are often encoded.</p>
+<h3 id="101-base64">
+<a class="header-anchor" href="#101-base64"></a>
+10.1 Base64
+</h3><p>Features:</p>
+<ul>
+<li>Usually letters, digits, <code>+</code>, <code>/</code></li>
+<li>May end with <code>=</code></li>
+<li>Length often multiple of 4</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ZmxhZ3t0ZXN0X2ZsYWd9
+</span></span></code></pre></div><p>Decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> ZmxhZ3t0ZXN0X2ZsYWd9 <span class="p">|</span> base64 -d
+</span></span></code></pre></div><h3 id="102-hex">
+<a class="header-anchor" href="#102-hex"></a>
+10.2 Hex
+</h3><p>Features:</p>
+<ul>
+<li>Only <code>0-9a-fA-F</code></li>
+<li>Length usually even</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">666c61677b6865785f656e636f64657d
+</span></span></code></pre></div><p>Python decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="s2">&#34;666c61677b6865785f656e636f64657d&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+</span></span></code></pre></div><h3 id="103-url-encoding">
+<a class="header-anchor" href="#103-url-encoding"></a>
+10.3 URL encoding
+</h3><p>Example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">%66%6c%61%67%7b%75%72%6c%7d
+</span></span></code></pre></div><p>Python decode:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">unquote</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">unquote</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%66%</span><span class="s2">6c</span><span class="si">%61%</span><span class="s2">67%7b</span><span class="si">%75%</span><span class="s2">72</span><span class="si">%6c%7d</span><span class="s2">&#34;</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="104-compressed-data-signatures">
+<a class="header-anchor" href="#104-compressed-data-signatures"></a>
+10.4 Compressed data signatures
+</h3><p>If you see these magic bytes, consider decompression or file recovery:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1f 8b       gzip
+</span></span><span class="line"><span class="cl">78 9c       zlib
+</span></span><span class="line"><span class="cl">50 4b       zip
+</span></span><span class="line"><span class="cl">89 50 4e 47 png
+</span></span><span class="line"><span class="cl">ff d8 ff    jpg
+</span></span></code></pre></div><p>Be sensitive to magic bytes.
+Sometimes transferred data is a real file, even if extension is fake.</p>
+<hr>
+<h2 id="11-a-general-troubleshooting-checklist">
+<a class="header-anchor" href="#11-a-general-troubleshooting-checklist"></a>
+11. A General Troubleshooting Checklist
+</h2><p>After receiving a capture, follow this order:</p>
+<ol>
+<li>Read challenge description and infer likely protocols.</li>
+<li>Use <code>strings</code> to search <code>flag</code>, <code>admin</code>, <code>password</code>, <code>ctf</code>.</li>
+<li>In Wireshark, inspect <code>Protocol Hierarchy</code>.</li>
+<li>Use <code>Conversations</code> to find high-volume sessions.</li>
+<li>Filter common protocols: HTTP, FTP, DNS, ICMP.</li>
+<li>For suspicious TCP connections, use <code>Follow TCP Stream</code>.</li>
+<li>If HTTP transferred files, use <code>Export Objects</code>.</li>
+<li>Try Base64/Hex/URL decode on suspicious strings.</li>
+<li>Continue with stego/decompression/script analysis on exported files.</li>
+<li>If data is fragmented, extract fields with <code>tshark</code> and merge via script.</li>
+</ol>
+<p>Not every challenge requires every step, but this flow prevents blind random clicking.</p>
+<hr>
+<h2 id="12-practical-experience-tips">
+<a class="header-anchor" href="#12-practical-experience-tips"></a>
+12. Practical Experience Tips
+</h2><h3 id="121-do-not-only-search-for-flag">
+<a class="header-anchor" href="#121-do-not-only-search-for-flag"></a>
+12.1 Do not only search for <code>flag</code>
+</h3><p>Many tasks do not directly expose <code>flag{}</code>.
+You may first find a password, archive, image, script, or key.</p>
+<p>Besides <code>flag</code>, also search:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">admin
+</span></span><span class="line"><span class="cl">password
+</span></span><span class="line"><span class="cl">pass
+</span></span><span class="line"><span class="cl">login
+</span></span><span class="line"><span class="cl">upload
+</span></span><span class="line"><span class="cl">download
+</span></span><span class="line"><span class="cl">secret
+</span></span><span class="line"><span class="cl">key
+</span></span><span class="line"><span class="cl">token
+</span></span><span class="line"><span class="cl">ctf
+</span></span></code></pre></div><h3 id="122-prioritize-large-data-connections">
+<a class="header-anchor" href="#122-prioritize-large-data-connections"></a>
+12.2 Prioritize large-data connections
+</h3><p>If one TCP connection has significantly more data than others, it often carries key content or files.</p>
+<h3 id="123-prioritize-plaintext-protocols">
+<a class="header-anchor" href="#123-prioritize-plaintext-protocols"></a>
+12.3 Prioritize plaintext protocols
+</h3><p>HTTP, FTP, DNS, ICMP are often the fastest path in CTF traffic problems.
+If these protocols exist, analyze them first before heavy TLS-focused work.</p>
+<h3 id="124-decode-abnormal-long-strings-immediately">
+<a class="header-anchor" href="#124-decode-abnormal-long-strings-immediately"></a>
+12.4 Decode abnormal long strings immediately
+</h3><p>Unusually long strings in URL, Cookie, POST params, DNS subdomains, or ICMP data are often intentional clues.</p>
+<h3 id="125-script-repetitive-work">
+<a class="header-anchor" href="#125-script-repetitive-work"></a>
+12.5 Script repetitive work
+</h3><p>If you need to combine hundreds of DNS queries, ICMP payloads, or USB key events, do not do it manually.
+Extract with <code>tshark</code>, process with Python, and reduce mistakes.</p>
+<hr>
+<h2 id="13-summary">
+<a class="header-anchor" href="#13-summary"></a>
+13. Summary
+</h2><p>Typical traffic-analysis route in CTF:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Description -&gt; Protocol Statistics -&gt; Conversation Analysis -&gt; Protocol Filtering -&gt; TCP Stream Following -&gt; Data Extraction -&gt; Decoding -&gt; File Analysis
+</span></span></code></pre></div><p>For HTTP: inspect requests, responses, cookies, POST body, and exported files.
+For FTP: look for credentials and transferred files.
+For DNS: extract domain labels and attempt concatenation/decoding.
+For ICMP: inspect <code>data</code> fields.
+For USB: reconstruct input with HID keyboard mapping.</p>
+
+        
+        <hr><p>Published on 2026-05-15 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-15</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>CTF CSV Challenge Tutorial</title>
+      <link>https://blog.m15tak3.com/en/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <description>
+        <![CDATA[<h1>CTF CSV Challenge Tutorial</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="ctf-csv-challenge-tutorial-what-the-challenge-wants-and-how-to-write-the-python-script">
+<a class="header-anchor" href="#ctf-csv-challenge-tutorial-what-the-challenge-wants-and-how-to-write-the-python-script"></a>
+CTF CSV Challenge Tutorial: What the Challenge Wants and How to Write the Python Script
+</h1><p>CSV challenges in CTFs are usually placed under Misc, data analysis, forensics, or scripting. They look like ordinary spreadsheet files, but the real test is not whether you can use Excel. The real test is whether you can find patterns in a large amount of structured data, extract the useful information, and finally recover the flag.</p>
+<p>In one sentence: <strong>a CSV challenge wants you to process data with a script instead of reading it line by line with your eyes.</strong></p>
+<hr>
+<h2 id="1-what-a-csv-challenge-usually-wants-you-to-do">
+<a class="header-anchor" href="#1-what-a-csv-challenge-usually-wants-you-to-do"></a>
+1. What a CSV Challenge Usually Wants You to Do
+</h2><p>A CSV file is essentially a text file whose fields are separated by commas, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">char</span><span class="p">,</span><span class="s">index</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">2</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">3</span><span class="p">
+</span></span></span></code></pre></div><p>In CTF challenges, the flag may be split, shuffled, hidden, or encoded inside the table. Common goals include the following.</p>
+<h3 id="11-search-for-the-flag-directly">
+<a class="header-anchor" href="#11-search-for-the-flag-directly"></a>
+1.1 Search for the Flag Directly
+</h3><p>The simplest case is that the flag is hidden in a certain row, column, or note field. The challenge may give you a very large CSV file so that it is hard to find manually.</p>
+<p>What you need to do:</p>
+<ol>
+<li>Read the CSV.</li>
+<li>Iterate through every row.</li>
+<li>Search every field for keywords such as <code>flag{</code>, <code>ctf{</code>, or <code>FLAG{</code>.</li>
+</ol>
+<h3 id="12-sort-by-one-column-and-concatenate-characters">
+<a class="header-anchor" href="#12-sort-by-one-column-and-concatenate-characters"></a>
+1.2 Sort by One Column and Concatenate Characters
+</h3><p>Many challenges split the flag into individual characters and then shuffle their order, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">pos</span><span class="p">,</span><span class="s">ch</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>Here, the challenge wants you to sort by <code>pos</code> and then concatenate <code>ch</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>The key is to identify the &ldquo;order column&rdquo; and the &ldquo;character column&rdquo;.</p>
+<h3 id="13-filter-valid-rows-by-condition">
+<a class="header-anchor" href="#13-filter-valid-rows-by-condition"></a>
+1.3 Filter Valid Rows by Condition
+</h3><p>Some CSV files contain a lot of noise, and only rows matching a condition are real. For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">?</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">6</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>The challenge wants you to keep rows where <code>valid=1</code> and then concatenate <code>value</code>.</p>
+<p>The core idea is: <strong>filter first, extract next, then concatenate.</strong></p>
+<h3 id="14-decode-encoded-fields">
+<a class="header-anchor" href="#14-decode-encoded-fields"></a>
+1.4 Decode Encoded Fields
+</h3><p>The CSV may not store characters directly. It may store ASCII, hex, binary, Base64, or other encodings.</p>
+<p>For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">ascii</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">102</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">108</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">97</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">103</span><span class="p">
+</span></span></span></code></pre></div><p>Here, <code>102 108 97 103</code> corresponds to ASCII characters:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>So you need to convert numbers into characters:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">chr</span><span class="p">(</span><span class="mi">102</span><span class="p">)</span>  <span class="c1"># f</span>
+</span></span></code></pre></div><h3 id="15-reconstruct-an-image-or-qr-code-from-coordinates">
+<a class="header-anchor" href="#15-reconstruct-an-image-or-qr-code-from-coordinates"></a>
+1.5 Reconstruct an Image or QR Code from Coordinates
+</h3><p>A slightly more advanced CSV challenge may give you coordinates and colors, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">x</span><span class="p">,</span><span class="s">y</span><span class="p">,</span><span class="s">color</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">255</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span></code></pre></div><p>This kind of challenge may want you to reconstruct an image, a QR code, or a pixel map from the CSV. You need to:</p>
+<ol>
+<li>Read the <code>x</code> and <code>y</code> coordinates.</li>
+<li>Draw pixels according to the color values.</li>
+<li>Save the result as an image.</li>
+<li>Scan the QR code or inspect the image to get the flag.</li>
+</ol>
+<hr>
+<h2 id="2-what-to-check-first-after-getting-a-csv-file">
+<a class="header-anchor" href="#2-what-to-check-first-after-getting-a-csv-file"></a>
+2. What to Check First After Getting a CSV File
+</h2><p>Do not start by writing a complicated script. Do some basic observation first.</p>
+<h3 id="21-check-the-header">
+<a class="header-anchor" href="#21-check-the-header"></a>
+2.1 Check the Header
+</h3><p>The header often reveals the intended solving path, for example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">index, char, order, ascii, hex, x, y, r, g, b, valid
+</span></span></code></pre></div><p>Different fields usually point to different directions:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Field name</th>
+          <th>Possible meaning</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>index</code> / <code>pos</code> / <code>order</code></td>
+          <td>Sorting</td>
+      </tr>
+      <tr>
+          <td><code>char</code> / <code>ch</code> / <code>value</code></td>
+          <td>Character concatenation</td>
+      </tr>
+      <tr>
+          <td><code>ascii</code></td>
+          <td>ASCII to character</td>
+      </tr>
+      <tr>
+          <td><code>hex</code></td>
+          <td>Hex decoding</td>
+      </tr>
+      <tr>
+          <td><code>bin</code></td>
+          <td>Binary decoding</td>
+      </tr>
+      <tr>
+          <td><code>x</code> / <code>y</code></td>
+          <td>Coordinate drawing</td>
+      </tr>
+      <tr>
+          <td><code>r</code> / <code>g</code> / <code>b</code></td>
+          <td>RGB image</td>
+      </tr>
+      <tr>
+          <td><code>valid</code> / <code>flag</code> / <code>is_true</code></td>
+          <td>Filtering valid data</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="22-check-the-amount-of-data">
+<a class="header-anchor" href="#22-check-the-amount-of-data"></a>
+2.2 Check the Amount of Data
+</h3><p>If there are only dozens of rows, you can inspect the pattern manually. If there are thousands or tens of thousands of rows, you must write a script.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;data.csv&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Row count:&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Header:&#34;</span><span class="p">,</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;First 5 rows:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="23-check-for-abnormal-values">
+<a class="header-anchor" href="#23-check-for-abnormal-values"></a>
+2.3 Check for Abnormal Values
+</h3><p>CTF challenges often hide key information in abnormal values, such as:</p>
+<ul>
+<li>A column has one unusually long row.</li>
+<li>A row contains <code>{</code> or <code>}</code>.</li>
+<li>Some numbers clearly fall in the ASCII range: <code>32</code> to <code>126</code>.</li>
+<li>Some fields look like hex: <code>66 6c 61 67</code>.</li>
+<li>Some fields look like Base64, possibly ending with <code>=</code>.</li>
+</ul>
+<hr>
+<h2 id="3-basic-python-csv-reading">
+<a class="header-anchor" href="#3-basic-python-csv-reading"></a>
+3. Basic Python CSV Reading
+</h2><p>Prefer Python&rsquo;s standard <code>csv</code> library first. It does not require installing third-party packages.</p>
+<h3 id="31-read-as-dictionaries">
+<a class="header-anchor" href="#31-read-as-dictionaries"></a>
+3.1 Read as Dictionaries
+</h3><p>If the CSV has a header, <code>DictReader</code> is the most convenient option.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span></code></pre></div><p>Suppose the CSV is:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">index</span><span class="p">,</span><span class="s">char</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">
+</span></span></span></code></pre></div><p>Each row will be read as:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="p">{</span><span class="s2">&#34;index&#34;</span><span class="p">:</span> <span class="s2">&#34;0&#34;</span><span class="p">,</span> <span class="s2">&#34;char&#34;</span><span class="p">:</span> <span class="s2">&#34;f&#34;</span><span class="p">}</span>
+</span></span></code></pre></div><p>Note: <strong>values read from a CSV are strings by default.</strong>
+If you need sorting or calculation, convert them to <code>int</code> manually.</p>
+<hr>
+<h2 id="4-script-template-1-search-for-the-flag-directly">
+<a class="header-anchor" href="#4-script-template-1-search-for-the-flag-directly"></a>
+4. Script Template 1: Search for the Flag Directly
+</h2><p>Use this when the challenge gives you a huge CSV and you suspect the flag is directly hidden inside it.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;flag\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">col_no</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="k">match</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[+] Found flag at row </span><span class="si">{</span><span class="n">line_no</span><span class="si">}</span><span class="s2">, column </span><span class="si">{</span><span class="n">col_no</span><span class="si">}</span><span class="s2">:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="k">match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+</span></span></code></pre></div><p>If the contest uses a flag format other than <code>flag{}</code>, change this line:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;your_prefix\{.*?\}&#34;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="5-script-template-2-sort-and-concatenate-characters">
+<a class="header-anchor" href="#5-script-template-2-sort-and-concatenate-characters"></a>
+5. Script Template 2: Sort and Concatenate Characters
+</h2><p>Use this when the CSV has columns such as <code>index</code> and <code>char</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;char&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>The most common thing to change is the column name. If the challenge uses <code>pos</code> and <code>value</code>, change it to:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="n">char</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span></code></pre></div><hr>
+<h2 id="6-script-template-3-filter-valid-rows-and-concatenate">
+<a class="header-anchor" href="#6-script-template-3-filter-valid-rows-and-concatenate"></a>
+6. Script Template 3: Filter Valid Rows and Concatenate
+</h2><p>Use this when the CSV has a column marking whether a row is valid, such as <code>valid</code>, <code>is_flag</code>, or <code>status</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>If sorting is also required, combine filtering and sorting:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">]),</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="7-script-template-4-ascii-to-characters">
+<a class="header-anchor" href="#7-script-template-4-ascii-to-characters"></a>
+7. Script Template 4: ASCII to Characters
+</h2><p>Use this when a field contains numbers such as <code>102,108,97,103</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">chars</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>If the CSV also contains an order column:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">char</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;ascii&#34;</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">char</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="8-script-template-5-hex-decoding">
+<a class="header-anchor" href="#8-script-template-5-hex-decoding"></a>
+8. Script Template 5: Hex Decoding
+</h2><p>The CSV may contain hex values such as <code>66</code>, <code>6c</code>, <code>61</code>, and <code>67</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_parts</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">hex_string</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hex_parts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></div><p>If each row contains a complete hex string, you can decode it row by row:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;hex&#34;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span></code></pre></div><hr>
+<h2 id="9-script-template-6-reconstruct-an-image-from-coordinates">
+<a class="header-anchor" href="#9-script-template-6-reconstruct-an-image-from-coordinates"></a>
+9. Script Template 6: Reconstruct an Image from Coordinates
+</h2><p>If the CSV contains <code>x</code>, <code>y</code>, <code>value</code>, or <code>r</code>, <code>g</code>, <code>b</code>, it probably wants you to draw an image.</p>
+<p>Install Pillow first:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install pillow
+</span></span></code></pre></div><p>Black-and-white image reconstruction:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;L&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="mi">255</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">color</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">255</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">color</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] Saved result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>RGB image reconstruction:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;x&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;y&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;r&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;g&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;b&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">img</span><span class="o">.</span><span class="n">putpixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;result.png&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[+] Saved result.png&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>After saving the image, scan it directly if it is a QR code. If the orientation is wrong, try rotating, flipping, or enlarging it.</p>
+<hr>
+<h2 id="10-a-complete-solving-example">
+<a class="header-anchor" href="#10-a-complete-solving-example"></a>
+10. A Complete Solving Example
+</h2><p>Suppose the challenge gives you <code>data.csv</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s">id</span><span class="p">,</span><span class="s">pos</span><span class="p">,</span><span class="s">value</span><span class="p">,</span><span class="s">valid</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">1</span><span class="p">,</span><span class="s">3</span><span class="p">,</span><span class="s">g</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">2</span><span class="p">,</span><span class="s">0</span><span class="p">,</span><span class="s">f</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">3</span><span class="p">,</span><span class="s">9</span><span class="p">,</span><span class="s">x</span><span class="p">,</span><span class="s">0</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">4</span><span class="p">,</span><span class="s">1</span><span class="p">,</span><span class="s">l</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span><span class="line"><span class="cl"><span class="s">5</span><span class="p">,</span><span class="s">2</span><span class="p">,</span><span class="s">a</span><span class="p">,</span><span class="s">1</span><span class="p">
+</span></span></span></code></pre></div><p>The challenge gives no extra hints and only says &ldquo;find the flag&rdquo;.</p>
+<p>First, observe the fields:</p>
+<ul>
+<li><code>pos</code>: looks like an order.</li>
+<li><code>value</code>: looks like a character.</li>
+<li><code>valid</code>: looks like a filtering condition.</li>
+</ul>
+<p>So the idea is:</p>
+<ol>
+<li>Read the CSV.</li>
+<li>Keep only rows where <code>valid=1</code>.</li>
+<li>Sort by <code>pos</code> from small to large.</li>
+<li>Concatenate <code>value</code>.</li>
+</ol>
+<p>Final script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">filename</span> <span class="o">=</span> <span class="s2">&#34;data.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;valid&#34;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&#34;1&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;pos&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+</span></span></code></pre></div><p>Run it:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python solve.py
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag
+</span></span></code></pre></div><p>In a real contest, the output is usually:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{xxxxxxxxxxxxxxxx}
+</span></span></code></pre></div><hr>
+<h2 id="11-general-workflow-for-solving-csv-challenges">
+<a class="header-anchor" href="#11-general-workflow-for-solving-csv-challenges"></a>
+11. General Workflow for Solving CSV Challenges
+</h2><p>When you encounter a CSV challenge, follow this process:</p>
+<ol>
+<li><strong>Check the file name and description</strong>: look for hints such as sorting, coordinates, colors, encoding, logs, or traffic.</li>
+<li><strong>Check the header</strong>: field names usually point to the intended solving direction.</li>
+<li><strong>Print the first few rows</strong>: confirm what each column looks like.</li>
+<li><strong>Count rows and inspect field ranges</strong>: judge whether it may be image coordinates, ASCII, or a time series.</li>
+<li><strong>Write the smallest script first</strong>: make it read, print, and filter.</li>
+<li><strong>Add features step by step</strong>: sort, concatenate, decode, and draw.</li>
+<li><strong>Search for the flag format</strong>: finally use regex to extract <code>flag{...}</code>.</li>
+</ol>
+<hr>
+<h2 id="12-common-pitfalls">
+<a class="header-anchor" href="#12-common-pitfalls"></a>
+12. Common Pitfalls
+</h2><h3 id="121-encoding-errors">
+<a class="header-anchor" href="#121-encoding-errors"></a>
+12.1 Encoding Errors
+</h3><p>If <code>utf-8</code> fails, try:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;gbk&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Or:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8-sig&#34;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p><code>utf-8-sig</code> can handle CSV files with a BOM.</p>
+<h3 id="122-numeric-sorting-turns-into-string-sorting">
+<a class="header-anchor" href="#122-numeric-sorting-turns-into-string-sorting"></a>
+12.2 Numeric Sorting Turns into String Sorting
+</h3><p>Wrong example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">items</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span></code></pre></div><p>If <code>x[0]</code> is a string, the order may become:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1, 10, 11, 2, 3
+</span></span></code></pre></div><p>So convert it to an integer:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&#34;index&#34;</span><span class="p">])</span>
+</span></span></code></pre></div><h3 id="123-the-separator-is-not-a-comma">
+<a class="header-anchor" href="#123-the-separator-is-not-a-comma"></a>
+12.3 The Separator Is Not a Comma
+</h3><p>Some files are called CSV, but actually use semicolons, tabs, or vertical bars as separators.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Tab-separated:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&#34;</span><span class="se">\t</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="124-the-header-contains-spaces">
+<a class="header-anchor" href="#124-the-header-contains-spaces"></a>
+12.4 The Header Contains Spaces
+</h3><p>Some headers may look like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-csv" data-lang="csv"><span class="line"><span class="cl"><span class="s"> index </span><span class="p">,</span><span class="s"> char</span><span class="p">
+</span></span></span></code></pre></div><p>This will make <code>row[&quot;index&quot;]</code> fail. Print the field names first:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">)</span>
+</span></span></code></pre></div><p>Or strip keys after reading:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span></span></code></pre></div>
+        
+        <hr><p>Published on 2026-05-15 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-15</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>A Detailed Guide to CTF Tracks</title>
+      <link>https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</link>
+      <pubDate>Thu, 14 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</guid>
+      <description>
+        <![CDATA[<h1>A Detailed Guide to CTF Tracks</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="a-detailed-guide-to-ctf-tracks">
+<a class="header-anchor" href="#a-detailed-guide-to-ctf-tracks"></a>
+A Detailed Guide to CTF Tracks
+</h1><h2 id="1-what-is-ctf">
+<a class="header-anchor" href="#1-what-is-ctf"></a>
+1. What Is CTF
+</h2><p>CTF (Capture The Flag) is a cybersecurity competition format. Players solve challenges through analysis, exploitation, cryptanalysis, reverse engineering, and forensics, then submit a <code>flag</code> (usually a specially formatted string) for points.</p>
+<p>The core of CTF is not memorizing tool commands. It is understanding system fundamentals, security mechanisms, and attacker/defender thinking under concrete challenge scenarios.</p>
+<h3 id="11-common-competition-formats">
+<a class="header-anchor" href="#11-common-competition-formats"></a>
+1.1 Common Competition Formats
+</h3><ul>
+<li>Jeopardy: categorized challenges (Web, Pwn, Reverse, Crypto, Misc, etc.), submit flags one by one.</li>
+<li>Attack-Defense: attack other teams&rsquo; services while defending your own.</li>
+<li>King of the Hill: continuously hold target points to gain score.</li>
+</ul>
+<h3 id="12-why-ctf-matters">
+<a class="header-anchor" href="#12-why-ctf-matters"></a>
+1.2 Why CTF Matters
+</h3><ul>
+<li>Practical ability: turns fragmented knowledge into complete attack/defense chains.</li>
+<li>Engineering ability: automation, debugging, log analysis, and postmortem habits.</li>
+<li>Collaboration ability: team split, parallel progress, time management, and strategy decisions.</li>
+</ul>
+<h3 id="13-typical-challenge-characteristics">
+<a class="header-anchor" href="#13-typical-challenge-characteristics"></a>
+1.3 Typical Challenge Characteristics
+</h3><ul>
+<li>Most problems are built around one exploitable flaw and are not identical to production systems.</li>
+<li>Deliberate noise is common; you must separate useful clues from distractions.</li>
+<li>High-value challenges often require multi-step chaining across domains.</li>
+</ul>
+<hr>
+<h2 id="2-web-track">
+<a class="header-anchor" href="#2-web-track"></a>
+2. Web Track
+</h2><h3 id="21-core-focus">
+<a class="header-anchor" href="#21-core-focus"></a>
+2.1 Core Focus
+</h3><p>Understand how Web applications work, then use design/implementation flaws to extract sensitive data (for example, flags).</p>
+<h3 id="22-common-problem-types">
+<a class="header-anchor" href="#22-common-problem-types"></a>
+2.2 Common Problem Types
+</h3><ul>
+<li>SQL injection (union, error-based, blind, stacked)</li>
+<li>XSS (reflected, stored, DOM-based)</li>
+<li>File upload vulnerabilities (extension bypass, MIME bypass, parser bugs)</li>
+<li>Deserialization issues (PHP/Python/Java)</li>
+<li>SSRF (internal network probing, cloud metadata endpoints)</li>
+<li>Command injection (RCE)</li>
+<li>Auth/session weaknesses (weak passwords, JWT forgery, session fixation)</li>
+<li>Access control bugs (horizontal/vertical privilege bypass)</li>
+<li>SSTI</li>
+<li>Path traversal / local file include (LFI/RFI)</li>
+</ul>
+<h3 id="23-knowledge-you-need">
+<a class="header-anchor" href="#23-knowledge-you-need"></a>
+2.3 Knowledge You Need
+</h3><ul>
+<li>HTTP/HTTPS basics (methods, status codes, cookies, headers)</li>
+<li>Backend framework behavior (Flask, Django, PHP, Node, etc.)</li>
+<li>SQL basics (MySQL/PostgreSQL)</li>
+<li>Secure data flow model (input -&gt; processing -&gt; output)</li>
+<li>Encoding/decoding (URL, Base64, Unicode, HTML entities)</li>
+</ul>
+<h3 id="24-common-tools">
+<a class="header-anchor" href="#24-common-tools"></a>
+2.4 Common Tools
+</h3><ul>
+<li>Burp Suite</li>
+<li>Browser DevTools</li>
+<li>sqlmap</li>
+<li>ffuf / dirsearch</li>
+<li>Postman / curl</li>
+</ul>
+<h3 id="25-generic-solving-workflow">
+<a class="header-anchor" href="#25-generic-solving-workflow"></a>
+2.5 Generic Solving Workflow
+</h3><ol>
+<li>Inventory pages, endpoints, parameters, and auth flow.</li>
+<li>Find controllable input points.</li>
+<li>Test boundary behavior (special chars, long input, type mismatch).</li>
+<li>Use errors and responses to classify vulnerability type and craft payloads.</li>
+<li>After initial foothold, expand laterally (file read, privilege escalation, internal probing).</li>
+</ol>
+<hr>
+<h2 id="3-misc-track">
+<a class="header-anchor" href="#3-misc-track"></a>
+3. Misc Track
+</h2><h3 id="31-core-focus">
+<a class="header-anchor" href="#31-core-focus"></a>
+3.1 Core Focus
+</h3><p>Misc emphasizes information processing, automation, and cross-domain reasoning. It is often about connecting multiple small clues rather than exploiting one single bug.</p>
+<h3 id="32-common-problem-types">
+<a class="header-anchor" href="#32-common-problem-types"></a>
+3.2 Common Problem Types
+</h3><ul>
+<li>Encoding/decoding puzzles</li>
+<li>Steganography (image/audio/text/file tail)</li>
+<li>Traffic analysis (pcap, HTTP/TCP extraction)</li>
+<li>Forensics artifacts (logs, archives, metadata)</li>
+<li>Protocol interaction or small automation games</li>
+<li>QR/barcode/keyboard traffic/Morse-style tasks</li>
+</ul>
+<h3 id="33-knowledge-you-need">
+<a class="header-anchor" href="#33-knowledge-you-need"></a>
+3.3 Knowledge You Need
+</h3><ul>
+<li>File format structures (PNG/JPG/ZIP/PDF)</li>
+<li>Network basics (TCP/HTTP/DNS)</li>
+<li>Linux CLI and batch operations</li>
+<li>Python scripting (regex, bytes, batch processing)</li>
+</ul>
+<h3 id="34-common-tools">
+<a class="header-anchor" href="#34-common-tools"></a>
+3.4 Common Tools
+</h3><ul>
+<li>CyberChef</li>
+<li>Wireshark / tshark</li>
+<li>binwalk / foremost</li>
+<li>stegsolve / zsteg / exiftool</li>
+<li>Python</li>
+</ul>
+<h3 id="35-generic-solving-workflow">
+<a class="header-anchor" href="#35-generic-solving-workflow"></a>
+3.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify artifact type.</li>
+<li>Inspect metadata and structure (headers, tails, magic bytes).</li>
+<li>Try reversible transformations.</li>
+<li>Script repetitive operations early.</li>
+</ol>
+<hr>
+<h2 id="4-crypto-track">
+<a class="header-anchor" href="#4-crypto-track"></a>
+4. Crypto Track
+</h2><h3 id="41-core-focus">
+<a class="header-anchor" href="#41-core-focus"></a>
+4.1 Core Focus
+</h3><p>In CTF, Crypto is usually not about brute-forcing modern algorithms, but about exploiting weak parameters, flawed implementations, or insecure usage.</p>
+<h3 id="42-common-problem-types">
+<a class="header-anchor" href="#42-common-problem-types"></a>
+4.2 Common Problem Types
+</h3><ul>
+<li>Classical ciphers (Caesar, Vigenere, rail fence)</li>
+<li>RSA issues (small exponent, common modulus, weak prime entropy, partial leakage)</li>
+<li>Symmetric misuse (ECB, IV reuse, padding oracle)</li>
+<li>Hash-related issues (length extension, weak collision setups)</li>
+<li>Predictable randomness (weak seeds)</li>
+</ul>
+<h3 id="43-knowledge-you-need">
+<a class="header-anchor" href="#43-knowledge-you-need"></a>
+4.3 Knowledge You Need
+</h3><ul>
+<li>Modular arithmetic, Euclid, inverses</li>
+<li>Prime math, Euler phi, fast exponentiation</li>
+<li>Cipher modes (ECB/CBC/CTR/GCM)</li>
+<li>Signature/auth concepts (HMAC, RSA/ECDSA basics)</li>
+</ul>
+<h3 id="44-common-tools">
+<a class="header-anchor" href="#44-common-tools"></a>
+4.4 Common Tools
+</h3><ul>
+<li>Python + <code>pycryptodome</code></li>
+<li>SageMath</li>
+<li>factordb / yafu</li>
+<li>RsaCtfTool</li>
+</ul>
+<h3 id="45-generic-solving-workflow">
+<a class="header-anchor" href="#45-generic-solving-workflow"></a>
+4.5 Generic Solving Workflow
+</h3><ol>
+<li>Decide whether this is algorithmic or implementation-driven.</li>
+<li>List knowns/unknowns (key, ciphertext, params, oracle behavior).</li>
+<li>Build mathematical relationships and solvability conditions.</li>
+<li>Prioritize weak/reused parameters.</li>
+</ol>
+<hr>
+<h2 id="5-pwn-track">
+<a class="header-anchor" href="#5-pwn-track"></a>
+5. Pwn Track
+</h2><h3 id="51-core-focus">
+<a class="header-anchor" href="#51-core-focus"></a>
+5.1 Core Focus
+</h3><p>Exploit binary memory-safety flaws to control execution flow and finally read flag or get shell.</p>
+<h3 id="52-common-problem-types">
+<a class="header-anchor" href="#52-common-problem-types"></a>
+5.2 Common Problem Types
+</h3><ul>
+<li>Stack overflow (ret2win, ret2libc, ROP)</li>
+<li>Heap exploitation (UAF, double free, tcache poisoning)</li>
+<li>Format string bugs</li>
+<li>Integer overflow leading to OOB read/write</li>
+<li>Sandbox escape (advanced)</li>
+</ul>
+<h3 id="53-knowledge-you-need">
+<a class="header-anchor" href="#53-knowledge-you-need"></a>
+5.3 Knowledge You Need
+</h3><ul>
+<li>C memory model (stack, heap, globals)</li>
+<li>x86/x64 calling conventions</li>
+<li>ELF and dynamic linking</li>
+<li>Linux/syscall fundamentals</li>
+<li>Protections: NX, Canary, PIE, RELRO, ASLR</li>
+</ul>
+<h3 id="54-common-tools">
+<a class="header-anchor" href="#54-common-tools"></a>
+5.4 Common Tools
+</h3><ul>
+<li>gdb + pwndbg/gef</li>
+<li>pwntools</li>
+<li>checksec</li>
+<li>IDA / Ghidra</li>
+<li>one_gadget / ropper</li>
+</ul>
+<h3 id="55-generic-solving-workflow">
+<a class="header-anchor" href="#55-generic-solving-workflow"></a>
+5.5 Generic Solving Workflow
+</h3><ol>
+<li>Run <code>checksec</code>.</li>
+<li>Reverse for controllable input and dangerous code paths.</li>
+<li>Confirm crash point and offset control.</li>
+<li>Choose exploit chain based on active mitigations.</li>
+<li>Port local exploit to remote; handle libc and timing differences.</li>
+</ol>
+<hr>
+<h2 id="6-reverse-track">
+<a class="header-anchor" href="#6-reverse-track"></a>
+6. Reverse Track
+</h2><h3 id="61-core-focus">
+<a class="header-anchor" href="#61-core-focus"></a>
+6.1 Core Focus
+</h3><p>Reconstruct program logic through static and dynamic analysis to recover key data, validation rules, or keys.</p>
+<h3 id="62-common-problem-types">
+<a class="header-anchor" href="#62-common-problem-types"></a>
+6.2 Common Problem Types
+</h3><ul>
+<li>String checks and simple obfuscation</li>
+<li>Control-flow flattening/fake branches</li>
+<li>Anti-debug/anti-sandbox</li>
+<li>Custom crypto routine recovery</li>
+<li>APK/so/script mixed reversing</li>
+</ul>
+<h3 id="63-knowledge-you-need">
+<a class="header-anchor" href="#63-knowledge-you-need"></a>
+6.3 Knowledge You Need
+</h3><ul>
+<li>Assembly basics</li>
+<li>Compiler optimization side effects</li>
+<li>PE/ELF/APK structures</li>
+<li>Dynamic breakpoint-tracing workflow</li>
+</ul>
+<h3 id="64-common-tools">
+<a class="header-anchor" href="#64-common-tools"></a>
+6.4 Common Tools
+</h3><ul>
+<li>IDA Pro / Ghidra</li>
+<li>x64dbg / OllyDbg</li>
+<li>gdb</li>
+<li>JADX / apktool</li>
+<li>Frida</li>
+</ul>
+<h3 id="65-generic-solving-workflow">
+<a class="header-anchor" href="#65-generic-solving-workflow"></a>
+6.5 Generic Solving Workflow
+</h3><ol>
+<li>Execute first and observe IO behavior.</li>
+<li>Locate critical functions statically.</li>
+<li>Validate hypotheses with breakpoints.</li>
+<li>Rebuild algorithm or patch around key verification.</li>
+</ol>
+<hr>
+<h2 id="7-ai-security-track">
+<a class="header-anchor" href="#7-ai-security-track"></a>
+7. AI Security Track
+</h2><h3 id="71-core-focus">
+<a class="header-anchor" href="#71-core-focus"></a>
+7.1 Core Focus
+</h3><p>Focus on attacks/defenses around model, data, inference pipeline, and integration layer.</p>
+<h3 id="72-common-problem-types">
+<a class="header-anchor" href="#72-common-problem-types"></a>
+7.2 Common Problem Types
+</h3><ul>
+<li>Prompt injection</li>
+<li>Jailbreak</li>
+<li>Data leakage (system prompts/private data)</li>
+<li>Tool abuse / privilege overreach</li>
+<li>RAG poisoning/retrieval manipulation</li>
+<li>Model extraction / membership inference</li>
+<li>Adversarial examples</li>
+</ul>
+<h3 id="73-knowledge-you-need">
+<a class="header-anchor" href="#73-knowledge-you-need"></a>
+7.3 Knowledge You Need
+</h3><ul>
+<li>LLM role hierarchy (system/user/assistant)</li>
+<li>RAG pipeline (retrieve/rerank/context build)</li>
+<li>Agent tool invocation and permission boundaries</li>
+<li>Input filtering, output policy checks, and safety strategy engines</li>
+</ul>
+<h3 id="74-common-methods">
+<a class="header-anchor" href="#74-common-methods"></a>
+7.4 Common Methods
+</h3><ul>
+<li>Manual payload crafting across turns and role tricks</li>
+<li>Log auditing for model/tool call traces</li>
+<li>Red-team benchmark sets</li>
+<li>Automated injection test scripts</li>
+</ul>
+<h3 id="75-generic-solving-workflow">
+<a class="header-anchor" href="#75-generic-solving-workflow"></a>
+7.5 Generic Solving Workflow
+</h3><ol>
+<li>Identify system boundaries.</li>
+<li>Start with low-risk probing.</li>
+<li>Escalate by layer (instruction conflicts -&gt; context poisoning -&gt; tool abuse).</li>
+<li>Confirm reproducibility.</li>
+<li>Provide mitigations (least privilege, context isolation, policy guardrails).</li>
+</ol>
+<h3 id="76-defensive-checklist">
+<a class="header-anchor" href="#76-defensive-checklist"></a>
+7.6 Defensive Checklist
+</h3><ul>
+<li>System instructions must not be overridden by user input.</li>
+<li>Separate retrieved context from user text with trust labels.</li>
+<li>Add permission gateways for tool calls (allowlists + auditing).</li>
+<li>Require policy checks / human review for high-risk output.</li>
+<li>Keep full logs for replay and incident tracing.</li>
+</ul>
+<hr>
+<h2 id="8-team-role-suggestions">
+<a class="header-anchor" href="#8-team-role-suggestions"></a>
+8. Team Role Suggestions
+</h2><ul>
+<li>Web: endpoint and business-logic vulnerabilities</li>
+<li>Pwn: binary exploitation chain</li>
+<li>Reverse: algorithm reconstruction and helper scripts</li>
+<li>Crypto: math/crypto tasks + validation scripts</li>
+<li>Misc: traffic/steg/mixed fast cleanup</li>
+<li>AI security: model and agent attack surface</li>
+</ul>
+<p>Mature teams usually need both ownership and backup for each domain.</p>
+<hr>
+<h2 id="9-conclusion">
+<a class="header-anchor" href="#9-conclusion"></a>
+9. Conclusion
+</h2><p>CTF is not just tool usage. It is the combination of knowledge structure, analysis method, automation ability, and team coordination.</p>
+<p>A practical learning path is to deeply specialize in 1-2 tracks first, build stable scoring strength, then gradually expand to other tracks.</p>
+
+        
+        <hr><p>Published on 2026-05-14 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-14</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>When AI Starts Bringing Us Closer to Ithaca...</title>
+      <link>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <description>
+        <![CDATA[<h1>When AI Starts Bringing Us Closer to Ithaca...</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="when-ai-starts-bringing-us-closer-to-ithaca">
+<a class="header-anchor" href="#when-ai-starts-bringing-us-closer-to-ithaca"></a>
+When AI Starts Bringing Us Closer to Ithaca&hellip;
+</h1><p>At some point, I realized my first reaction to a problem had become: ask AI.</p>
+<p>At first, that felt exciting. AI was like a lamp you can switch on at any moment, lighting up corners that once took a long time to explore alone. If I did not understand code, I asked it. If I could not explain an error, I asked it. If I had no idea how to start a CTF challenge, I asked it. Web, Reverse, Pwn, Crypto: things that used to require endless searching and trial-and-error suddenly felt much closer.</p>
+<p>This is real progress, and I do not want to deny that. AI lowers barriers and removes a lot of meaningless friction. People who were blocked by environment setup, unfamiliar terms, and fragmented documentation can now enter the field more smoothly. For security learners, that help is real. It gives difficult knowledge a softer entry point, and in lonely study hours, it can feel like a tireless companion.</p>
+<p>But at the same time, something else is quietly becoming lighter.</p>
+<p>In the past, getting stuck in CTF was normal. You could stare at a code fragment and see nothing. You could build payload after payload and get silence. You could get lost in decompiled output, search through traffic captures for one anomaly, and guess the next move of a program from registers and stack frames. Learning was slow. Many nights ended with no beautiful result, only a pile of failed attempts.</p>
+<p>Yet when I look back, what stayed with me was exactly that slowness. The moments without immediate answers taught me how to observe. Wrong guesses taught me where the boundaries were. Problems I could not solve for a long time taught me that security is not remembering vulnerability names, but holding on to doubt inside uncertainty.</p>
+<p>Now answers arrive too quickly. Sometimes before we have even sat with the question, we rush to submit something. A fluent explanation can replace half an hour of silent reasoning. A complete-looking solution path can make us believe we already understand.</p>
+<p>That makes me a little sad. Not because AI is too powerful, but because we are becoming less able to tolerate the state of &ldquo;not knowing.&rdquo; Not knowing used to be the most natural entry to learning. It forced us to pause, to admit blank space, to move step by step toward the unknown. Now that blank space gets filled almost instantly. A confident answer appears on screen, well-structured, patient, polished. Anxiety fades for a while.</p>
+<p>But understanding may fade with it.</p>
+<p>In CTF, the most important thing was never only the flag. The flag can be an endpoint, or just a signal. What truly changes us is the path we walk toward it. Why did you suspect this point? Why does this route work? Why did the other direction fail? Why does the same payload break in a different environment? If we skip that journey and only see the final string, what remains inside is often empty.</p>
+<p>AI is excellent at giving answers, but not always at helping people own answers. In cybersecurity, this is especially risky. Security is judgment. It is sensitivity to boundaries. It is distrust of things that &ldquo;look normal.&rdquo; AI can explain vulnerabilities, generate scripts, and speak with technical fluency. But it can also be wrong, and often wrong in ways that look right. Smoothness can make errors look respectable, and guesses look like conclusions. Without verification ability, it is easy to mistake that polish for truth.</p>
+<p>Sometimes AI feels like a faster road that helps us avoid muddy paths. But some of our strength is built in that mud. We avoid detours, but we also lose time wrestling with real questions. We reach results faster, but not always the essence.</p>
+<p>This is not an anti-AI argument. I will keep using it, and I know I depend on it. It helps me see blind spots, save time, and find a starting point in chaos. I just hope I do not forget this: tools can light the road, but they cannot grow eyes for me.</p>
+<p>In CTF, maybe the best way to use AI is not to let it replace problem-solving, but to let it accompany us while we stay in front of the problem. It can suggest a direction, but we still need to decide whether there is really a path. It can help write a script, but we still need to know why every line exists. It can produce an answer, but we still need to ask: is this an answer I truly understand?</p>
+<p>We are entering an age where answers are cheaper than ever. Precisely because of that, slowing down becomes more precious. Slow is not backward, and it is not incompetence. Slow is respect for the problem. Slow is a way to keep understanding for ourselves.</p>
+<p>When everything is compressed into progress bars, outcomes, screenshots, and summaries, slowing down takes courage.</p>
+<p>In cybersecurity, rushing is dangerous. Security is not a speed quiz; it is verification. Saying a vulnerability name first does not mean being closer to truth. Producing a payload first does not mean truly understanding the system. Security needs patience, skepticism, and the willingness to pause where things seem reasonable. Many vulnerabilities are not discovered by speed, but by repeated observation, repeated verification, and repeated questioning.</p>
+<p>So I hope we can still learn to slow down.</p>
+<p>Not to reject AI. Not to return to the past. But to keep a healthy distance while using it. Look at the challenge first. Think about boundaries first. Let the question stay in your head for a while.</p>
+<p>Do not rush to cover all blank space with answers, and do not rush to use generated content to silence your insecurity.</p>
+<p>Some blank space is worth keeping.</p>
+<p>Because that is where thinking begins.</p>
+<p>AI can bring us to Ithaca faster.</p>
+<p>But before arrival, I still want to know whether we truly saw the sea.</p>
+
+        
+        <hr><p>Published on 2026-05-07 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-07</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Essay</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Linux Python Management (Installing and Using pyenv)</title>
+      <link>https://blog.m15tak3.com/en/post/pyenv/</link>
+      <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/pyenv/</guid>
+      <description>
+        <![CDATA[<h1>Linux Python Management (Installing and Using pyenv)</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="linux-python-management-installing-and-using-pyenv">
+<a class="header-anchor" href="#linux-python-management-installing-and-using-pyenv"></a>
+Linux Python Management (Installing and Using pyenv)
+</h1><p>On newer Linux versions (for example, Ubuntu 24.04), using <code>pip</code> for system-level package management may trigger the <code>externally-managed-environment</code> error. In other words, the system does not allow direct global package installation with <code>pip</code>.</p>
+<p>To avoid breaking the system Python environment and to manage Python versions more cleanly, I recommend using <code>pyenv</code> (plus virtual environments).</p>
+<h2 id="install-build-dependencies">
+<a class="header-anchor" href="#install-build-dependencies"></a>
+Install Build Dependencies
+</h2><p><strong>For Ubuntu/Debian:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt-get update<span class="p">;</span> sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+</span></span></code></pre></div><p><strong>For CentOS and similar systems:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo yum install -y gcc zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel findutils
+</span></span></code></pre></div><h2 id="install-pyenv">
+<a class="header-anchor" href="#install-pyenv"></a>
+Install pyenv
+</h2><p>Install via the official script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://pyenv.run <span class="p">|</span> bash
+</span></span></code></pre></div><h2 id="configure-your-shell-and-apply">
+<a class="header-anchor" href="#configure-your-shell-and-apply"></a>
+Configure Your Shell and Apply
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;export PYENV_ROOT=&#34;$HOME/.pyenv&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;command -v pyenv &gt;/dev/null || export PATH=&#34;$PYENV_ROOT/bin:$PATH&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(pyenv init -)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> ~/.bashrc
+</span></span><span class="line"><span class="cl"><span class="c1"># If you use Zsh, replace .bashrc with .zshrc</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Verify</span>
+</span></span><span class="line"><span class="cl">pyenv --version
+</span></span></code></pre></div><h2 id="basic-pyenv-usage">
+<a class="header-anchor" href="#basic-pyenv-usage"></a>
+Basic pyenv Usage
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># pyenv install python-version, e.g. install 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv install 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv global python-version, e.g. set global version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv global 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv local python-version, e.g. set local project version to 3.13.3</span>
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-project/
+</span></span><span class="line"><span class="cl">pyenv <span class="nb">local</span> 3.13.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv shell python-version, e.g. set shell session version to 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv shell python-version
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv virtualenv python-version myproject-env, e.g. create ctf env with 3.13.3</span>
+</span></span><span class="line"><span class="cl">pyenv virtualenv 3.13.3 ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv activate myproject-env, e.g. activate ctf env</span>
+</span></span><span class="line"><span class="cl">pyenv activate ctf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv deactivate, exit virtual environment</span>
+</span></span><span class="line"><span class="cl">pyenv deactivate
+</span></span></code></pre></div>
+        
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Installing WSL2 &#43; Ubuntu from Scratch</title>
+      <link>https://blog.m15tak3.com/en/post/wsl1/</link>
+      <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/en/post/wsl1/</guid>
+      <description>
+        <![CDATA[<h1>Installing WSL2 + Ubuntu from Scratch</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
+        
+          <h1 id="installing-wsl2--ubuntu-from-scratch">
+<a class="header-anchor" href="#installing-wsl2--ubuntu-from-scratch"></a>
+Installing WSL2 + Ubuntu from Scratch
+</h1><h2 id="before-you-start">
+<a class="header-anchor" href="#before-you-start"></a>
+Before You Start
+</h2><p>You can think of WSL as a lightweight VM that gives much better local file interaction than VMware under Windows.</p>
+<p><strong>Note</strong>: after installing a Linux subsystem, if you later upgrade Windows from Home to Pro, subsystem file corruption can happen. Please keep backups.</p>
+<h2 id="installing-wsl">
+<a class="header-anchor" href="#installing-wsl"></a>
+Installing WSL
+</h2><h3 id="enable-required-features">
+<a class="header-anchor" href="#enable-required-features"></a>
+Enable Required Features
+</h3><p>Open: <code>Windows Settings -&gt; System -&gt; Optional features -&gt; More Windows features</code></p>
+<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
+<p>Enable <strong>Windows Subsystem for Linux</strong> and <strong>Virtual Machine Platform</strong>, then click OK. Windows will install these features and ask for a reboot.</p>
+<p><img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
+<h2 id="install-wsl-ubuntu">
+<a class="header-anchor" href="#install-wsl-ubuntu"></a>
+Install WSL Ubuntu
+</h2><p>Open a terminal and run:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p>The system will automatically pull Ubuntu 24.04 in this setup, so just wait for the progress to finish.</p>
+<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
+<p>After installation, the subsystem starts automatically and asks you to create a username. Username rules vary slightly by distro; if your name is rejected, adjust it accordingly.</p>
+<p><img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
+<h2 id="move-the-subsystem-to-another-drive">
+<a class="header-anchor" href="#move-the-subsystem-to-another-drive"></a>
+Move the Subsystem to Another Drive
+</h2><p>By default, WSL installs distributions under drive C. If you want to move it, first run <code>exit</code> in the Linux shell.</p>
+<p>Then shut down all WSL VMs and export the installed Ubuntu 22.04 for backup:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
+<p>You can choose your own path, but the exported file must end with <code>.tar</code>.</p>
+<p>Now unregister the current distro and import it to your target location:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
+</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
+</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
+<p>After that, the subsystem location is changed, and your files stay intact.</p>
+
+        
+        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+      </description>
+      
+        <category>Tech</category><category>CTF</category>
+      
+    </item>
+    
+  </channel>
+</rss>

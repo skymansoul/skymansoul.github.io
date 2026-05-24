@@ -1,0 +1,128 @@
+{
+  "type": "Live2D Model Setting",
+  "name": "Violet",
+  "model": "Violet.moc",
+  "textures": [
+    "Violet.1024/texture_00.png"
+  ],
+  "layout": {
+    "width": 4.25,
+    "center_x": -0.08,
+    "center_y": -1.35
+  },
+  "motions": {
+    "idle": [
+      {
+        "file": "motions/idle01.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle02.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle03.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      },
+      {
+        "file": "motions/idle04.mtn",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "start": [
+      {
+        "file": "motions/start.mtn",
+        "sound": "sound/start.mp3",
+        "text": "&#x60a8;&#x597d;&#xff0c;&#x6211;&#x662f;&#x81ea;&#x52a8;&#x624b;&#x8bb0;&#x4eba;&#x5076;&#xff0c;&#x8587;&#x5c14;&#x8389;&#x7279;&#x3002;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_head": [
+      {
+        "file": "motions/tap_face.mtn",
+        "text": "&#x8bf7;&#x95ee;&#xff0c;&#x60a8;&#x662f;&#x6709;&#x8bdd;&#x60f3;&#x8ba9;&#x6211;&#x5199;&#x4e0b;&#x5417;&#xff1f;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_body": [
+      {
+        "file": "motions/tap_body.mtn",
+        "sound": "sound/tap_body.mp3",
+        "text": "&#x6211;&#x5728;&#x3002;&#x8bf7;&#x6162;&#x6162;&#x8bf4;&#xff0c;&#x6211;&#x4f1a;&#x542c;&#x5b8c;&#x3002;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_arm_left": [
+      {
+        "file": "motions/tap_Lhand.mtn",
+        "sound": "sound/tap_Lhand.mp3",
+        "text": "&#x8fd9;&#x53cc;&#x624b;&#xff0c;&#x662f;&#x4e3a;&#x4e86;&#x628a;&#x5fc3;&#x610f;&#x5199;&#x6210;&#x6587;&#x5b57;&#x800c;&#x5b58;&#x5728;&#x7684;&#x3002;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_arm_right": [
+      {
+        "file": "motions/tap_Rhand.mtn",
+        "sound": "sound/tap_Rhand.mp3",
+        "text": "&#x82e5;&#x60a8;&#x613f;&#x610f;&#xff0c;&#x6211;&#x53ef;&#x4ee5;&#x4e3a;&#x60a8;&#x4ee3;&#x7b14;&#x3002;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "tap_skirt": [
+      {
+        "file": "motions/tap_qunzi.mtn",
+        "text": "&#x8bf7;&#x4fdd;&#x6301;&#x793c;&#x8c8c;&#x3002;&#x8fd9;&#x6837;&#x4f1a;&#x8ba9;&#x6211;&#x66f4;&#x5b89;&#x5fc3;&#x3002;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ],
+    "new_msg": [
+      {
+        "file": "motions/tap_Lhand.mtn",
+        "sound": "sound/tap_Lhand.mp3",
+        "text": "&#x6709;&#x65b0;&#x7684;&#x8bdd;&#x8bed;&#x9700;&#x8981;&#x4f20;&#x8fbe;&#x5417;&#xff1f;",
+        "fade_in": 0,
+        "fade_out": 0
+      }
+    ]
+  },
+  "hit_areas": [
+    {
+      "name": "head",
+      "id": "D_REF.face"
+    },
+    {
+      "name": "body",
+      "id": "D_REF.body"
+    },
+    {
+      "name": "arm_left",
+      "id": "D_REF.Lhand"
+    },
+    {
+      "name": "arm_right",
+      "id": "D_REF.Rhand"
+    },
+    {
+      "name": "skirt",
+      "id": "D_REF.QUNZI"
+    }
+  ],
+  "loop_params": [
+    {
+      "id": "PARAM_HBPL",
+      "duration": 8000,
+      "type": 0,
+      "weight": 1.0
+    }
+  ]
+}
