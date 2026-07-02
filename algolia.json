@@ -6,6 +6,12 @@
     "updated": "2026-05-07 17:00:00"
   }, 
   {
+    "objectID": "499e26d49081e492429ae0973c4eec8f01a1fdb1",
+    "permalink": "/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/",
+    "title": "PWN前置一-PWN是什么","content": " PWN前置一 什么是PWN？ 一、什么是PWN PWN是一个黑客之间使用的词语，通常指攻破设备或系统。发音类似“砰”，对黑客而言，这象征着成功实施黑客攻击的声音——砰的一声，被“黑”的电脑或手机就被操纵了。在网络安全语境中，PWN通常指的是通过不同的攻击手段如利用漏洞、进行社会工程学攻击等方法成功地获得了一个设备、系统或网络的未授权控制权。一旦攻击者“PWN了”一个系统，他们就可以执行各种恶意活动，如窃取数据、安装恶意软件或制造更广泛的破坏。 在CTF（Capture The Flag）等黑客竞赛中，PWN任务经常涉及在一个受限制的环境中寻找和利用漏洞来访问受保护的资源或系统。具体来说，PWN题目通常会提供一个用C或C++编写的程序（当然现在还有其他语言的），该程序运行在目标服务器上，参赛者需要通过网络与服务器进行交互，利用程序中的漏洞（如栈溢出、堆溢出、整数溢出、格式化 字符串漏洞等）来造成内存破坏，进而获取远程计算机的shell，并最终获得flag。\nPWN需要的知识 C/C++ Python 汇编 编译过程 文件结构 操作系统 其他编程语言（Java、Go） PWN常用工具 Ubuntu/kali IDA Pro Pwntools checksec pwndbg LibcSearcher one_gadget ROPgadget 未来会在用到这些工具的时候再进步介绍\n常用学习资料 CTFShow\nCTF竞赛权威指南-PWN篇\n这里我推荐这两个，CTFShow是刷题学习网站，权威指南这是一本书。\nPWN能干什么 挖漏洞！PWN的选手未来都会往漏洞挖掘和IOT安全走，这部分都是二进制内容的，未来有机会也会介绍。\n","date": "2026-07-02 16:00:00",
+    "updated": "2026-07-02 16:00:00"
+  }, 
+  {
     "objectID": "2b37c01c47fe34ee0f894046ae74076b96c4aef6",
     "permalink": "/post/2026-01cuzwp/",
     "title": "2026cuz第一次校赛wp","content": " 2026cuz第一次校赛wp 本wp由She11ud0联合战队联合撰写，M15tak3主编，yunli，hp，YuuJ13r，opureye，洪声越Jeff，沁deer_不哈一同撰写。\nMISC 圣经（签到） 通过010edit可以直接找到flag\nflag{th1s_is_a_flag_S0_easy}\nTIF 通过010edit打开找到疑似flag，尝试发现不是，后发现有hint，说是64，猜测可能有base64加密，尝试发现成功\nflag{sulphone0729}\nZIP 解压发现失败，密码也招募到，猜测可能有伪加密，在010edit中打开\n打开后发现确实有伪加密的情况，讲0x6的位置的09修改\n在最后发现文件结尾多出一段，猜测藏东西了\n用binwalk提取获得一张空白的图片，猜测可能lsb，用stegsolve看一下，找到flag\nflag{sulphone0956}\nWAV 给了一段音频（听歌放松一下）\n发现频谱图里面藏了flag，但提交后不正确，猜测可能还有，或者不正确\n将音频听完或看波形图\n有摩斯，厨师一下\n感觉像是一部分，拼接提交成功\nflag{CTFLeeathKSKBLZDJD}\n流量包审计 题目描述：内网的备份主机每天凌晨都会产生一些访问日志。管理员发现其中一台机器的 DNS 查询行为不太正常，但 HTTP 访问看起来只是普通巡检。 请从附件流量包中找出被带出的信息。\n题面提到“备份主机”“DNS 查询行为不太正常”，同时又说 HTTP 访问看起来像普通巡检。因此第一反应可以把重点放在 DNS 流量上：HTTP 很可能只是干扰，真正的数据通过 DNS 查询带出。\nDNS 隧道题常见特征有：\n查询域名里出现较长、随机感较强的 label；\n多个查询使用同一个可疑域名后缀；\nlabel 里包含 base32 / base64 / hex 这类编码字符；\n数据被拆成多个分片，需要重新排序后拼接。\n打开 office_backup.pcap 后，可以先看协议统计或直接在 Wireshark 里过滤 DNS：\ndns 会看到一些正常查询，例如：\nwww.example.com api.weather.local cdn.hzh-lab.local time.windows.com printer-01.office.local 同时还会看到一批格式很 …","date": "2026-05-24 17:00:00",

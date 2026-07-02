@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Course on M15tak3のBlog</title>
-    <link>https://blog.m15tak3.com/en/tags/course/</link>
+    <link>http://localhost:1313/en/tags/course/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>en</language>
@@ -15,7 +15,7 @@
     <lastBuildDate>Wed, 06 May 2026 11:00:00 +0800</lastBuildDate>
     
     
-    <atom:link href="https://blog.m15tak3.com/en/tags/course/index.xml" rel="self" type="application/rss&#43;xml" />
+    <atom:link href="http://localhost:1313/en/tags/course/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
     
@@ -24,10 +24,10 @@
 
     <item>
       <title>Linux Python Management (Installing and Using pyenv)</title>
-      <link>https://blog.m15tak3.com/en/post/pyenv/</link>
+      <link>http://localhost:1313/en/post/pyenv/</link>
       <pubDate>Wed, 06 May 2026 11:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/en/post/pyenv/</guid>
+      <guid>http://localhost:1313/en/post/pyenv/</guid>
       <description>
         <![CDATA[<h1>Linux Python Management (Installing and Using pyenv)</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
         
@@ -88,7 +88,7 @@ Basic pyenv Usage
 </span></span><span class="line"><span class="cl">pyenv deactivate
 </span></span></code></pre></div>
         
-        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+        <hr><p>Published on 2026-05-06 at <a href='http://localhost:1313/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
       </description>
       
         <category>Tech</category><category>CTF</category>
@@ -100,10 +100,10 @@ Basic pyenv Usage
 
     <item>
       <title>Installing WSL2 &#43; Ubuntu from Scratch</title>
-      <link>https://blog.m15tak3.com/en/post/wsl1/</link>
+      <link>http://localhost:1313/en/post/wsl1/</link>
       <pubDate>Wed, 06 May 2026 09:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/en/post/wsl1/</guid>
+      <guid>http://localhost:1313/en/post/wsl1/</guid>
       <description>
         <![CDATA[<h1>Installing WSL2 + Ubuntu from Scratch</h1><p>Author: M15tak3(skyman.soul@gmail.com)</p>
         
@@ -151,7 +151,7 @@ Move the Subsystem to Another Drive
 <p>After that, the subsystem location is changed, and your files stay intact.</p>
 
         
-        <hr><p>Published on 2026-05-06 at <a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
+        <hr><p>Published on 2026-05-06 at <a href='http://localhost:1313/'>M15tak3のBlog</a>, last modified on 2026-05-06</p><p>All articles on this blog are licensed under the BY-NC-SA license agreement unless otherwise stated. Please indicate the source when reprinting!</p>]]>
       </description>
       
         <category>Tech</category><category>CTF</category>
