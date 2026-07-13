@@ -6,6 +6,12 @@
     "updated": "2026-05-07 17:00:00"
   }, 
   {
+    "objectID": "6e29a849b7250d7496087467c58268e18445a801",
+    "permalink": "/post/pwn_c++beginners/",
+    "title": "面向 Pwn 入门者的 C++ 零基础教程","content": " 面向 Pwn 入门者的 C++ 零基础教程 0. Pwn 和 C++ 的关系 Pwn 是 CTF 中研究程序如何与内存交互的方向。许多题目使用 C 或 C++ 编写。想做 Pwn，不一定要成为 C++ 工程师，但至少要能：\n看懂程序从哪里读入数据、如何处理数据、最后输出什么； 知道变量、数组和指针在内存中的大致样子； 识别不安全的输入处理方式； 用调试器观察程序状态。 学习顺序很重要：不要一开始就背漏洞利用脚本。先理解程序正常怎么运行，异常行为才会变得可解释。\n1. 准备环境 推荐在 Linux 环境中练习，因为大多数 Pwn 题运行在 Linux。Windows 用户可使用 WSL、虚拟机，或先使用在线 C++ 编译器完成语法练习。\nLinux 中安装编译器：\nsudo apt update sudo apt install build-essential gdb 创建文件 hello.cpp，写入下面的代码：\n#include \u0026amp;lt;iostream\u0026amp;gt; int main() { std::cout \u0026amp;lt;\u0026amp;lt; \u0026amp;#34;Hello, Pwn!\u0026amp;#34; \u0026amp;lt;\u0026amp;lt; std::endl; return 0; } 编译并运行：\ng++ hello.cpp -o hello ./hello 你应看到：\nHello, Pwn! 1.1 一次运行发生了什么？ hello.cpp（人写的源代码） ↓ g++ hello（计算机执行的程序） ↓ ./hello 屏幕上的输出 .cpp 是 C++ 源代码文件。 g++ 是编译器：把人可读的代码翻译为机器可执行的指令。 -o hello 表示把输出程序命名为 hello。 ./hello 表示运行当前目录中的 hello。 2. 第一段代码，逐行阅读 #include \u0026amp;lt;iostream\u0026amp;gt; int main() { std::cout \u0026amp;lt;\u0026amp;lt; \u0026amp;#34;Hello, Pwn!\u0026amp;#34; \u0026amp;lt;\u0026amp;lt; std::endl; return 0; } 代码 含义 #include \u0026amp;lt;iostream\u0026amp;gt; 引入输入、输出工具。 int main() 程序从 main 函数开始执行。 { 与 } 表示一段代码的开始和结束。 std::cout 把内容输出到屏幕。 …","date": "2026-07-13 14:00:00",
+    "updated": "2026-07-13 14:00:00"
+  }, 
+  {
     "objectID": "499e26d49081e492429ae0973c4eec8f01a1fdb1",
     "permalink": "/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/",
     "title": "PWN前置一[PWN是什么]","content": " PWN前置一 什么是PWN？ 一、什么是PWN PWN是一个黑客之间使用的词语，通常指攻破设备或系统。发音类似“砰”，对黑客而言，这象征着成功实施黑客攻击的声音——砰的一声，被“黑”的电脑或手机就被操纵了。在网络安全语境中，PWN通常指的是通过不同的攻击手段如利用漏洞、进行社会工程学攻击等方法成功地获得了一个设备、系统或网络的未授权控制权。一旦攻击者“PWN了”一个系统，他们就可以执行各种恶意活动，如窃取数据、安装恶意软件或制造更广泛的破坏。 在CTF（Capture The Flag）等黑客竞赛中，PWN任务经常涉及在一个受限制的环境中寻找和利用漏洞来访问受保护的资源或系统。具体来说，PWN题目通常会提供一个用C或C++编写的程序（当然现在还有其他语言的），该程序运行在目标服务器上，参赛者需要通过网络与服务器进行交互，利用程序中的漏洞（如栈溢出、堆溢出、整数溢出、格式化 字符串漏洞等）来造成内存破坏，进而获取远程计算机的shell，并最终获得flag。\nPWN需要的知识 C/C++ Python 汇编 编译过程 文件结构 操作系统 其他编程语言（Java、Go） PWN常用工具 Ubuntu/kali IDA Pro Pwntools checksec pwndbg LibcSearcher one_gadget ROPgadget 未来会在用到这些工具的时候再进步介绍\n常用学习资料 CTFShow\nCTF竞赛权威指南-PWN篇\n这里我推荐这两个，CTFShow是刷题学习网站，权威指南这是一本书。\nPWN能干什么 挖漏洞！PWN的选手未来都会往漏洞挖掘和IOT安全走，这部分都是二进制内容的，未来有机会也会介绍。\n","date": "2026-07-02 16:00:00",

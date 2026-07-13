@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>CTF on M15tak3のBlog</title>
-    <link>http://localhost:1313/tags/ctf/</link>
+    <link>https://blog.m15tak3.com/tags/ctf/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>zh-CN</language>
@@ -12,10 +12,10 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Thu, 02 Jul 2026 16:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jul 2026 14:00:00 +0800</lastBuildDate>
     
     
-    <atom:link href="http://localhost:1313/tags/ctf/index.xml" rel="self" type="application/rss&#43;xml" />
+    <atom:link href="https://blog.m15tak3.com/tags/ctf/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
     
@@ -23,11 +23,565 @@
     
 
     <item>
+      <title>面向 Pwn 入门者的 C&#43;&#43; 零基础教程</title>
+      <link>https://blog.m15tak3.com/post/pwn_c&#43;&#43;beginners/</link>
+      <pubDate>Mon, 13 Jul 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/pwn_c&#43;&#43;beginners/</guid>
+      <description>
+        <![CDATA[<h1>面向 Pwn 入门者的 C++ 零基础教程</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="面向-pwn-入门者的-c-零基础教程">
+<a class="header-anchor" href="#%e9%9d%a2%e5%90%91-pwn-%e5%85%a5%e9%97%a8%e8%80%85%e7%9a%84-c-%e9%9b%b6%e5%9f%ba%e7%a1%80%e6%95%99%e7%a8%8b"></a>
+面向 Pwn 入门者的 C++ 零基础教程
+</h1><hr>
+<h2 id="0-pwn-和-c-的关系">
+<a class="header-anchor" href="#0-pwn-%e5%92%8c-c-%e7%9a%84%e5%85%b3%e7%b3%bb"></a>
+0. Pwn 和 C++ 的关系
+</h2><p>Pwn 是 CTF 中研究<strong>程序如何与内存交互</strong>的方向。许多题目使用 C 或 C++ 编写。想做 Pwn，不一定要成为 C++ 工程师，但至少要能：</p>
+<ol>
+<li>看懂程序从哪里读入数据、如何处理数据、最后输出什么；</li>
+<li>知道变量、数组和指针在内存中的大致样子；</li>
+<li>识别不安全的输入处理方式；</li>
+<li>用调试器观察程序状态。</li>
+</ol>
+<p>学习顺序很重要：不要一开始就背漏洞利用脚本。先理解程序正常怎么运行，异常行为才会变得可解释。</p>
+<h2 id="1-准备环境">
+<a class="header-anchor" href="#1-%e5%87%86%e5%a4%87%e7%8e%af%e5%a2%83"></a>
+1. 准备环境
+</h2><p>推荐在 Linux 环境中练习，因为大多数 Pwn 题运行在 Linux。Windows 用户可使用 WSL、虚拟机，或先使用在线 C++ 编译器完成语法练习。</p>
+<p>Linux 中安装编译器：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt update
+</span></span><span class="line"><span class="cl">sudo apt install build-essential gdb
+</span></span></code></pre></div><p>创建文件 <code>hello.cpp</code>，写入下面的代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Hello, Pwn!&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译并运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ hello.cpp -o hello
+</span></span><span class="line"><span class="cl">./hello
+</span></span></code></pre></div><p>你应看到：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Hello, Pwn!
+</span></span></code></pre></div><h3 id="11-一次运行发生了什么">
+<a class="header-anchor" href="#11-%e4%b8%80%e6%ac%a1%e8%bf%90%e8%a1%8c%e5%8f%91%e7%94%9f%e4%ba%86%e4%bb%80%e4%b9%88"></a>
+1.1 一次运行发生了什么？
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">hello.cpp（人写的源代码）
+</span></span><span class="line"><span class="cl">          ↓ g++
+</span></span><span class="line"><span class="cl">hello（计算机执行的程序）
+</span></span><span class="line"><span class="cl">          ↓ ./hello
+</span></span><span class="line"><span class="cl">屏幕上的输出
+</span></span></code></pre></div><ul>
+<li><code>.cpp</code> 是 C++ 源代码文件。</li>
+<li><code>g++</code> 是编译器：把人可读的代码翻译为机器可执行的指令。</li>
+<li><code>-o hello</code> 表示把输出程序命名为 <code>hello</code>。</li>
+<li><code>./hello</code> 表示运行当前目录中的 <code>hello</code>。</li>
+</ul>
+<h2 id="2-第一段代码逐行阅读">
+<a class="header-anchor" href="#2-%e7%ac%ac%e4%b8%80%e6%ae%b5%e4%bb%a3%e7%a0%81%e9%80%90%e8%a1%8c%e9%98%85%e8%af%bb"></a>
+2. 第一段代码，逐行阅读
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Hello, Pwn!&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><table>
+  <thead>
+      <tr>
+          <th>代码</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>#include &lt;iostream&gt;</code></td>
+          <td>引入输入、输出工具。</td>
+      </tr>
+      <tr>
+          <td><code>int main()</code></td>
+          <td>程序从 <code>main</code> 函数开始执行。</td>
+      </tr>
+      <tr>
+          <td><code>{</code> 与 <code>}</code></td>
+          <td>表示一段代码的开始和结束。</td>
+      </tr>
+      <tr>
+          <td><code>std::cout</code></td>
+          <td>把内容输出到屏幕。</td>
+      </tr>
+      <tr>
+          <td><code>&quot;Hello, Pwn!&quot;</code></td>
+          <td>字符串，也就是一段文本。</td>
+      </tr>
+      <tr>
+          <td><code>std::endl</code></td>
+          <td>换行。</td>
+      </tr>
+      <tr>
+          <td><code>return 0;</code></td>
+          <td>告诉系统程序正常结束。</td>
+      </tr>
+  </tbody>
+</table>
+<p>先记住两个规则：C++ 大多数语句末尾要有分号 <code>;</code>；字符串必须用英文双引号包住。</p>
+<h2 id="3-变量给数据贴标签">
+<a class="header-anchor" href="#3-%e5%8f%98%e9%87%8f%e7%bb%99%e6%95%b0%e6%8d%ae%e8%b4%b4%e6%a0%87%e7%ad%be"></a>
+3. 变量：给数据贴标签
+</h2><p>变量可以理解成一个有名字的小盒子，用来保存数据。声明变量时通常写：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="err">类型</span> <span class="err">名字</span> <span class="o">=</span> <span class="err">初始值</span><span class="p">;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">grade</span> <span class="o">=</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">double</span> <span class="n">price</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">score</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">grade</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">price</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>常见类型：</p>
+<table>
+  <thead>
+      <tr>
+          <th>类型</th>
+          <th>保存内容</th>
+          <th>示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>int</code></td>
+          <td>整数</td>
+          <td><code>42</code>、<code>-7</code></td>
+      </tr>
+      <tr>
+          <td><code>char</code></td>
+          <td>单个字符</td>
+          <td><code>'A'</code>、<code>'x'</code></td>
+      </tr>
+      <tr>
+          <td><code>double</code></td>
+          <td>小数</td>
+          <td><code>3.14</code></td>
+      </tr>
+      <tr>
+          <td><code>bool</code></td>
+          <td>真或假</td>
+          <td><code>true</code>、<code>false</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>注意：<code>'A'</code> 是一个字符，使用单引号；<code>&quot;A&quot;</code> 是文本，使用双引号。它们不是同一种数据。</p>
+<h3 id="31-修改变量">
+<a class="header-anchor" href="#31-%e4%bf%ae%e6%94%b9%e5%8f%98%e9%87%8f"></a>
+3.1 修改变量
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">lives</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">lives</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">lives</span> <span class="o">=</span> <span class="n">lives</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+</span></span></code></pre></div><p>最后 <code>lives</code> 的值是 <code>3</code>。等号 <code>=</code> 在这里是“把右边的结果放进左边的变量”，不是数学课中的“左右相等”。</p>
+<h2 id="4-输入与输出">
+<a class="header-anchor" href="#4-%e8%be%93%e5%85%a5%e4%b8%8e%e8%be%93%e5%87%ba"></a>
+4. 输入与输出
+</h2><p>程序可以从键盘读取数据：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">age</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;请输入年龄：&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">age</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;明年你将是 &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">age</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="s">&#34; 岁。&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li><code>std::cout &lt;&lt; 内容</code>：输出。</li>
+<li><code>std::cin &gt;&gt; 变量</code>：等待用户输入，并存入变量。</li>
+</ul>
+<p>Pwn 题中，尤其要留意所有“外部输入”：键盘输入、网络数据、文件内容、命令行参数。程序若没有正确限制输入，它们就可能成为问题来源。</p>
+<h2 id="5-条件判断程序如何做选择">
+<a class="header-anchor" href="#5-%e6%9d%a1%e4%bb%b6%e5%88%a4%e6%96%ad%e7%a8%8b%e5%ba%8f%e5%a6%82%e4%bd%95%e5%81%9a%e9%80%89%e6%8b%a9"></a>
+5. 条件判断：程序如何做选择
+</h2><p><code>if</code> 让程序根据条件走不同路径：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">password</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">password</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">password</span> <span class="o">==</span> <span class="mi">1234</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;欢迎&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;密码错误&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>常见比较符号：</p>
+<table>
+  <thead>
+      <tr>
+          <th>写法</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>==</code></td>
+          <td>是否相等</td>
+      </tr>
+      <tr>
+          <td><code>!=</code></td>
+          <td>是否不相等</td>
+      </tr>
+      <tr>
+          <td><code>&gt;</code>、<code>&lt;</code></td>
+          <td>大于、小于</td>
+      </tr>
+      <tr>
+          <td><code>&gt;=</code>、<code>&lt;=</code></td>
+          <td>大于等于、小于等于</td>
+      </tr>
+      <tr>
+          <td><code>&amp;&amp;</code></td>
+          <td>并且</td>
+      </tr>
+      <tr>
+          <td>`</td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><code>!</code></td>
+          <td>取反</td>
+      </tr>
+  </tbody>
+</table>
+<p>最常见新手错误：把判断中的 <code>==</code> 写成 <code>=</code>。前者是比较，后者是赋值。</p>
+<h2 id="6-循环重复做事情">
+<a class="header-anchor" href="#6-%e5%be%aa%e7%8e%af%e9%87%8d%e5%a4%8d%e5%81%9a%e4%ba%8b%e6%83%85"></a>
+6. 循环：重复做事情
+</h2><p><code>for</code> 循环适合明确重复次数的场景：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>它会输出 <code>0</code> 到 <code>4</code>。可以拆成三部分理解：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="err">初始动作</span><span class="p">;</span> <span class="err">继续条件</span><span class="p">;</span> <span class="err">每轮结束后的动作</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="err">重复执行的代码</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>while</code> 则是“条件成立就继续”：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="p">(</span><span class="n">number</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">number</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">number</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>如果循环变量永远不改变，条件可能永远为真，程序就会卡在无限循环中。</p>
+<h2 id="7-函数给一段操作起名字">
+<a class="header-anchor" href="#7-%e5%87%bd%e6%95%b0%e7%bb%99%e4%b8%80%e6%ae%b5%e6%93%8d%e4%bd%9c%e8%b5%b7%e5%90%8d%e5%ad%97"></a>
+7. 函数：给一段操作起名字
+</h2><p>函数把一段可复用的代码组织起来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">first</span><span class="p">,</span> <span class="kt">int</span> <span class="n">second</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">first</span> <span class="o">+</span> <span class="n">second</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">result</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>add</code> 接收两个整数，计算后把结果交给调用它的地方。这里：</p>
+<ul>
+<li><code>int add(...)</code> 开头的 <code>int</code>：函数最终返回一个整数；</li>
+<li><code>first</code>、<code>second</code>：函数的参数；</li>
+<li><code>return first + second;</code>：把结果返回。</li>
+</ul>
+<p>看 Pwn 源码时，可以先找 <code>main</code>，再顺着它调用的函数看。不要试图一眼看懂所有函数。</p>
+<h2 id="8-数组连续排列的多个盒子">
+<a class="header-anchor" href="#8-%e6%95%b0%e7%bb%84%e8%bf%9e%e7%bb%ad%e6%8e%92%e5%88%97%e7%9a%84%e5%a4%9a%e4%b8%aa%e7%9b%92%e5%ad%90"></a>
+8. 数组：连续排列的多个盒子
+</h2><p>数组保存一组同类型数据：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">};</span>
+</span></span></code></pre></div><p>数组下标从 <strong>0</strong> 开始：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>  <span class="c1">// 10
+</span></span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>  <span class="c1">// 40
+</span></span></span></code></pre></div><p>可以把它想象为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">下标：     0     1     2     3
+</span></span><span class="line"><span class="cl">内容：    10    20    30    40
+</span></span></code></pre></div><p>数组大小是 <code>4</code> 时，合法下标只有 <code>0</code> 到 <code>3</code>。访问 <code>numbers[4]</code> 已经越界：程序会读写本不属于这个数组的内存。这类边界问题是 Pwn 中非常核心的主题。</p>
+<h2 id="9-字符串与字符数组">
+<a class="header-anchor" href="#9-%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e7%ac%a6%e6%95%b0%e7%bb%84"></a>
+9. 字符串与字符数组
+</h2><p>Pwn 题里经常会遇到 C 风格字符串：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;cat&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>它在内存中类似：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;c&#39;  &#39;a&#39;  &#39;t&#39;  &#39;\0&#39;  ?  ?  ?  ?
+</span></span></code></pre></div><p>结尾的 <code>\0</code> 是空字符，表示“字符串到这里结束”。所以一个能放 7 个可见字符的 <code>char name[8]</code>，还要留一个位置给 <code>\0</code>。</p>
+<p>现代 C++ 也有更方便的 <code>std::string</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;你好，&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>做入门练习时优先使用 <code>std::string</code>；学习 Pwn 阅读旧代码时，则必须理解 <code>char[]</code> 和结尾的 <code>\0</code>。</p>
+<h2 id="10-内存的直觉地址与指针">
+<a class="header-anchor" href="#10-%e5%86%85%e5%ad%98%e7%9a%84%e7%9b%b4%e8%a7%89%e5%9c%b0%e5%9d%80%e4%b8%8e%e6%8c%87%e9%92%88"></a>
+10. 内存的直觉：地址与指针
+</h2><p>程序运行时，变量会放在内存中。内存可以粗略看成一排有编号的位置，编号叫<strong>地址</strong>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">score</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span><span class="o">*</span> <span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">score</span><span class="p">;</span>
+</span></span></code></pre></div><ul>
+<li><code>score</code> 保存值 <code>100</code>。</li>
+<li><code>&amp;score</code> 表示“<code>score</code> 的地址”。</li>
+<li><code>pointer</code> 是指针变量，保存这个地址。</li>
+<li><code>int*</code> 表示它指向一个 <code>int</code>。</li>
+</ul>
+<p>通过指针读取或修改目标变量：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>  <span class="c1">// 读取 score，输出 100
+</span></span></span><span class="line"><span class="cl"><span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>                      <span class="c1">// 修改 score
+</span></span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">score</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>     <span class="c1">// 输出 200
+</span></span></span></code></pre></div><p>这里的星号有两种常见含义：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span><span class="o">*</span> <span class="n">pointer</span><span class="p">;</span>  <span class="c1">// 声明：pointer 是“指向 int 的指针”
+</span></span></span><span class="line"><span class="cl"><span class="o">*</span><span class="n">pointer</span>       <span class="c1">// 使用：取出 pointer 所指向地址里的值
+</span></span></span></code></pre></div><h3 id="101-为什么指针对-pwn-很重要">
+<a class="header-anchor" href="#101-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%8c%87%e9%92%88%e5%af%b9-pwn-%e5%be%88%e9%87%8d%e8%a6%81"></a>
+10.1 为什么指针对 Pwn 很重要？
+</h3><p>程序通过地址访问内存；函数返回、局部变量、数组和许多对象都与内存布局有关。当代码发生越界读写、错误使用指针等问题时，本应分开的数据可能相互影响。</p>
+<p>此阶段不必背地址细节。目标只是建立这条因果链：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">输入长度未检查 → 写过数组边界 → 改到相邻内存 → 程序行为异常
+</span></span></code></pre></div><h2 id="11-栈函数的临时工作区">
+<a class="header-anchor" href="#11-%e6%a0%88%e5%87%bd%e6%95%b0%e7%9a%84%e4%b8%b4%e6%97%b6%e5%b7%a5%e4%bd%9c%e5%8c%ba"></a>
+11. 栈：函数的临时工作区
+</h2><p>每次调用函数，程序通常会为这个函数准备一块临时空间，常被称为“栈帧”。其中可能放着局部变量和函数返回所需的信息。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">greet</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">message</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">message</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>可以先用下面的简化图理解：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">greet() 的临时区域（示意，不代表实际顺序）
+</span></span><span class="line"><span class="cl">+-----------------------+
+</span></span><span class="line"><span class="cl">| message[16]           |
+</span></span><span class="line"><span class="cl">+-----------------------+
+</span></span><span class="line"><span class="cl">| 函数返回相关的信息    |
+</span></span><span class="line"><span class="cl">+-----------------------+
+</span></span></code></pre></div><p>函数结束后，这块临时区域会被回收。后面会更细地讲栈、寄存器和调用约定；现在先记住：<strong>局部数组的边界必须严格遵守。</strong></p>
+<h2 id="12-一个安全的长度检查例子">
+<a class="header-anchor" href="#12-%e4%b8%80%e4%b8%aa%e5%ae%89%e5%85%a8%e7%9a%84%e9%95%bf%e5%ba%a6%e6%a3%80%e6%9f%a5%e4%be%8b%e5%ad%90"></a>
+12. 一个安全的长度检查例子
+</h2><p>不要复制不安全的输入方式。下面是一个简单、可读的写法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;输入昵称（最多 16 个字符）：&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">name</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;昵称太长。&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;昵称已保存：&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>核心思路不是死记某个函数，而是：</p>
+<ol>
+<li>输入来自外部，不可信；</li>
+<li>接收数据的空间有限；</li>
+<li>在使用数据前检查长度和格式；</li>
+<li>超出预期时安全地拒绝或截断。</li>
+</ol>
+<h2 id="13-常见危险信号阅读代码时">
+<a class="header-anchor" href="#13-%e5%b8%b8%e8%a7%81%e5%8d%b1%e9%99%a9%e4%bf%a1%e5%8f%b7%e9%98%85%e8%af%bb%e4%bb%a3%e7%a0%81%e6%97%b6"></a>
+13. 常见危险信号（阅读代码时）
+</h2><p>当你在授权靶场源码中看到下列情况，应停下来检查边界与输入：</p>
+<table>
+  <thead>
+      <tr>
+          <th>信号</th>
+          <th>应思考的问题</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>char buffer[32]</code></td>
+          <td>缓冲区只有多大？</td>
+      </tr>
+      <tr>
+          <td>用户输入写入 <code>buffer</code></td>
+          <td>有没有长度上限？</td>
+      </tr>
+      <tr>
+          <td><code>numbers[index]</code></td>
+          <td><code>index</code> 是否保证在合法范围？</td>
+      </tr>
+      <tr>
+          <td>指针 <code>pointer</code></td>
+          <td>是否初始化？是否已经失效？</td>
+      </tr>
+      <tr>
+          <td><code>new</code> / <code>delete</code></td>
+          <td>是否重复释放或释放后继续使用？</td>
+      </tr>
+      <tr>
+          <td><code>memcpy</code>、<code>strcpy</code> 等</td>
+          <td>复制的长度是否受控？目标空间够不够？</td>
+      </tr>
+  </tbody>
+</table>
+<p>这不是让你去攻击真实程序，而是训练一种审计习惯：先确认数据从哪里来、流向哪里、边界在哪里。</p>
+<h2 id="14-用编译器帮忙发现问题">
+<a class="header-anchor" href="#14-%e7%94%a8%e7%bc%96%e8%af%91%e5%99%a8%e5%b8%ae%e5%bf%99%e5%8f%91%e7%8e%b0%e9%97%ae%e9%a2%98"></a>
+14. 用编译器帮忙发现问题
+</h2><p>练习时请打开警告，并保留调试信息：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -Wall -Wextra -g demo.cpp -o demo
+</span></span></code></pre></div><ul>
+<li><code>-Wall -Wextra</code>：让编译器报告更多可疑写法；</li>
+<li><code>-g</code>：加入调试信息，便于后面用 GDB 观察程序。</li>
+</ul>
+<p>还可以用 AddressSanitizer 辅助发现许多内存错误：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -Wall -Wextra -g -fsanitize<span class="o">=</span>address demo.cpp -o demo
+</span></span><span class="line"><span class="cl">./demo
+</span></span></code></pre></div><p>它不能代替人工理解，但非常适合新手检查数组越界、使用已释放内存等问题。</p>
+<h2 id="15-初识-gdb观察而非猜测">
+<a class="header-anchor" href="#15-%e5%88%9d%e8%af%86-gdb%e8%a7%82%e5%af%9f%e8%80%8c%e9%9d%9e%e7%8c%9c%e6%b5%8b"></a>
+15. 初识 GDB：观察而非猜测
+</h2><p>假设程序叫 <code>demo</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gdb ./demo
+</span></span></code></pre></div><p>进入后可以使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">break main        在 main 入口暂停
+</span></span><span class="line"><span class="cl">run               开始运行
+</span></span><span class="line"><span class="cl">next              执行下一行，不进入函数内部
+</span></span><span class="line"><span class="cl">step              执行下一行，必要时进入函数
+</span></span><span class="line"><span class="cl">print variable    查看变量的值
+</span></span><span class="line"><span class="cl">backtrace         查看函数调用链
+</span></span><span class="line"><span class="cl">quit              退出
+</span></span></code></pre></div><p>建议先用 GDB 调试自己的加法程序、数组程序。能把“代码中的变量”对应到“运行时的数值”，再学习内存查看会轻松得多。</p>
+<h2 id="16-小练习">
+<a class="header-anchor" href="#16-%e5%b0%8f%e7%bb%83%e4%b9%a0"></a>
+16. 小练习
+</h2><p>下面程序包含输入、函数、数组和边界检查：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">sum</span><span class="p">(</span><span class="k">const</span> <span class="kt">int</span> <span class="n">values</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">count</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">;</span> <span class="n">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">+</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">total</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;请输入第 &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="s">&#34; 个整数：&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;总和是：&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">sum</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>试着回答：</p>
+<ol>
+<li><code>values</code> 有几个元素？合法下标是什么？</li>
+<li>为什么循环条件是 <code>index &lt; 3</code> 而不是 <code>index &lt;= 3</code>？</li>
+<li><code>sum(values, 3)</code> 中的 <code>3</code> 有什么作用？</li>
+<li>把 <code>values[3]</code> 改成 <code>values[5]</code> 后，还应修改哪些地方？</li>
+</ol>
+<h2 id="17-建议练习路线">
+<a class="header-anchor" href="#17-%e5%bb%ba%e8%ae%ae%e7%bb%83%e4%b9%a0%e8%b7%af%e7%ba%bf"></a>
+17. 建议练习路线
+</h2><p>按顺序完成，不会的地方就回看对应章节：</p>
+<ol>
+<li>输出自己的名字、年龄和一句话；</li>
+<li>读入两个整数，输出较大的那个；</li>
+<li>使用循环计算 <code>1</code> 到 <code>100</code> 的和；</li>
+<li>读入 5 个整数，输出最大值；</li>
+<li>写一个函数判断一个整数是否为偶数；</li>
+<li>用 GDB 在循环中暂停，查看 <code>index</code> 与数组内容；</li>
+<li>给每个数组访问加上边界思考：下标来自哪里、范围是什么？</li>
+</ol>
+<p>每次练习都使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -Wall -Wextra -g 文件名.cpp -o 程序名
+</span></span></code></pre></div><p>当你能独立写出第 4、5 项，并解释数组下标和指针的区别，就可以进入 CTF Pwn 的下一阶段：Linux 基础、程序保护机制、汇编基础、GDB/GEF 或 pwndbg，以及只在授权环境中进行的漏洞分析。</p>
+<h2 id="18-最小速查表">
+<a class="header-anchor" href="#18-%e6%9c%80%e5%b0%8f%e9%80%9f%e6%9f%a5%e8%a1%a8"></a>
+18. 最小速查表
+</h2><table>
+  <thead>
+      <tr>
+          <th>看到的写法</th>
+          <th>快速理解</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>int value = 7;</code></td>
+          <td>创建一个整数变量</td>
+      </tr>
+      <tr>
+          <td><code>char text[16];</code></td>
+          <td>创建可容纳 16 个字符位置的数组</td>
+      </tr>
+      <tr>
+          <td><code>array[index]</code></td>
+          <td>访问数组第 <code>index</code> 个位置（从 0 开始）</td>
+      </tr>
+      <tr>
+          <td><code>&amp;value</code></td>
+          <td>取得变量地址</td>
+      </tr>
+      <tr>
+          <td><code>int* pointer</code></td>
+          <td>创建指向整数的指针</td>
+      </tr>
+      <tr>
+          <td><code>*pointer</code></td>
+          <td>访问指针所指地址中的值</td>
+      </tr>
+      <tr>
+          <td><code>if (condition)</code></td>
+          <td>条件为真才执行</td>
+      </tr>
+      <tr>
+          <td><code>for (...)</code></td>
+          <td>重复执行</td>
+      </tr>
+      <tr>
+          <td><code>return value;</code></td>
+          <td>从函数交回结果</td>
+      </tr>
+  </tbody>
+</table>
+
+        
+        <hr><p>本文2026-07-13首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-07-13</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
       <title>PWN前置一[PWN是什么]</title>
-      <link>http://localhost:1313/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/</link>
+      <link>https://blog.m15tak3.com/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/</link>
       <pubDate>Thu, 02 Jul 2026 16:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://localhost:1313/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/</guid>
+      <guid>https://blog.m15tak3.com/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/</guid>
       <description>
         <![CDATA[<h1>PWN前置一[PWN是什么]</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -84,7 +638,7 @@ PWN能干什么
 </h2><p>挖漏洞！PWN的选手未来都会往漏洞挖掘和IOT安全走，这部分都是二进制内容的，未来有机会也会介绍。</p>
 
         
-        <hr><p>本文2026-07-02首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-07-02</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-07-02首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-07-02</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -96,10 +650,10 @@ PWN能干什么
 
     <item>
       <title>2026cuz第一次校赛wp</title>
-      <link>http://localhost:1313/post/2026-01cuzwp/</link>
+      <link>https://blog.m15tak3.com/post/2026-01cuzwp/</link>
       <pubDate>Sun, 24 May 2026 17:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://localhost:1313/post/2026-01cuzwp/</guid>
+      <guid>https://blog.m15tak3.com/post/2026-01cuzwp/</guid>
       <description>
         <![CDATA[<h1>2026cuz第一次校赛wp</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -2131,7 +2685,7 @@ EXP
 </span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-24首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-24</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-24首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-24</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -2143,10 +2697,10 @@ EXP
 
     <item>
       <title>CTF 流量包</title>
-      <link>http://localhost:1313/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
+      <link>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
       <pubDate>Fri, 15 May 2026 18:30:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://localhost:1313/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
+      <guid>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
       <description>
         <![CDATA[<h1>CTF 流量包</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -2615,7 +3169,7 @@ CTF 中经常把信息藏在 ICMP 的 data 字段里。</p>
 遇到 USB，就按 HID 键盘数据还原输入。</p>
 
         
-        <hr><p>本文2026-05-15首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -2627,10 +3181,10 @@ CTF 中经常把信息藏在 ICMP 的 data 字段里。</p>
 
     <item>
       <title>CTF CSV题目教程</title>
-      <link>http://localhost:1313/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <link>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
       <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://localhost:1313/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <guid>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
       <description>
         <![CDATA[<h1>CTF CSV题目教程</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -3139,7 +3693,7 @@ CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-15首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -3151,10 +3705,10 @@ CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
 
     <item>
       <title>当AI开始替我们靠近伊萨卡...</title>
-      <link>http://localhost:1313/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
+      <link>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</link>
       <pubDate>Thu, 07 May 2026 17:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>http://localhost:1313/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
+      <guid>https://blog.m15tak3.com/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/</guid>
       <description>
         <![CDATA[<h1>当AI开始替我们靠近伊萨卡...</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -3181,7 +3735,7 @@ CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
 <p>​	但我更想知道，在抵达之前，我们有没有真正见过海。</p>
 
         
-        <hr><p>本文2026-05-07首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-07</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-07首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-07</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>随笔</category><category>CTF</category>
