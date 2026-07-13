@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Misc on M15tak3のBlog</title>
-    <link>https://blog.m15tak3.com/tags/misc/</link>
+    <link>http://localhost:1313/tags/misc/</link>
     <description>Recent content from M15tak3のBlog</description>
     <generator>Hugo</generator>
     <language>zh-CN</language>
@@ -15,7 +15,7 @@
     <lastBuildDate>Sun, 24 May 2026 17:00:00 +0800</lastBuildDate>
     
     
-    <atom:link href="https://blog.m15tak3.com/tags/misc/index.xml" rel="self" type="application/rss&#43;xml" />
+    <atom:link href="http://localhost:1313/tags/misc/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
     
@@ -24,10 +24,10 @@
 
     <item>
       <title>2026cuz第一次校赛wp</title>
-      <link>https://blog.m15tak3.com/post/2026-01cuzwp/</link>
+      <link>http://localhost:1313/post/2026-01cuzwp/</link>
       <pubDate>Sun, 24 May 2026 17:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/2026-01cuzwp/</guid>
+      <guid>http://localhost:1313/post/2026-01cuzwp/</guid>
       <description>
         <![CDATA[<h1>2026cuz第一次校赛wp</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -2059,7 +2059,7 @@ EXP
 </span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-24首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-24</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-24首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-24</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -2071,10 +2071,10 @@ EXP
 
     <item>
       <title>CTF 流量包</title>
-      <link>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
+      <link>http://localhost:1313/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</link>
       <pubDate>Fri, 15 May 2026 18:30:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
+      <guid>http://localhost:1313/post/ctf%E6%B5%81%E9%87%8F%E5%8C%85/</guid>
       <description>
         <![CDATA[<h1>CTF 流量包</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -2543,7 +2543,7 @@ CTF 中经常把信息藏在 ICMP 的 data 字段里。</p>
 遇到 USB，就按 HID 键盘数据还原输入。</p>
 
         
-        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-15首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
@@ -2555,10 +2555,10 @@ CTF 中经常把信息藏在 ICMP 的 data 字段里。</p>
 
     <item>
       <title>CTF CSV题目教程</title>
-      <link>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
+      <link>http://localhost:1313/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</link>
       <pubDate>Fri, 15 May 2026 11:00:00 &#43;0800</pubDate>
       <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
+      <guid>http://localhost:1313/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/</guid>
       <description>
         <![CDATA[<h1>CTF CSV题目教程</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
         
@@ -3067,7 +3067,7 @@ CTF CSV题目教程：题目想让你干嘛，以及Python脚本怎么写
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 </span></span></code></pre></div>
         
-        <hr><p>本文2026-05-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+        <hr><p>本文2026-05-15首发于<a href='http://localhost:1313/'>M15tak3のBlog</a>，最后修改于2026-05-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category>
