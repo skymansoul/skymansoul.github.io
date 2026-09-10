@@ -8,7 +8,7 @@
   name="viewport"
   content="width=device-width, initial-scale=1, shrink-to-fit=no"
 /><title>
-  CTF 方向详解 | M15tak3
+  Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域 | M15tak3
 </title>
 <meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
 <script data-pjax>
@@ -56,20 +56,20 @@
     type="font/woff2"
     crossorigin="anonymous"
   /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
-  <meta property="og:title" content="CTF 方向详解 | M15tak3" />
+  <meta property="og:title" content="Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域 | M15tak3" />
   <meta
     property="og:description"
     content="挖不出漏洞的菜鸡pwn_ctfer"
   />
-  <meta property="og:url" content="https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/" />
+  <meta property="og:url" content="https://blog.m15tak3.com/post/02-control-flow-functions/" />
   <meta
     property="og:site_name"
     content="M15tak3のBlog"
   />
-  <meta property="og:image" content="https://blog.m15tak3.com/images/CTF.png" />
+  <meta property="og:image" content="https://blog.m15tak3.com/images/C.webp" />
   <meta property="article:author" content="M15tak3" />
-  <meta property="article:published_time" content="2026-05-14T17:00:00&#43;08:00" />
-  <meta property="article:modified_time" content="2026-05-14T17:00:00&#43;08:00" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/CTF.png" />
+  <meta property="article:published_time" content="2026-09-09T14:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-09-09T14:00:00&#43;08:00" /><meta property="article:tag" content="C&#43;&#43;, CTF, PWN" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/C.webp" />
 <link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.aa23953727ef01755afabce27a2bdd482733a8013a1f84f3d5442c54ffe1fa82.css" /><link
     rel="preload"
     as="style"
@@ -164,7 +164,7 @@
           <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
           <span id="selected-lang">简体中文</span>
         </div>
-        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" class="selected" aria-selected="true" >简体中文</li><li data-value="en" role="option" aria-selected="false" >English</li></ul>
+        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" class="selected" aria-selected="true" >简体中文</li></ul>
       </div>
       <script>
         var selectSelected = document.getElementById("select-selected");
@@ -180,7 +180,7 @@
 
         selectOptions.forEach((item) => {
           item.addEventListener("click", () => {
-            const langMap = {};langMap['en'] = '\/en\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/';selectedLang.textContent = item.textContent;
+            const langMap = {};selectedLang.textContent = item.textContent;
             selectItems.classList.remove("show");
             selectOptions.forEach((option) => {
               option.classList.remove("selected");
@@ -209,9 +209,9 @@
       </script>
     </nav></div>
 <header id="header" aria-label="Site header"><picture></picture>
-    <img crossorigin="anonymous" fetchpriority="high" src="/images/CTF.png" alt="CTF 方向详解"><div id="header-outer">
+    <img crossorigin="anonymous" fetchpriority="high" src="/images/C_banner.webp" alt="Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域"><div id="header-outer">
     <div id="header-title"><span id="logo">
-            <h1 data-aos="slide-up">CTF 方向详解</h1>
+            <h1 data-aos="slide-up">Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域</h1>
           </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
   </div>
 </header><div id="content"
@@ -225,70 +225,26 @@
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#1-ctf-是什么">1. CTF 是什么</a>
+    <li><a href="#1-条件判断">1. 条件判断</a></li>
+    <li><a href="#2-switch">2. <code>switch</code></a></li>
+    <li><a href="#3-循环">3. 循环</a>
       <ul>
-        <li><a href="#11-常见比赛形式">1.1 常见比赛形式</a></li>
-        <li><a href="#12-ctf-的价值">1.2 CTF 的价值</a></li>
-        <li><a href="#13-常见题目特征">1.3 常见题目特征</a></li>
+        <li><a href="#for"><code>for</code></a></li>
+        <li><a href="#while"><code>while</code></a></li>
+        <li><a href="#do-while"><code>do-while</code></a></li>
+        <li><a href="#break-和-continue"><code>break</code> 和 <code>continue</code></a></li>
       </ul>
     </li>
-    <li><a href="#2-web-方向">2. Web 方向</a>
-      <ul>
-        <li><a href="#11-核心定位">1.1 核心定位</a></li>
-        <li><a href="#12-常见题型">1.2 常见题型</a></li>
-        <li><a href="#13-需要掌握的知识">1.3 需要掌握的知识</a></li>
-        <li><a href="#14-常用工具">1.4 常用工具</a></li>
-        <li><a href="#15-解题通用方法">1.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#3-misc-方向">3. Misc 方向</a>
-      <ul>
-        <li><a href="#21-核心定位">2.1 核心定位</a></li>
-        <li><a href="#22-常见题型">2.2 常见题型</a></li>
-        <li><a href="#23-需要掌握的知识">2.3 需要掌握的知识</a></li>
-        <li><a href="#24-常用工具">2.4 常用工具</a></li>
-        <li><a href="#25-解题通用方法">2.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#4-crypto密码方向">4. Crypto（密码）方向</a>
-      <ul>
-        <li><a href="#31-核心定位">3.1 核心定位</a></li>
-        <li><a href="#32-常见题型">3.2 常见题型</a></li>
-        <li><a href="#33-需要掌握的知识">3.3 需要掌握的知识</a></li>
-        <li><a href="#34-常用工具">3.4 常用工具</a></li>
-        <li><a href="#35-解题通用方法">3.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#5-pwn-方向">5. Pwn 方向</a>
-      <ul>
-        <li><a href="#41-核心定位">4.1 核心定位</a></li>
-        <li><a href="#42-常见题型">4.2 常见题型</a></li>
-        <li><a href="#43-需要掌握的知识">4.3 需要掌握的知识</a></li>
-        <li><a href="#44-常用工具">4.4 常用工具</a></li>
-        <li><a href="#45-解题通用方法">4.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#6-reverse">6. Reverse</a>
-      <ul>
-        <li><a href="#51-核心定位">5.1 核心定位</a></li>
-        <li><a href="#52-常见题型">5.2 常见题型</a></li>
-        <li><a href="#53-需要掌握的知识">5.3 需要掌握的知识</a></li>
-        <li><a href="#54-常用工具">5.4 常用工具</a></li>
-        <li><a href="#55-解题通用方法">5.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#7-ai-安全方向">7. AI 安全方向</a>
-      <ul>
-        <li><a href="#61-核心定位">6.1 核心定位</a></li>
-        <li><a href="#62-常见题型">6.2 常见题型</a></li>
-        <li><a href="#63-需要掌握的知识">6.3 需要掌握的知识</a></li>
-        <li><a href="#64-常用工具与方法">6.4 常用工具与方法</a></li>
-        <li><a href="#65-解题通用方法">6.5 解题通用方法</a></li>
-        <li><a href="#76-防护思路实战很关键">7.6 防护思路（实战很关键）</a></li>
-      </ul>
-    </li>
-    <li><a href="#8-团队分工建议">8. 团队分工建议</a></li>
-    <li><a href="#9-总结">9. 总结</a></li>
+    <li><a href="#4-定义函数">4. 定义函数</a></li>
+    <li><a href="#5-函数声明与定义">5. 函数声明与定义</a></li>
+    <li><a href="#6-c-默认按值传递">6. C 默认按值传递</a></li>
+    <li><a href="#7-作用域">7. 作用域</a></li>
+    <li><a href="#8-static-局部变量">8. <code>static</code> 局部变量</a></li>
+    <li><a href="#9-递归">9. 递归</a></li>
+    <li><a href="#10-一个完整示例">10. 一个完整示例</a></li>
+    <li><a href="#本篇练习">本篇练习</a></li>
+    <li><a href="#本篇小结">本篇小结</a></li>
+    <li><a href="#下一篇">下一篇</a></li>
   </ul>
 </nav>
 </div></div>
@@ -390,11 +346,11 @@
     class="article-date-link icon-calendar"
     data-aos="zoom-in"
   >
-    <time datetime="2026-05-14 17:00:00 &#43;0800 CST" itemprop="datePublished"
-      >2026-05-14</time
+    <time datetime="2026-09-09 14:00:00 &#43;0800 CST" itemprop="datePublished"
+      >2026-09-09</time
     >
     <time style="display: none;" id="post-update-time"
-      >2026-05-14</time
+      >2026-09-09</time
     >
   </span></div>
 </div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
@@ -404,362 +360,217 @@
         >
           <p class="alert-heading">WARNING</p>
           <p></p>
-        </blockquote><h1 id="ctf-方向详解">
-<a class="header-anchor" href="#ctf-%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3"></a>
-CTF 方向详解
-</h1><h2 id="1-ctf-是什么">
-<a class="header-anchor" href="#1-ctf-%e6%98%af%e4%bb%80%e4%b9%88"></a>
-1. CTF 是什么
-</h2><p>CTF（Capture The Flag）是一种信息安全竞赛形式，参赛者通过分析、利用、解密、逆向、取证等技术手段，获取题目中的 <code>flag</code>（通常是一段特定格式字符串）来得分。<br>
-CTF 的核心不是“背工具命令”，而是通过题目场景考察对系统原理、安全机制和攻击防护思维的综合理解。</p>
-<h3 id="11-常见比赛形式">
-<a class="header-anchor" href="#11-%e5%b8%b8%e8%a7%81%e6%af%94%e8%b5%9b%e5%bd%a2%e5%bc%8f"></a>
-1.1 常见比赛形式
+        </blockquote><h1 id="pwn-基础之cc二控制流程函数与作用域">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%ba%8c%e6%8e%a7%e5%88%b6%e6%b5%81%e7%a8%8b%e5%87%bd%e6%95%b0%e4%b8%8e%e4%bd%9c%e7%94%a8%e5%9f%9f"></a>
+Pwn 基础之C/C++（二）：控制流程、函数与作用域
+</h1><blockquote>
+<p><strong>本篇目标</strong>：掌握条件、循环和函数，理解参数传递以及局部变量的作用域。</p>
+<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
+</blockquote>
+<h2 id="1-条件判断">
+<a class="header-anchor" href="#1-%e6%9d%a1%e4%bb%b6%e5%88%a4%e6%96%ad"></a>
+1. 条件判断
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">score</span> <span class="o">&gt;=</span> <span class="mi">90</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;A</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">score</span> <span class="o">&gt;=</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Pass</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Fail</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>在 C 中：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">0 表示假
+</span></span><span class="line"><span class="cl">非 0 表示真
+</span></span></code></pre></div><p>注意：<code>=</code> 是赋值，<code>==</code> 才是比较相等。</p>
+<h2 id="2-switch">
+<a class="header-anchor" href="#2-switch"></a>
+2. <code>switch</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">switch</span> <span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Add</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Show</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Unknown</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>break</code> 用于退出 <code>switch</code>。省略后可能继续执行后面的 <code>case</code>，称为 fall-through。</p>
+<h2 id="3-循环">
+<a class="header-anchor" href="#3-%e5%be%aa%e7%8e%af"></a>
+3. 循环
+</h2><h3 id="for">
+<a class="header-anchor" href="#for"></a>
+<code>for</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>执行顺序：初始化、判断、循环体、更新、重新判断。</p>
+<h3 id="while">
+<a class="header-anchor" href="#while"></a>
+<code>while</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="do-while">
+<a class="header-anchor" href="#do-while"></a>
+<code>do-while</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">choice</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">scanf</span><span class="p">(</span><span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">choice</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">choice</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>do-while</code> 至少执行一次循环体。</p>
+<h3 id="break-和-continue">
+<a class="header-anchor" href="#break-%e5%92%8c-continue"></a>
+<code>break</code> 和 <code>continue</code>
 </h3><ul>
-<li>Jeopardy（解题赛）：按题目分类（Web、Pwn、Reverse、Crypto、Misc 等）逐题提交 flag。</li>
-<li>Attack-Defense（攻防赛）：既要攻击他队服务，也要防守自己服务。</li>
-<li>King of the Hill（夺旗赛）：持续占领目标点获取分数。</li>
+<li><code>break</code>：结束当前循环；</li>
+<li><code>continue</code>：跳过本轮剩余代码，进入下一轮。</li>
 </ul>
-<h3 id="12-ctf-的价值">
-<a class="header-anchor" href="#12-ctf-%e7%9a%84%e4%bb%b7%e5%80%bc"></a>
-1.2 CTF 的价值
-</h3><ul>
-<li>提升实战能力：把零散知识串成完整攻击链与防护链。</li>
-<li>训练工程能力：脚本自动化、调试、日志分析、复盘沉淀。</li>
-<li>强化协作能力：团队分工、并行推进、时间管理与策略决策。</li>
+<h2 id="4-定义函数">
+<a class="header-anchor" href="#4-%e5%ae%9a%e4%b9%89%e5%87%bd%e6%95%b0"></a>
+4. 定义函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="nf">add</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+</span></span></code></pre></div><p>函数由返回类型、函数名、参数列表和函数体组成。</p>
+<p>没有返回值时使用 <code>void</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_line</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;----------</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="5-函数声明与定义">
+<a class="header-anchor" href="#5-%e5%87%bd%e6%95%b0%e5%a3%b0%e6%98%8e%e4%b8%8e%e5%ae%9a%e4%b9%89"></a>
+5. 函数声明与定义
+</h2><p>如果定义位于调用位置之后，需要先声明：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">add</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>声明告诉编译器函数的类型，定义提供真正的函数体。</p>
+<h2 id="6-c-默认按值传递">
+<a class="header-anchor" href="#6-c-%e9%bb%98%e8%ae%a4%e6%8c%89%e5%80%bc%e4%bc%a0%e9%80%92"></a>
+6. C 默认按值传递
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">change</span><span class="p">(</span><span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>输出仍是 <code>10</code>。调用时复制了 <code>number</code> 的值，函数修改的是副本。</p>
+<p>后续学习指针后，可以把变量地址传给函数，从而修改原变量。</p>
+<h2 id="7-作用域">
+<a class="header-anchor" href="#7-%e4%bd%9c%e7%94%a8%e5%9f%9f"></a>
+7. 作用域
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">global_value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">local_value</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>全局变量：在文件范围声明，生命周期通常覆盖程序运行期；</li>
+<li>局部变量：只能在所属代码块内通过该名称访问；</li>
+<li>参数：作用域位于对应函数内部。</li>
 </ul>
-<h3 id="13-常见题目特征">
-<a class="header-anchor" href="#13-%e5%b8%b8%e8%a7%81%e9%a2%98%e7%9b%ae%e7%89%b9%e5%be%81"></a>
-1.3 常见题目特征
-</h3><ul>
-<li>题目往往围绕“一个可利用缺陷”设计，不完全等同真实生产环境。</li>
-<li>题目会刻意加入干扰信息，要求选手识别有效线索。</li>
-<li>很多高分题是“多步骤串联”，需要跨方向知识协同。</li>
-</ul>
-<hr>
-<h2 id="2-web-方向">
-<a class="header-anchor" href="#2-web-%e6%96%b9%e5%90%91"></a>
-2. Web 方向
-</h2><h3 id="11-核心定位">
-<a class="header-anchor" href="#11-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-1.1 核心定位
-</h3><p>Web 方向的核心是：<strong>理解 Web 应用如何工作，并利用设计或实现缺陷获取敏感信息（如 flag）</strong>。<br>
-题目一般围绕网站、API、认证授权、文件处理、模板渲染、服务间调用等场景展开。</p>
-<h3 id="12-常见题型">
-<a class="header-anchor" href="#12-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-1.2 常见题型
-</h3><ul>
-<li>SQL 注入（联合查询、报错注入、盲注、堆叠查询）</li>
-<li>XSS（反射型、存储型、DOM 型）</li>
-<li>文件上传漏洞（后缀绕过、MIME 绕过、解析漏洞）</li>
-<li>反序列化（PHP/Python/Java 常见）</li>
-<li>SSRF（探测内网、打云元数据服务）</li>
-<li>命令执行（RCE）</li>
-<li>认证与会话问题（弱口令、JWT 伪造、Session 固定）</li>
-<li>访问控制缺陷（越权、水平/垂直权限绕过）</li>
-<li>模板注入（SSTI）</li>
-<li>路径穿越 / 本地文件包含（LFI/RFI）</li>
-</ul>
-<h3 id="13-需要掌握的知识">
-<a class="header-anchor" href="#13-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-1.3 需要掌握的知识
-</h3><ul>
-<li>HTTP/HTTPS 基础（请求方法、状态码、Cookie、Header）</li>
-<li>常见后端框架基本行为（Flask、Django、PHP、Node 等）</li>
-<li>数据库基础（MySQL/PostgreSQL 常见语法）</li>
-<li>Web 安全基本模型（输入、处理、输出链路）</li>
-<li>编码与解码（URL/Base64/Unicode/HTML 实体）</li>
-</ul>
-<h3 id="14-常用工具">
-<a class="header-anchor" href="#14-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
-1.4 常用工具
-</h3><ul>
-<li>Burp Suite（抓包、改包、重放、爆破）</li>
-<li>浏览器开发者工具（Network/Console/Storage）</li>
-<li>sqlmap（注入自动化辅助）</li>
-<li>ffuf / dirsearch（目录与接口探测）</li>
-<li>Postman / curl（API 调试）</li>
-</ul>
-<h3 id="15-解题通用方法">
-<a class="header-anchor" href="#15-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-1.5 解题通用方法
-</h3><ol>
-<li>先做资产梳理：页面、接口、参数、鉴权逻辑。</li>
-<li>找输入点：URL 参数、POST body、Header、文件上传、WebSocket。</li>
-<li>测试可控输入的“边界行为”：特殊字符、超长输入、类型错配。</li>
-<li>结合报错与回显判断漏洞类型，再构造 payload。</li>
-<li>拿到初始突破后，继续横向扩展（读文件、提权、内网探测）。</li>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 此处不能再使用 value
+</span></span></span></code></pre></div><h2 id="8-static-局部变量">
+<a class="header-anchor" href="#8-static-%e5%b1%80%e9%83%a8%e5%8f%98%e9%87%8f"></a>
+8. <code>static</code> 局部变量
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">counter</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>连续调用三次会输出 <code>1、2、3</code>。它的名称作用域仍在函数内，但对象的生命周期覆盖整个程序运行期。</p>
+<h2 id="9-递归">
+<a class="header-anchor" href="#9-%e9%80%92%e5%bd%92"></a>
+9. 递归
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="nf">factorial</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="nf">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>递归必须具有能够到达的终止条件。每次调用都有独立的参数和局部运行环境。</p>
+<h2 id="10-一个完整示例">
+<a class="header-anchor" href="#10-%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e7%a4%ba%e4%be%8b"></a>
+10. 一个完整示例
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">is_even</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">value</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">is_even</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d is even</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d is odd</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>判断一个数是否为正数、负数或零。</li>
+<li>使用循环计算 <code>1～n</code> 的和。</li>
+<li>编写函数判断质数。</li>
+<li>分别使用循环和递归计算阶乘。</li>
+<li>编写一个 <code>switch</code> 菜单，支持加减乘除。</li>
 </ol>
-<hr>
-<h2 id="3-misc-方向">
-<a class="header-anchor" href="#3-misc-%e6%96%b9%e5%90%91"></a>
-3. Misc 方向
-</h2><h3 id="21-核心定位">
-<a class="header-anchor" href="#21-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-2.1 核心定位
-</h3><p>Misc 是综合题型，强调<strong>信息处理能力、脚本自动化能力和跨领域联想能力</strong>。<br>
-通常不是“单一漏洞”，而是多个线索拼接。</p>
-<h3 id="22-常见题型">
-<a class="header-anchor" href="#22-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-2.2 常见题型
-</h3><ul>
-<li>编码与解码（Base 系列、URL、栅栏、培根等）</li>
-<li>隐写（图片、音频、文本、文件尾）</li>
-<li>流量分析（pcap、HTTP/TCP 提取）</li>
-<li>取证杂项（日志、压缩包、元数据）</li>
-<li>自动化小游戏 / 协议交互题</li>
-<li>二维码、条形码、键盘流量、摩斯码等</li>
-</ul>
-<h3 id="23-需要掌握的知识">
-<a class="header-anchor" href="#23-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-2.3 需要掌握的知识
-</h3><ul>
-<li>常见文件格式结构（PNG/JPG/ZIP/PDF）</li>
-<li>网络基础（TCP、HTTP、DNS）</li>
-<li>Linux 命令行与批处理能力</li>
-<li>Python 脚本处理（正则、字节流、批量处理）</li>
-</ul>
-<h3 id="24-常用工具">
-<a class="header-anchor" href="#24-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
-2.4 常用工具
-</h3><ul>
-<li>CyberChef（快速编码解码与数据变换）</li>
-<li>Wireshark / tshark（流量分析）</li>
-<li>binwalk / foremost（文件分离和恢复）</li>
-<li>stegsolve / zsteg / exiftool（隐写与元数据分析）</li>
-<li>Python（自动化解题）</li>
-</ul>
-<h3 id="25-解题通用方法">
-<a class="header-anchor" href="#25-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-2.5 解题通用方法
-</h3><ol>
-<li>先识别题目资产类型（图、音频、流量、压缩包、日志）。</li>
-<li>检查元数据与文件结构（头、尾、magic bytes）。</li>
-<li>进行可逆变换尝试（编码链、位运算、字符替换）。</li>
-<li>发现重复操作后立刻脚本化，避免手工消耗时间。</li>
-</ol>
-<hr>
-<h2 id="4-crypto密码方向">
-<a class="header-anchor" href="#4-crypto%e5%af%86%e7%a0%81%e6%96%b9%e5%90%91"></a>
-4. Crypto（密码）方向
-</h2><h3 id="31-核心定位">
-<a class="header-anchor" href="#31-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-3.1 核心定位
-</h3><p>Crypto 在 CTF 中通常不是“硬破现代密码算法”，而是<strong>利用错误实现、弱参数或不安全使用方式</strong>拿到明文/私钥/flag。</p>
-<h3 id="32-常见题型">
-<a class="header-anchor" href="#32-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-3.2 常见题型
-</h3><ul>
-<li>古典密码（凯撒、维吉尼亚、栅栏等）</li>
-<li>RSA 相关漏洞（小指数、共模、低熵素数、泄露部分信息）</li>
-<li>对称加密误用（ECB 模式、IV 重用、padding oracle）</li>
-<li>哈希相关（长度扩展、弱碰撞场景）</li>
-<li>随机数问题（可预测 seed）</li>
-</ul>
-<h3 id="33-需要掌握的知识">
-<a class="header-anchor" href="#33-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-3.3 需要掌握的知识
-</h3><ul>
-<li>模运算、欧几里得算法、同余与逆元</li>
-<li>素数、欧拉函数、快速幂</li>
-<li>常见加密模式（ECB/CBC/CTR/GCM）</li>
-<li>签名与认证基础（HMAC、RSA/ECDSA 基础概念）</li>
-</ul>
-<h3 id="34-常用工具">
-<a class="header-anchor" href="#34-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
-3.4 常用工具
-</h3><ul>
-<li>Python + <code>pycryptodome</code></li>
-<li>SageMath（数论与代数计算）</li>
-<li>factordb / yafu（因数分解辅助）</li>
-<li>RsaCtfTool（RSA 场景辅助）</li>
-</ul>
-<h3 id="35-解题通用方法">
-<a class="header-anchor" href="#35-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-3.5 解题通用方法
-</h3><ol>
-<li>先判断是“算法题”还是“实现缺陷题”。</li>
-<li>梳理已知量与未知量（公钥、密文、参数、oracle 接口）。</li>
-<li>尝试建立数学关系，确认可解条件。</li>
-<li>优先从参数弱点和复用问题切入（很多题突破口在这里）。</li>
-</ol>
-<hr>
-<h2 id="5-pwn-方向">
-<a class="header-anchor" href="#5-pwn-%e6%96%b9%e5%90%91"></a>
-5. Pwn 方向
-</h2><h3 id="41-核心定位">
-<a class="header-anchor" href="#41-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-4.1 核心定位
-</h3><p>Pwn 的目标是：<strong>利用二进制程序的内存安全漏洞，控制程序执行流程，最终读取 flag 或拿到 shell</strong>。</p>
-<h3 id="42-常见题型">
-<a class="header-anchor" href="#42-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-4.2 常见题型
-</h3><ul>
-<li>栈溢出（ret2win、ret2libc、ROP）</li>
-<li>堆利用（UAF、double free、tcache poisoning）</li>
-<li>格式化字符串漏洞</li>
-<li>整数溢出导致的越界读写</li>
-<li>沙箱逃逸（高阶题）</li>
-</ul>
-<h3 id="43-需要掌握的知识">
-<a class="header-anchor" href="#43-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-4.3 需要掌握的知识
-</h3><ul>
-<li>C 语言内存模型（栈、堆、全局区）</li>
-<li>汇编基础（x86/x64 调用约定）</li>
-<li>ELF 文件结构与动态链接</li>
-<li>Linux 基础与系统调用</li>
-<li>常见保护机制：NX、Canary、PIE、RELRO、ASLR</li>
-</ul>
-<h3 id="44-常用工具">
-<a class="header-anchor" href="#44-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
-4.4 常用工具
-</h3><ul>
-<li>gdb + pwndbg/gef</li>
-<li>pwntools（exp 编写）</li>
-<li>checksec（保护机制识别）</li>
-<li>IDA / Ghidra（静态分析）</li>
-<li>one_gadget / ropper（ROP 辅助）</li>
-</ul>
-<h3 id="45-解题通用方法">
-<a class="header-anchor" href="#45-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-4.5 解题通用方法
-</h3><ol>
-<li><code>checksec</code> 看保护机制。</li>
-<li>逆向定位可控输入与危险函数。</li>
-<li>验证崩溃点与覆盖能力（offset 计算）。</li>
-<li>按保护机制选攻击链（ret2win/ROP/堆链）。</li>
-<li>本地打通后切远程，处理 libc 版本差异与时序问题。</li>
-</ol>
-<hr>
-<h2 id="6-reverse">
-<a class="header-anchor" href="#6-reverse"></a>
-6. Reverse
-</h2><h3 id="51-核心定位">
-<a class="header-anchor" href="#51-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-5.1 核心定位
-</h3><p>Reverse 的核心是：<strong>通过静态与动态分析还原程序逻辑，提取关键数据、校验算法或密钥</strong>。</p>
-<h3 id="52-常见题型">
-<a class="header-anchor" href="#52-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-5.2 常见题型
-</h3><ul>
-<li>简单字符串校验与混淆</li>
-<li>控制流平坦化/虚假分支</li>
-<li>反调试与反沙箱</li>
-<li>自定义加密算法还原</li>
-<li>APK/so/脚本混合逆向</li>
-</ul>
-<h3 id="53-需要掌握的知识">
-<a class="header-anchor" href="#53-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-5.3 需要掌握的知识
-</h3><ul>
-<li>汇编基础（寄存器、栈帧、跳转逻辑）</li>
-<li>常见编译器优化影响（内联、寄存器分配）</li>
-<li>PE/ELF/APK 基础结构</li>
-<li>动态调试与断点跟踪思路</li>
-</ul>
-<h3 id="54-常用工具">
-<a class="header-anchor" href="#54-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7"></a>
-5.4 常用工具
-</h3><ul>
-<li>IDA Pro / Ghidra（静态分析）</li>
-<li>x64dbg / OllyDbg（Windows 调试）</li>
-<li>gdb（Linux 调试）</li>
-<li>JADX / apktool（Android 逆向）</li>
-<li>Frida（动态 Hook）</li>
-</ul>
-<h3 id="55-解题通用方法">
-<a class="header-anchor" href="#55-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-5.5 解题通用方法
-</h3><ol>
-<li>先跑程序看输入输出行为和校验位置。</li>
-<li>静态定位关键函数（字符串引用、比较点、加解密函数）。</li>
-<li>动态下断验证猜测，观察关键变量变化。</li>
-<li>还原算法或直接 patch 绕过关键校验。</li>
-</ol>
-<hr>
-<h2 id="7-ai-安全方向">
-<a class="header-anchor" href="#7-ai-%e5%ae%89%e5%85%a8%e6%96%b9%e5%90%91"></a>
-7. AI 安全方向
-</h2><h3 id="61-核心定位">
-<a class="header-anchor" href="#61-%e6%a0%b8%e5%bf%83%e5%ae%9a%e4%bd%8d"></a>
-6.1 核心定位
-</h3><p>AI 安全在 CTF 中主要关注：<strong>模型、数据、推理链路与应用集成层的攻击与防护</strong>。<br>
-这类题融合了传统安全和 LLM/ML 特性，是近年增长很快的新方向。</p>
-<h3 id="62-常见题型">
-<a class="header-anchor" href="#62-%e5%b8%b8%e8%a7%81%e9%a2%98%e5%9e%8b"></a>
-6.2 常见题型
-</h3><ul>
-<li>Prompt Injection（提示词注入）</li>
-<li>Jailbreak（越狱绕过安全策略）</li>
-<li>Data Leakage（系统提示词/隐私数据泄露）</li>
-<li>Tool Abuse（工具调用滥用、权限越权）</li>
-<li>RAG 攻击（检索污染、上下文投毒）</li>
-<li>Model Extraction / Membership Inference（高阶）</li>
-<li>对抗样本（视觉/文本误导）</li>
-</ul>
-<h3 id="63-需要掌握的知识">
-<a class="header-anchor" href="#63-%e9%9c%80%e8%a6%81%e6%8e%8c%e6%8f%a1%e7%9a%84%e7%9f%a5%e8%af%86"></a>
-6.3 需要掌握的知识
-</h3><ul>
-<li>LLM 基础（system/user/assistant 指令层级）</li>
-<li>RAG 架构（检索、重排、上下文拼接）</li>
-<li>Agent 工具调用流程（函数调用、权限边界）</li>
-<li>常见安全框架（输入过滤、输出审计、策略引擎）</li>
-</ul>
-<h3 id="64-常用工具与方法">
-<a class="header-anchor" href="#64-%e5%b8%b8%e7%94%a8%e5%b7%a5%e5%85%b7%e4%b8%8e%e6%96%b9%e6%b3%95"></a>
-6.4 常用工具与方法
-</h3><ul>
-<li>手工构造提示词 payload（多轮、角色扮演、编码绕过）</li>
-<li>日志审计（查看模型输入输出与工具调用轨迹）</li>
-<li>安全评测基准（红队提示集、越狱测试集）</li>
-<li>自动化测试脚本（批量注入、成功率统计）</li>
-</ul>
-<h3 id="65-解题通用方法">
-<a class="header-anchor" href="#65-%e8%a7%a3%e9%a2%98%e9%80%9a%e7%94%a8%e6%96%b9%e6%b3%95"></a>
-6.5 解题通用方法
-</h3><ol>
-<li>识别系统边界：模型能访问什么、不能访问什么。</li>
-<li>先做“低风险探测注入”，确认防护类型。</li>
-<li>分层突破：指令冲突、上下文污染、工具调用绕过。</li>
-<li>成功后验证可复现性，确认不是偶发。</li>
-<li>同时给出修复思路（最小权限、上下文隔离、策略校验）。</li>
-</ol>
-<h3 id="76-防护思路实战很关键">
-<a class="header-anchor" href="#76-%e9%98%b2%e6%8a%a4%e6%80%9d%e8%b7%af%e5%ae%9e%e6%88%98%e5%be%88%e5%85%b3%e9%94%ae"></a>
-7.6 防护思路（实战很关键）
-</h3><ul>
-<li>明确优先级：<code>System</code> 指令不可被用户输入覆盖。</li>
-<li>检索内容与用户输入分区，并做可信度标记。</li>
-<li>对工具调用做权限网关（参数白名单、动作审计）。</li>
-<li>对高风险输出进行策略检查与人工复核。</li>
-<li>保留完整链路日志，支持回放和溯源。</li>
-</ul>
-<hr>
-<h2 id="8-团队分工建议">
-<a class="header-anchor" href="#8-%e5%9b%a2%e9%98%9f%e5%88%86%e5%b7%a5%e5%bb%ba%e8%ae%ae"></a>
-8. 团队分工建议
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
 </h2><ul>
-<li>Web：主攻接口和业务逻辑漏洞</li>
-<li>Pwn：主攻二进制利用链</li>
-<li>Reverse：负责还原算法和补齐关键脚本</li>
-<li>Crypto：处理数学/密码题并做脚本验证</li>
-<li>Misc：负责流量、隐写、杂项快速清题</li>
-<li>AI 安全：负责新型模型/Agent 攻击面题目</li>
+<li>条件决定代码是否执行；</li>
+<li>循环用于重复处理；</li>
+<li>函数用于封装逻辑；</li>
+<li>C 的普通参数按值传递；</li>
+<li>作用域决定名称在哪里可见；</li>
+<li>生命周期决定对象存在多久。</li>
 </ul>
-<p>一个成熟队伍通常需要“主攻 + 备份”机制：每个方向至少 1 名主力，另有 1 名能接力的副手。</p>
-<hr>
-<h2 id="9-总结">
-<a class="header-anchor" href="#9-%e6%80%bb%e7%bb%93"></a>
-9. 总结
-</h2><p>CTF 不是单纯比“工具使用”，而是比<strong>知识结构 + 分析方法 + 自动化能力 + 团队协作</strong>。<br>
-在学习的过程中，建议大家选择1~2 个方向深耕，形成稳定得分点，再逐步补齐其余方向，整体提升会更快。<br>
-更加详细的学习大家可以参考CTF WIKI</p>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇单独攻克 C 语言最重要的概念：指针、地址、解引用和二级指针。</p>
 </div>
     <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>本文作者：</strong>M15tak3</p><p>
-      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/">https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/</a>
-    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>CTF 方向详解</p><p>
+      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/02-control-flow-functions/">https://blog.m15tak3.com/post/02-control-flow-functions/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域</p><p>
       
       <strong><span class="icon-copyright icon"></span>本文版权：</strong>
       本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -769,9 +580,9 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
   <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">赞助</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">请作者喝杯咖啡吧</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
           <img src="/images/wechat.jpg" alt="微信" width="200" />
           <p class="sponsor-qr-name">微信</p>
-        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/&amp;title=CTF%20%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3&amp;desc=%20CTF%20%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3%201.%20CTF%20%e6%98%af%e4%bb%80%e4%b9%88%20CTF%ef%bc%88Capture%20The%20Flag%ef%bc%89%e6%98%af%e4%b8%80%e7%a7%8d%e4%bf%a1%e6%81%af%e5%ae%89%e5%85%a8%e7%ab%9e%e8%b5%9b%e5%bd%a2%e5%bc%8f%ef%bc%8c%e5%8f%82%e8%b5%9b%e8%80%85%e9%80%9a%e8%bf%87%e5%88%86%e6%9e%90%e3%80%81%e5%88%a9%e7%94%a8%e3%80%81%e8%a7%a3%e5%af%86%e3%80%81%e9%80%86%e5%90%91%e3%80%81%e5%8f%96%e8%af%81%e7%ad%89%e6%8a%80%e6%9c%af%e6%89%8b%e6%ae%b5%ef%bc%8c%e8%8e%b7%e5%8f%96%e9%a2%98%e7%9b%ae%e4%b8%ad%e7%9a%84%20flag%ef%bc%88%e9%80%9a%e5%b8%b8%e6%98%af%e4%b8%80%e6%ae%b5%e7%89%b9%e5%ae%9a%e6%a0%bc%e5%bc%8f%e5%ad%97%e7%ac%a6%e4%b8%b2%ef%bc%89%e6%9d%a5%e5%be%97%e5%88%86%e3%80%82%0aCTF%20%e7%9a%84%e6%a0%b8%e5%bf%83%e4%b8%8d%e6%98%af%e2%80%9c%e8%83%8c%e5%b7%a5%e5%85%b7%e5%91%bd%e4%bb%a4%e2%80%9d%ef%bc%8c%e8%80%8c%e6%98%af%e9%80%9a%e8%bf%87%e9%a2%98%e7%9b%ae%e5%9c%ba%e6%99%af%e8%80%83%e5%af%9f%e5%af%b9%e7%b3%bb%e7%bb%9f%e5%8e%9f%e7%90%86%e3%80%81%e5%ae%89%e5%85%a8%e6%9c%ba%e5%88%b6%e5%92%8c%e6%94%bb%e5%87%bb%e9%98%b2%e6%8a%a4%e6%80%9d%e7%bb%b4%e7%9a%84%e7%bb%bc%e5%90%88%e7%90%86%e8%a7%a3%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="CTF 方向详解">
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/02-control-flow-functions/&amp;title=Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%8c%ef%bc%89%ef%bc%9a%e6%8e%a7%e5%88%b6%e6%b5%81%e7%a8%8b%e3%80%81%e5%87%bd%e6%95%b0%e4%b8%8e%e4%bd%9c%e7%94%a8%e5%9f%9f&amp;desc=%20Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%8c%ef%bc%89%ef%bc%9a%e6%8e%a7%e5%88%b6%e6%b5%81%e7%a8%8b%e3%80%81%e5%87%bd%e6%95%b0%e4%b8%8e%e4%bd%9c%e7%94%a8%e5%9f%9f%20%e6%9c%ac%e7%af%87%e7%9b%ae%e6%a0%87%ef%bc%9a%e6%8e%8c%e6%8f%a1%e6%9d%a1%e4%bb%b6%e3%80%81%e5%be%aa%e7%8e%af%e5%92%8c%e5%87%bd%e6%95%b0%ef%bc%8c%e7%90%86%e8%a7%a3%e5%8f%82%e6%95%b0%e4%bc%a0%e9%80%92%e4%bb%a5%e5%8f%8a%e5%b1%80%e9%83%a8%e5%8f%98%e9%87%8f%e7%9a%84%e4%bd%9c%e7%94%a8%e5%9f%9f%e3%80%82%0a%e9%a2%84%e8%ae%a1%e9%98%85%e8%af%bb%e6%97%b6%e9%97%b4%ef%bc%9a15%ef%bd%9e20%20%e5%88%86%e9%92%9f%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域">
       <div class="share-icon icon icon-qq"></div>
-    </a><a href="javascript:;"  title="CTF 方向详解">
+    </a><a href="javascript:;"  title="Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域">
       <div class="share-icon icon icon-weixin"><div id="share-weixin">
             <div class="share-weixin-dom">
               <div class="share-weixin-content">
@@ -791,12 +602,12 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
           </div></div>
     </a></div><a
           data-aos="zoom-in"
-          href="/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/#comments"
+          href="/post/02-control-flow-functions/#comments"
           class="article-comment-link"
         >
           <span
             class="post-comments-count waline-comment-count"
-            data-path="/post/ctf%e6%96%b9%e5%90%91%e8%af%a6%e8%a7%a3/"
+            data-path="/post/02-control-flow-functions/"
             itemprop="commentCount"
           ></span>
           留言
@@ -806,7 +617,7 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
         >
           <span
             class="waline-pageview-count"
-            data-path="/post/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3/"
+            data-path="/post/02-control-flow-functions/"
             >0</span
           >
           <em class="post-meta-item-text">阅读量</em>
@@ -817,37 +628,65 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
       data-aos="zoom-in"
       >CTF</a
     >
+    </li><li class="article-tag-list-item" data-aos="zoom-in">
+    <a
+      class="article-category-link"
+      href="/categories/%e6%8a%80%e6%9c%af"
+      data-aos="zoom-in"
+      >技术</a
+    >
     </li></ul>
-<ul class="article-tag-list" itemprop="keywords"></ul>
+<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in">
+      <a
+        class="article-tag-list-link"
+        href="/tags/c&#43;&#43;"
+        rel="tag"
+        >C&#43;&#43;</a
+      >
+    </li><li class="article-tag-list-item" data-aos="zoom-in">
+      <a
+        class="article-tag-list-link"
+        href="/tags/ctf"
+        rel="tag"
+        >CTF</a
+      >
+    </li><li class="article-tag-list-item" data-aos="zoom-in">
+      <a
+        class="article-tag-list-link"
+        href="/tags/pwn"
+        rel="tag"
+        >PWN</a
+      >
+    </li></ul>
 </footer>
   </div><nav
     id="article-nav"
     aria-label="Article navigation"
     data-aos="fade-up"
   ><div class="article-nav-link-wrap left"><img
-            data-src="https://images.ctfassets.net/iuhngnmppwjh/2VrwRqKkQP2TFnrWsxi3aM/a0c8a659be24ea63afea463e0dd1f7d9/pyenv.drawio.png"
+            data-src="/images/C.webp"
             data-sizes="auto"
-            alt="linux-python管理（pyenv的安装与使用）"
+            alt="Pwn 基础之C/C&#43;&#43;（一）：从第一个 C 程序到数据类型"
             class="lazyload"
           /><a
-          href="/post/pyenv/"
-          aria-label="前一篇:linux-python管理（pyenv的安装与使用）"
-          title="前一篇:linux-python管理（pyenv的安装与使用）"
+          href="/post/01-c-program-types/"
+          aria-label="前一篇:Pwn 基础之C/C&#43;&#43;（一）：从第一个 C 程序到数据类型"
+          title="前一篇:Pwn 基础之C/C&#43;&#43;（一）：从第一个 C 程序到数据类型"
         ></a>
         <div class="article-nav-caption">前一篇</div>
-        <h3 class="article-nav-title">linux-python管理（pyenv的安装与使用）</h3>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（一）：从第一个 C 程序到数据类型</h3>
       </div><div class="article-nav-link-wrap right"><img
-            data-src="/images/%e7%b4%ab%e7%bd%97%e5%85%b0%e5%86%99.jpg"
+            data-src="/images/C.webp"
             data-sizes="auto"
-            alt="CTF CSV题目教程"
+            alt="Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
             class="lazyload"
           /><a
-          href="/post/ctf-csv%E9%A2%98%E7%9B%AE%E6%95%99%E7%A8%8B/"
-          aria-label="后一篇:CTF CSV题目教程"
-          title="后一篇:CTF CSV题目教程"
+          href="/post/03-pointers/"
+          aria-label="后一篇:Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
+          title="后一篇:Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
         ></a>
         <div class="article-nav-caption">后一篇</div>
-        <h3 class="article-nav-title">CTF CSV题目教程</h3>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针</h3>
       </div></nav></article><section id="comments" data-aos="fade-up">
 <div class="comment-header"><h2 class="comment-title">说些什么吧！</h2>
   <div class="comment-selector">
@@ -924,70 +763,26 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#1-ctf-是什么">1. CTF 是什么</a>
+    <li><a href="#1-条件判断">1. 条件判断</a></li>
+    <li><a href="#2-switch">2. <code>switch</code></a></li>
+    <li><a href="#3-循环">3. 循环</a>
       <ul>
-        <li><a href="#11-常见比赛形式">1.1 常见比赛形式</a></li>
-        <li><a href="#12-ctf-的价值">1.2 CTF 的价值</a></li>
-        <li><a href="#13-常见题目特征">1.3 常见题目特征</a></li>
+        <li><a href="#for"><code>for</code></a></li>
+        <li><a href="#while"><code>while</code></a></li>
+        <li><a href="#do-while"><code>do-while</code></a></li>
+        <li><a href="#break-和-continue"><code>break</code> 和 <code>continue</code></a></li>
       </ul>
     </li>
-    <li><a href="#2-web-方向">2. Web 方向</a>
-      <ul>
-        <li><a href="#11-核心定位">1.1 核心定位</a></li>
-        <li><a href="#12-常见题型">1.2 常见题型</a></li>
-        <li><a href="#13-需要掌握的知识">1.3 需要掌握的知识</a></li>
-        <li><a href="#14-常用工具">1.4 常用工具</a></li>
-        <li><a href="#15-解题通用方法">1.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#3-misc-方向">3. Misc 方向</a>
-      <ul>
-        <li><a href="#21-核心定位">2.1 核心定位</a></li>
-        <li><a href="#22-常见题型">2.2 常见题型</a></li>
-        <li><a href="#23-需要掌握的知识">2.3 需要掌握的知识</a></li>
-        <li><a href="#24-常用工具">2.4 常用工具</a></li>
-        <li><a href="#25-解题通用方法">2.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#4-crypto密码方向">4. Crypto（密码）方向</a>
-      <ul>
-        <li><a href="#31-核心定位">3.1 核心定位</a></li>
-        <li><a href="#32-常见题型">3.2 常见题型</a></li>
-        <li><a href="#33-需要掌握的知识">3.3 需要掌握的知识</a></li>
-        <li><a href="#34-常用工具">3.4 常用工具</a></li>
-        <li><a href="#35-解题通用方法">3.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#5-pwn-方向">5. Pwn 方向</a>
-      <ul>
-        <li><a href="#41-核心定位">4.1 核心定位</a></li>
-        <li><a href="#42-常见题型">4.2 常见题型</a></li>
-        <li><a href="#43-需要掌握的知识">4.3 需要掌握的知识</a></li>
-        <li><a href="#44-常用工具">4.4 常用工具</a></li>
-        <li><a href="#45-解题通用方法">4.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#6-reverse">6. Reverse</a>
-      <ul>
-        <li><a href="#51-核心定位">5.1 核心定位</a></li>
-        <li><a href="#52-常见题型">5.2 常见题型</a></li>
-        <li><a href="#53-需要掌握的知识">5.3 需要掌握的知识</a></li>
-        <li><a href="#54-常用工具">5.4 常用工具</a></li>
-        <li><a href="#55-解题通用方法">5.5 解题通用方法</a></li>
-      </ul>
-    </li>
-    <li><a href="#7-ai-安全方向">7. AI 安全方向</a>
-      <ul>
-        <li><a href="#61-核心定位">6.1 核心定位</a></li>
-        <li><a href="#62-常见题型">6.2 常见题型</a></li>
-        <li><a href="#63-需要掌握的知识">6.3 需要掌握的知识</a></li>
-        <li><a href="#64-常用工具与方法">6.4 常用工具与方法</a></li>
-        <li><a href="#65-解题通用方法">6.5 解题通用方法</a></li>
-        <li><a href="#76-防护思路实战很关键">7.6 防护思路（实战很关键）</a></li>
-      </ul>
-    </li>
-    <li><a href="#8-团队分工建议">8. 团队分工建议</a></li>
-    <li><a href="#9-总结">9. 总结</a></li>
+    <li><a href="#4-定义函数">4. 定义函数</a></li>
+    <li><a href="#5-函数声明与定义">5. 函数声明与定义</a></li>
+    <li><a href="#6-c-默认按值传递">6. C 默认按值传递</a></li>
+    <li><a href="#7-作用域">7. 作用域</a></li>
+    <li><a href="#8-static-局部变量">8. <code>static</code> 局部变量</a></li>
+    <li><a href="#9-递归">9. 递归</a></li>
+    <li><a href="#10-一个完整示例">10. 一个完整示例</a></li>
+    <li><a href="#本篇练习">本篇练习</a></li>
+    <li><a href="#本篇小结">本篇小结</a></li>
+    <li><a href="#下一篇">下一篇</a></li>
   </ul>
 </nav>
 </div></div>
@@ -1191,10 +986,10 @@ CTF 的核心不是“背工具命令”，而是通过题目场景考察对系�
   <div><script data-pjax>
         window.REIMU_POST = {
           author: "M15tak3",
-          title: "CTF 方向详解",
-          url: "https:\/\/blog.m15tak3.com\/post\/ctf%E6%96%B9%E5%90%91%E8%AF%A6%E8%A7%A3\/",
-          description: " CTF 方向详解 1. CTF 是什么 CTF（Capture The Flag）是一种信息安全竞赛形式，参赛者通过分析、利用、解密、逆向、取证等技术手段，获取题目中的 flag（通常是一段特定格式字符串）来得分。\nCTF 的核心不是“背工具命令”，而是通过题目场景考察对系统原理、安全机制和攻击防护思维的综合理解。\n",
-          cover: "https:\/\/blog.m15tak3.com\/images\/CTF.png",
+          title: "Pwn 基础之C\/C\u002b\u002b（二）：控制流程、函数与作用域",
+          url: "https:\/\/blog.m15tak3.com\/post\/02-control-flow-functions\/",
+          description: " Pwn 基础之C\/C\u002b\u002b（二）：控制流程、函数与作用域 本篇目标：掌握条件、循环和函数，理解参数传递以及局部变量的作用域。\n预计阅读时间：15～20 分钟。\n",
+          cover: "https:\/\/blog.m15tak3.com\/images\/C.webp",
         };
       </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
           if (_$$(`${gallery} ${children}`).length > 0) {

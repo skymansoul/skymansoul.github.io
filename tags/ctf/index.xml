@@ -12,12 +12,456 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Tue, 08 Sep 2026 14:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 14:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/tags/ctf/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针</title>
+      <link>https://blog.m15tak3.com/post/03-pointers/</link>
+      <pubDate>Thu, 10 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/03-pointers/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（三）：一篇文章理解 C 指针</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc三一篇文章理解-c-指针">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%b8%89%e4%b8%80%e7%af%87%e6%96%87%e7%ab%a0%e7%90%86%e8%a7%a3-c-%e6%8c%87%e9%92%88"></a>
+Pwn 基础之C/C++（三）：一篇文章理解 C 指针
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解地址、指针、解引用、指针运算和二级指针。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-内存地址">
+<a class="header-anchor" href="#1-%e5%86%85%e5%ad%98%e5%9c%b0%e5%9d%80"></a>
+1. 内存地址
+</h2><p>内存可以抽象成连续排列的字节，每个字节都有一个编号：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">地址        内容
+</span></span><span class="line"><span class="cl">0x1000      0x41
+</span></span><span class="line"><span class="cl">0x1001      0x42
+</span></span><span class="line"><span class="cl">0x1002      0x43
+</span></span></code></pre></div><p>这个编号就是地址。程序中的对象位于某个地址，并占用一定数量的连续字节。</p>
+<h2 id="2-取地址-">
+<a class="header-anchor" href="#2-%e5%8f%96%e5%9c%b0%e5%9d%80-"></a>
+2. 取地址 <code>&amp;</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>&amp;number</code> 得到变量 <code>number</code> 的地址。<code>%p</code> 用来打印指针，通常转换为 <code>void *</code>。</p>
+<h2 id="3-声明指针">
+<a class="header-anchor" href="#3-%e5%a3%b0%e6%98%8e%e6%8c%87%e9%92%88"></a>
+3. 声明指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">number</span><span class="p">;</span>
+</span></span></code></pre></div><p>关系可以表示为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">pointer ─────→ number
+</span></span><span class="line"><span class="cl">                100
+</span></span></code></pre></div><p><code>pointer</code> 自己也是变量，只不过它保存的是地址。</p>
+<h2 id="4-解引用-">
+<a class="header-anchor" href="#4-%e8%a7%a3%e5%bc%95%e7%94%a8-"></a>
+4. 解引用 <code>*</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>*pointer</code> 表示访问 <code>pointer</code> 所指地址处的 <code>int</code> 对象。</p>
+<p>注意两种 <code>*</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span><span class="p">;</span>   <span class="c1">// 声明：pointer 是指针
+</span></span></span><span class="line"><span class="cl"><span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>  <span class="c1">// 表达式：访问指向的对象
+</span></span></span></code></pre></div><h2 id="5-通过指针修改函数外变量">
+<a class="header-anchor" href="#5-%e9%80%9a%e8%bf%87%e6%8c%87%e9%92%88%e4%bf%ae%e6%94%b9%e5%87%bd%e6%95%b0%e5%a4%96%e5%8f%98%e9%87%8f"></a>
+5. 通过指针修改函数外变量
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">change</span><span class="p">(</span><span class="o">&amp;</span><span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>传递过程：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;number → number 的地址 → value → *value → number
+</span></span></code></pre></div><p>C 仍然是按值传递，只是这次复制的“值”恰好是一个地址。</p>
+<h2 id="6-指针类型为什么重要">
+<a class="header-anchor" href="#6-%e6%8c%87%e9%92%88%e7%b1%bb%e5%9e%8b%e4%b8%ba%e4%bb%80%e4%b9%88%e9%87%8d%e8%a6%81"></a>
+6. 指针类型为什么重要
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="o">*</span><span class="n">byte_pointer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">int_pointer</span><span class="p">;</span>
+</span></span></code></pre></div><p>指针类型告诉编译器：</p>
+<ol>
+<li>解引用时按什么类型解释数据；</li>
+<li>通常读取多少字节；</li>
+<li>指针加一时跨过多大的对象。</li>
+</ol>
+<p><code>char *</code> 解引用通常访问一个字节，<code>int *</code> 解引用通常访问一个 <code>int</code>。</p>
+<h2 id="7-空指针">
+<a class="header-anchor" href="#7-%e7%a9%ba%e6%8c%87%e9%92%88"></a>
+7. 空指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>NULL</code> 表示当前不指向有效对象。解引用前应保证指针有效：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">pointer</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>空指针不能被解引用。</p>
+<h2 id="8-void-">
+<a class="header-anchor" href="#8-void-"></a>
+8. <code>void *</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="n">raw</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">number</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>void *</code> 可以保存对象地址，但不能直接解引用，因为编译器不知道目标类型。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">raw</span><span class="p">;</span>
+</span></span></code></pre></div><p>强制转换只改变编译器的解释方式，不会改变底层字节，也不能保证解释一定合理。</p>
+<h2 id="9-指针运算">
+<a class="header-anchor" href="#9-%e6%8c%87%e9%92%88%e8%bf%90%e7%ae%97"></a>
+9. 指针运算
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="n">values</span><span class="p">;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>       <span class="c1">// 10
+</span></span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">pointer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span> <span class="c1">// 20
+</span></span></span></code></pre></div><p>如果 <code>int</code> 占 4 字节，<code>pointer + 1</code> 通常向后移动 4 字节，而不是 1 字节。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">pointer + n
+</span></span></code></pre></div><p>表示移动 <code>n</code> 个目标类型对象的距离。</p>
+<p>指针运算只有在同一个数组对象及其尾后位置范围内才具有标准定义。</p>
+<h2 id="10-二级指针">
+<a class="header-anchor" href="#10-%e4%ba%8c%e7%ba%a7%e6%8c%87%e9%92%88"></a>
+10. 二级指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">**</span><span class="n">pointer_to_pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">pointer</span><span class="p">;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">pointer_to_pointer → pointer → value
+</span></span></code></pre></div><p>访问结果：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">**</span><span class="n">pointer_to_pointer</span><span class="p">);</span>
+</span></span></code></pre></div><p>二级指针常用于：</p>
+<ul>
+<li>修改调用者持有的指针；</li>
+<li>表示字符串数组；</li>
+<li>实现输出参数；</li>
+<li>构建动态数据结构。</li>
+</ul>
+<h2 id="11-用二级指针修改指针">
+<a class="header-anchor" href="#11-%e7%94%a8%e4%ba%8c%e7%ba%a7%e6%8c%87%e9%92%88%e4%bf%ae%e6%94%b9%e6%8c%87%e9%92%88"></a>
+11. 用二级指针修改指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">create_number</span><span class="p">(</span><span class="kt">int</span> <span class="o">**</span><span class="n">output</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="o">*</span><span class="n">number</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">number</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">number</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">output</span> <span class="o">=</span> <span class="n">number</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">create_number</span><span class="p">(</span><span class="o">&amp;</span><span class="n">pointer</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="12-const-与指针">
+<a class="header-anchor" href="#12-const-%e4%b8%8e%e6%8c%87%e9%92%88"></a>
+12. <code>const</code> 与指针
+</h2><p>指向常量的指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span><span class="p">;</span>
+</span></span></code></pre></div><p>不能通过该指针修改目标，但可以改变它的指向。</p>
+<p>常量指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="k">const</span> <span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span></code></pre></div><p>可以修改目标，但不能改变指针自身保存的地址。</p>
+<p>两者都限制：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="o">*</span><span class="k">const</span> <span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span></code></pre></div><h2 id="13-常见误区">
+<a class="header-anchor" href="#13-%e5%b8%b8%e8%a7%81%e8%af%af%e5%8c%ba"></a>
+13. 常见误区
+</h2><h3 id="指针不是目标对象">
+<a class="header-anchor" href="#%e6%8c%87%e9%92%88%e4%b8%8d%e6%98%af%e7%9b%ae%e6%a0%87%e5%af%b9%e8%b1%a1"></a>
+指针不是目标对象
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>pointer</code> 保存地址，<code>*pointer</code> 才是目标值。</p>
+<h3 id="声明多个指针时要分别写-">
+<a class="header-anchor" href="#%e5%a3%b0%e6%98%8e%e5%a4%9a%e4%b8%aa%e6%8c%87%e9%92%88%e6%97%b6%e8%a6%81%e5%88%86%e5%88%ab%e5%86%99-"></a>
+声明多个指针时要分别写 <code>*</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">b</span><span class="p">;</span>
+</span></span></code></pre></div><p>下面只有 <code>a</code> 是指针，<code>b</code> 是普通整数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>
+</span></span></code></pre></div><h3 id="地址相同不代表类型相同">
+<a class="header-anchor" href="#%e5%9c%b0%e5%9d%80%e7%9b%b8%e5%90%8c%e4%b8%8d%e4%bb%a3%e8%a1%a8%e7%b1%bb%e5%9e%8b%e7%9b%b8%e5%90%8c"></a>
+地址相同不代表类型相同
+</h3><p>同一个地址可以被转换成不同指针类型，但读取宽度和解释方法会随类型改变。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>打印一个变量的值、地址以及指针自身的地址。</li>
+<li>编写 <code>swap(int *a, int *b)</code> 交换两个整数。</li>
+<li>使用指针遍历整数数组。</li>
+<li>编写函数，通过二级指针返回动态申请的整数。</li>
+<li>分别声明“指向常量的指针”和“常量指针”，观察编译器限制。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>指针保存地址；</li>
+<li><code>&amp;</code> 获取地址，<code>*</code> 访问指向对象；</li>
+<li>指针类型决定访问和移动方式；</li>
+<li>C 可以通过传递地址间接修改外部对象；</li>
+<li>二级指针保存另一个指针的地址；</li>
+<li>指针是否有效必须由程序逻辑保证。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇把指针用于数组和字符串，并从逐字节观察整数引出大小端序。</p>
+
+        
+        <hr><p>本文2026-09-10首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-10</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（二）：控制流程、函数与作用域</title>
+      <link>https://blog.m15tak3.com/post/02-control-flow-functions/</link>
+      <pubDate>Wed, 09 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/02-control-flow-functions/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（二）：控制流程、函数与作用域</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc二控制流程函数与作用域">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%ba%8c%e6%8e%a7%e5%88%b6%e6%b5%81%e7%a8%8b%e5%87%bd%e6%95%b0%e4%b8%8e%e4%bd%9c%e7%94%a8%e5%9f%9f"></a>
+Pwn 基础之C/C++（二）：控制流程、函数与作用域
+</h1><blockquote>
+<p><strong>本篇目标</strong>：掌握条件、循环和函数，理解参数传递以及局部变量的作用域。</p>
+<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
+</blockquote>
+<h2 id="1-条件判断">
+<a class="header-anchor" href="#1-%e6%9d%a1%e4%bb%b6%e5%88%a4%e6%96%ad"></a>
+1. 条件判断
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">score</span> <span class="o">&gt;=</span> <span class="mi">90</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;A</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">score</span> <span class="o">&gt;=</span> <span class="mi">60</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Pass</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Fail</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>在 C 中：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">0 表示假
+</span></span><span class="line"><span class="cl">非 0 表示真
+</span></span></code></pre></div><p>注意：<code>=</code> 是赋值，<code>==</code> 才是比较相等。</p>
+<h2 id="2-switch">
+<a class="header-anchor" href="#2-switch"></a>
+2. <code>switch</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">switch</span> <span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Add</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Show</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Unknown</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>break</code> 用于退出 <code>switch</code>。省略后可能继续执行后面的 <code>case</code>，称为 fall-through。</p>
+<h2 id="3-循环">
+<a class="header-anchor" href="#3-%e5%be%aa%e7%8e%af"></a>
+3. 循环
+</h2><h3 id="for">
+<a class="header-anchor" href="#for"></a>
+<code>for</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>执行顺序：初始化、判断、循环体、更新、重新判断。</p>
+<h3 id="while">
+<a class="header-anchor" href="#while"></a>
+<code>while</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="do-while">
+<a class="header-anchor" href="#do-while"></a>
+<code>do-while</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">choice</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">scanf</span><span class="p">(</span><span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">choice</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">choice</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>do-while</code> 至少执行一次循环体。</p>
+<h3 id="break-和-continue">
+<a class="header-anchor" href="#break-%e5%92%8c-continue"></a>
+<code>break</code> 和 <code>continue</code>
+</h3><ul>
+<li><code>break</code>：结束当前循环；</li>
+<li><code>continue</code>：跳过本轮剩余代码，进入下一轮。</li>
+</ul>
+<h2 id="4-定义函数">
+<a class="header-anchor" href="#4-%e5%ae%9a%e4%b9%89%e5%87%bd%e6%95%b0"></a>
+4. 定义函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="nf">add</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+</span></span></code></pre></div><p>函数由返回类型、函数名、参数列表和函数体组成。</p>
+<p>没有返回值时使用 <code>void</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_line</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;----------</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="5-函数声明与定义">
+<a class="header-anchor" href="#5-%e5%87%bd%e6%95%b0%e5%a3%b0%e6%98%8e%e4%b8%8e%e5%ae%9a%e4%b9%89"></a>
+5. 函数声明与定义
+</h2><p>如果定义位于调用位置之后，需要先声明：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">add</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>声明告诉编译器函数的类型，定义提供真正的函数体。</p>
+<h2 id="6-c-默认按值传递">
+<a class="header-anchor" href="#6-c-%e9%bb%98%e8%ae%a4%e6%8c%89%e5%80%bc%e4%bc%a0%e9%80%92"></a>
+6. C 默认按值传递
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">change</span><span class="p">(</span><span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>输出仍是 <code>10</code>。调用时复制了 <code>number</code> 的值，函数修改的是副本。</p>
+<p>后续学习指针后，可以把变量地址传给函数，从而修改原变量。</p>
+<h2 id="7-作用域">
+<a class="header-anchor" href="#7-%e4%bd%9c%e7%94%a8%e5%9f%9f"></a>
+7. 作用域
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">global_value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">local_value</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>全局变量：在文件范围声明，生命周期通常覆盖程序运行期；</li>
+<li>局部变量：只能在所属代码块内通过该名称访问；</li>
+<li>参数：作用域位于对应函数内部。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 此处不能再使用 value
+</span></span></span></code></pre></div><h2 id="8-static-局部变量">
+<a class="header-anchor" href="#8-static-%e5%b1%80%e9%83%a8%e5%8f%98%e9%87%8f"></a>
+8. <code>static</code> 局部变量
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">counter</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>连续调用三次会输出 <code>1、2、3</code>。它的名称作用域仍在函数内，但对象的生命周期覆盖整个程序运行期。</p>
+<h2 id="9-递归">
+<a class="header-anchor" href="#9-%e9%80%92%e5%bd%92"></a>
+9. 递归
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="nf">factorial</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="nf">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>递归必须具有能够到达的终止条件。每次调用都有独立的参数和局部运行环境。</p>
+<h2 id="10-一个完整示例">
+<a class="header-anchor" href="#10-%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e7%a4%ba%e4%be%8b"></a>
+10. 一个完整示例
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">is_even</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">value</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">is_even</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d is even</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d is odd</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>判断一个数是否为正数、负数或零。</li>
+<li>使用循环计算 <code>1～n</code> 的和。</li>
+<li>编写函数判断质数。</li>
+<li>分别使用循环和递归计算阶乘。</li>
+<li>编写一个 <code>switch</code> 菜单，支持加减乘除。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>条件决定代码是否执行；</li>
+<li>循环用于重复处理；</li>
+<li>函数用于封装逻辑；</li>
+<li>C 的普通参数按值传递；</li>
+<li>作用域决定名称在哪里可见；</li>
+<li>生命周期决定对象存在多久。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇单独攻克 C 语言最重要的概念：指针、地址、解引用和二级指针。</p>
+
+        
+        <hr><p>本文2026-09-09首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-09</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
     
       
     
