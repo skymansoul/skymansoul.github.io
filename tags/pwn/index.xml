@@ -12,12 +12,663 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Thu, 10 Sep 2026 14:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 13 Sep 2026 14:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/tags/pwn/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存</title>
+      <link>https://blog.m15tak3.com/post/06-memory-lifetime-dynamic-allocation/</link>
+      <pubDate>Sun, 13 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/06-memory-lifetime-dynamic-allocation/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（六）：栈、堆、生命周期与动态内存</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc六栈堆生命周期与动态内存">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e5%85%ad%e6%a0%88%e5%a0%86%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f%e4%b8%8e%e5%8a%a8%e6%80%81%e5%86%85%e5%ad%98"></a>
+Pwn 基础之C/C++（六）：栈、堆、生命周期与动态内存
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解程序常见内存区域，正确使用 <code>malloc</code>、<code>calloc</code>、<code>realloc</code> 和 <code>free</code>。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-程序的常见内存区域">
+<a class="header-anchor" href="#1-%e7%a8%8b%e5%ba%8f%e7%9a%84%e5%b8%b8%e8%a7%81%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f"></a>
+1. 程序的常见内存区域
+</h2><p>概念上可以粗略理解为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">高地址
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Stack            |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Memory Mapping   |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Heap             |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| BSS              |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Data             |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Read-only Data   |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| Text             |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">低地址
+</span></span></code></pre></div><p>真实布局受操作系统、加载器、编译器、ABI 和随机化机制影响。</p>
+<h2 id="2-text-与只读数据">
+<a class="header-anchor" href="#2-text-%e4%b8%8e%e5%8f%aa%e8%af%bb%e6%95%b0%e6%8d%ae"></a>
+2. Text 与只读数据
+</h2><p>Text 区域主要保存编译后的机器指令。</p>
+<p>字符串字面量等数据通常位于只读数据区域：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">message</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>指针变量和字符串字面量本身可能位于不同区域。</p>
+<h2 id="3-data-与-bss">
+<a class="header-anchor" href="#3-data-%e4%b8%8e-bss"></a>
+3. Data 与 BSS
+</h2><p>有非零初始值的全局或静态变量通常与 Data 区域相关：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">global_value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="n">static_value</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span></code></pre></div><p>未显式初始化或初始化为零的全局、静态变量通常与 BSS 区域相关：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">global_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="n">static_value</span><span class="p">;</span>
+</span></span></code></pre></div><p>程序开始运行时，它们会被初始化为零。</p>
+<h2 id="4-栈">
+<a class="header-anchor" href="#4-%e6%a0%88"></a>
+4. 栈
+</h2><p>普通局部变量和函数调用环境经常与栈有关：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">text</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>函数返回后，这些局部对象的生命周期结束。</p>
+<p>但“局部变量一定在栈上”不是绝对规则。优化后，变量可能只存在于寄存器，也可能被完全消除。</p>
+<h2 id="5-堆">
+<a class="header-anchor" href="#5-%e5%a0%86"></a>
+5. 堆
+</h2><p>堆用于运行时动态申请内存，适合：</p>
+<ul>
+<li>编译时不知道元素数量；</li>
+<li>数据需要跨越当前函数继续存在；</li>
+<li>需要动态创建和销毁对象。</li>
+</ul>
+<p>C 常用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">malloc  calloc  realloc  free
+</span></span></code></pre></div><h2 id="6-作用域与生命周期">
+<a class="header-anchor" href="#6-%e4%bd%9c%e7%94%a8%e5%9f%9f%e4%b8%8e%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f"></a>
+6. 作用域与生命周期
+</h2><p>作用域回答：</p>
+<blockquote>
+<p>在源代码什么位置可以使用这个名称？</p>
+</blockquote>
+<p>生命周期回答：</p>
+<blockquote>
+<p>对象从什么时候开始存在，到什么时候结束？</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="nf">create_number</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">pointer</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pointer</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">pointer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>函数返回后，局部变量 <code>pointer</code> 消失，但它指向的动态对象仍存在，直到调用者释放它。</p>
+<h2 id="7-malloc">
+<a class="header-anchor" href="#7-malloc"></a>
+7. <code>malloc</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">pointer</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">pointer</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&#34;allocation failed</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="o">*</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pointer</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>malloc</code> 接收字节数，成功时返回动态区域起始地址，失败时返回 <code>NULL</code>。</p>
+<p><code>sizeof(*pointer)</code> 能跟随指针类型变化，减少重复维护类型名称。</p>
+<h2 id="8-动态数组">
+<a class="header-anchor" href="#8-%e5%8a%a8%e6%80%81%e6%95%b0%e7%bb%84"></a>
+8. 动态数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="n">count</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">free</span><span class="p">(</span><span class="n">numbers</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span></code></pre></div><p>实际代码还应考虑乘法是否超过 <code>size_t</code> 可表示范围，尤其是长度来自外部数据时。</p>
+<h2 id="9-calloc">
+<a class="header-anchor" href="#9-calloc"></a>
+9. <code>calloc</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="nf">calloc</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">));</span>
+</span></span></code></pre></div><p>它接收元素数量和元素大小，并将申请区域初始化为全零字节。</p>
+<p>全零字节适合初始化整数零，但不能脱离具体类型简单理解为所有类型的通用默认值。</p>
+<h2 id="10-realloc">
+<a class="header-anchor" href="#10-realloc"></a>
+10. <code>realloc</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">temporary</span> <span class="o">=</span> <span class="nf">realloc</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">new_count</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">temporary</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">numbers</span> <span class="o">=</span> <span class="n">temporary</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>realloc</code> 可能：</p>
+<ul>
+<li>在原位置调整；</li>
+<li>分配新区域并复制旧内容；</li>
+<li>返回不同地址；</li>
+<li>失败并返回 <code>NULL</code>。</li>
+</ul>
+<p>使用临时指针，调整失败时仍能保留原地址。</p>
+<h2 id="11-free">
+<a class="header-anchor" href="#11-free"></a>
+11. <code>free</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">free</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">pointer</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>free</code> 结束动态对象对应存储的可用生命周期，但不会自动修改指针变量。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">free</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+</span></span></code></pre></div><p>是允许的。</p>
+<p>只应释放由匹配的动态分配函数返回、且尚未释放的地址。</p>
+<h2 id="12-所有权与借用">
+<a class="header-anchor" href="#12-%e6%89%80%e6%9c%89%e6%9d%83%e4%b8%8e%e5%80%9f%e7%94%a8"></a>
+12. 所有权与借用
+</h2><p>动态内存管理的核心问题是：</p>
+<blockquote>
+<p>谁负责释放？</p>
+</blockquote>
+<p>可以建立约定：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">创建者拥有对象
+</span></span><span class="line"><span class="cl">拥有者负责释放
+</span></span><span class="line"><span class="cl">转移所有权必须明确
+</span></span><span class="line"><span class="cl">借用者不得擅自释放
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="o">*</span><span class="nf">create_message</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span></span></code></pre></div><p>如果返回动态字符串，接口应说明调用者负责 <code>free</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="nf">get_program_name</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span></span></code></pre></div><p>如果返回程序内部已有字符串，调用者只借用，不应释放。</p>
+<h2 id="13-动态数组扩容模型">
+<a class="header-anchor" href="#13-%e5%8a%a8%e6%80%81%e6%95%b0%e7%bb%84%e6%89%a9%e5%ae%b9%e6%a8%a1%e5%9e%8b"></a>
+13. 动态数组扩容模型
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">grow_array</span><span class="p">(</span><span class="kt">int</span> <span class="o">**</span><span class="n">array</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">capacity</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">new_capacity</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">capacity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="mi">4</span> <span class="o">:</span> <span class="o">*</span><span class="n">capacity</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="o">*</span><span class="n">temporary</span> <span class="o">=</span> <span class="nf">realloc</span><span class="p">(</span><span class="o">*</span><span class="n">array</span><span class="p">,</span> <span class="n">new_capacity</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">**</span><span class="n">array</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">temporary</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">array</span> <span class="o">=</span> <span class="n">temporary</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">new_capacity</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这里同时练习：</p>
+<ul>
+<li>动态内存；</li>
+<li>二级指针；</li>
+<li>容量管理；</li>
+<li>失败处理；</li>
+<li>所有权不变的扩容操作。</li>
+</ul>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>动态申请 <code>n</code> 个整数并计算平均值。</li>
+<li>使用 <code>calloc</code> 创建全零数组。</li>
+<li>编写可扩容整数列表。</li>
+<li>画出指针变量与动态对象的生命周期。</li>
+<li>实现学生信息动态数组，退出前释放全部资源。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>程序包含代码、静态数据、栈、堆等区域；</li>
+<li>作用域与生命周期是两个不同概念；</li>
+<li>动态对象不会因创建函数返回而自动释放；</li>
+<li>每次分配都要检查失败；</li>
+<li>每块动态资源都应有明确所有者；</li>
+<li><code>malloc/free</code>、<code>calloc/free</code> 和 <code>realloc</code> 必须按规则配合。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇学习输入输出、类型转换以及函数指针。</p>
+
+        
+        <hr><p>本文2026-09-13首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-13</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</title>
+      <link>https://blog.m15tak3.com/post/05-struct-union-alignment/</link>
+      <pubDate>Sat, 12 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/05-struct-union-alignment/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（五）：结构体、联合体与内存对齐</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc五结构体联合体与内存对齐">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%ba%94%e7%bb%93%e6%9e%84%e4%bd%93%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
+Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
+</h1><blockquote>
+<p><strong>本篇目标</strong>：掌握复合类型，并能够从字节偏移角度理解结构体布局。</p>
+<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
+</blockquote>
+<h2 id="1-结构体">
+<a class="header-anchor" href="#1-%e7%bb%93%e6%9e%84%e4%bd%93"></a>
+1. 结构体
+</h2><p>结构体将多个相关字段组合为一个类型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">level</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>创建和初始化：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#34;Alice&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">10</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>访问成员：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
+</span></span></code></pre></div><h2 id="2-结构体指针">
+<a class="header-anchor" href="#2-%e7%bb%93%e6%9e%84%e4%bd%93%e6%8c%87%e9%92%88"></a>
+2. 结构体指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
+</span></span></code></pre></div><p>访问成员：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">pointer</span><span class="o">-&gt;</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span></span></code></pre></div><p>等价于：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="p">(</span><span class="o">*</span><span class="n">pointer</span><span class="p">).</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span></span></code></pre></div><ul>
+<li><code>.</code> 用于结构体对象；</li>
+<li><code>-&gt;</code> 用于指向结构体的指针。</li>
+</ul>
+<h2 id="3-typedef">
+<a class="header-anchor" href="#3-typedef"></a>
+3. <code>typedef</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">User</span><span class="p">;</span>
+</span></span></code></pre></div><p>之后可以直接写：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">user</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>typedef</code> 创建类型别名，不会创建新变量。</p>
+<h2 id="4-枚举">
+<a class="header-anchor" href="#4-%e6%9e%9a%e4%b8%be"></a>
+4. 枚举
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">STATE_IDLE</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">STATE_RUNNING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">STATE_STOPPED</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>默认值通常依次为 <code>0、1、2</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="n">state</span> <span class="o">=</span> <span class="n">STATE_RUNNING</span><span class="p">;</span>
+</span></span></code></pre></div><p>也可以显式指定：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">Permission</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_READ</span>  <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_WRITE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_EXEC</span>  <span class="o">=</span> <span class="mi">4</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>这类值适合配合位运算表示多个状态。</p>
+<h2 id="5-联合体">
+<a class="header-anchor" href="#5-%e8%81%94%e5%90%88%e4%bd%93"></a>
+5. 联合体
+</h2><p>联合体的所有成员共享同一块存储：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">number</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">bytes</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">value</span><span class="p">.</span><span class="n">number</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>number</code> 和 <code>bytes</code> 从同一地址开始。联合体大小通常满足最大成员的大小和对齐要求。</p>
+<p>结构体与联合体的区别：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">结构体：各成员通常拥有各自的存储位置
+</span></span><span class="line"><span class="cl">联合体：各成员共享同一块存储
+</span></span></code></pre></div><h2 id="6-为什么需要内存对齐">
+<a class="header-anchor" href="#6-%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
+6. 为什么需要内存对齐
+</h2><p>考虑：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>字段大小之和通常是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 + 4 + 1 = 6
+</span></span></code></pre></div><p>但 <code>sizeof(struct Example)</code> 在常见环境中可能是 <code>12</code>。</p>
+<p>一种常见布局：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">偏移 0      a
+</span></span><span class="line"><span class="cl">偏移 1～3   填充
+</span></span><span class="line"><span class="cl">偏移 4～7   b
+</span></span><span class="line"><span class="cl">偏移 8      c
+</span></span><span class="line"><span class="cl">偏移 9～11  尾部填充
+</span></span></code></pre></div><p>填充字节称为 padding。它使成员地址满足平台和 ABI 的对齐要求，也保证结构体数组中的每个元素都正确对齐。</p>
+<h2 id="7-查看成员偏移">
+<a class="header-anchor" href="#7-%e6%9f%a5%e7%9c%8b%e6%88%90%e5%91%98%e5%81%8f%e7%a7%bb"></a>
+7. 查看成员偏移
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;sizeof: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;a: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">a</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;b: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">b</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;c: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">c</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>不要用“字段大小简单相加”猜测最终布局，应通过目标环境验证。</p>
+<h2 id="8-成员顺序会影响大小">
+<a class="header-anchor" href="#8-%e6%88%90%e5%91%98%e9%a1%ba%e5%ba%8f%e4%bc%9a%e5%bd%b1%e5%93%8d%e5%a4%a7%e5%b0%8f"></a>
+8. 成员顺序会影响大小
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>两个结构体拥有相同类型的字段，但布局和最终大小可能不同。将对齐要求相近的成员放在一起，通常可以减少填充。</p>
+<h2 id="9-结构体数组">
+<a class="header-anchor" href="#9-%e7%bb%93%e6%9e%84%e4%bd%93%e6%95%b0%e7%bb%84"></a>
+9. 结构体数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">users</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+</span></span></code></pre></div><p>每个元素占 <code>sizeof(User)</code> 字节：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;users[1] - &amp;users[0]
+</span></span></code></pre></div><p>按字节理解就是一个完整结构体大小。尾部填充保证下一个元素的成员仍满足对齐要求。</p>
+<h2 id="10-结构体传参">
+<a class="header-anchor" href="#10-%e7%bb%93%e6%9e%84%e4%bd%93%e4%bc%a0%e5%8f%82"></a>
+10. 结构体传参
+</h2><p>按值传递会复制整个结构体：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="n">User</span> <span class="n">user</span><span class="p">);</span>
+</span></span></code></pre></div><p>只读时可以传指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="k">const</span> <span class="n">User</span> <span class="o">*</span><span class="n">user</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这避免复制完整对象，并通过 <code>const</code> 表明函数不打算修改它。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>定义 <code>Student</code> 结构体并创建数组。</li>
+<li>打印结构体每个成员的地址和偏移。</li>
+<li>调整字段顺序，比较 <code>sizeof</code>。</li>
+<li>使用联合体逐字节观察 <code>uint32_t</code>。</li>
+<li>使用枚举实现一个简单状态机。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>结构体组合多个字段；</li>
+<li><code>.</code> 访问对象成员，<code>-&gt;</code> 访问指针所指对象的成员；</li>
+<li>联合体让多个成员共享存储；</li>
+<li>枚举为状态值提供可读名称；</li>
+<li>padding 会使结构体大小大于字段大小之和；</li>
+<li><code>offsetof</code> 可以查看实际成员偏移。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇进入程序内存模型，学习栈、堆、生命周期及动态内存管理。</p>
+
+        
+        <hr><p>本文2026-09-12首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-12</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序</title>
+      <link>https://blog.m15tak3.com/post/04-arrays-strings-endianness/</link>
+      <pubDate>Fri, 11 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/04-arrays-strings-endianness/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（四）：数组、字符串与字节序</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc四数组字符串与字节序">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e5%9b%9b%e6%95%b0%e7%bb%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e5%ba%8f"></a>
+Pwn 基础之C/C++（四）：数组、字符串与字节序
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解连续内存、数组与指针的关系、C 字符串及大小端序。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-一维数组">
+<a class="header-anchor" href="#1-%e4%b8%80%e7%bb%b4%e6%95%b0%e7%bb%84"></a>
+1. 一维数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">};</span>
+</span></span></code></pre></div><p>数组包含固定数量的同类型对象，并通常连续排列：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">numbers[0]  numbers[1]  numbers[2]  numbers[3]
+</span></span><span class="line"><span class="cl">    10          20          30          40
+</span></span></code></pre></div><p>下标从 <code>0</code> 开始：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+</span></span></code></pre></div><h2 id="2-计算数组长度">
+<a class="header-anchor" href="#2-%e8%ae%a1%e7%ae%97%e6%95%b0%e7%bb%84%e9%95%bf%e5%ba%a6"></a>
+2. 计算数组长度
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">count</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span></code></pre></div><ul>
+<li><code>sizeof(numbers)</code> 是整个数组的字节数；</li>
+<li><code>sizeof(numbers[0])</code> 是一个元素的字节数。</li>
+</ul>
+<p>这种方法只适用于当前表达式中仍是真正数组的情况。</p>
+<h2 id="3-数组与指针的关系">
+<a class="header-anchor" href="#3-%e6%95%b0%e7%bb%84%e4%b8%8e%e6%8c%87%e9%92%88%e7%9a%84%e5%85%b3%e7%b3%bb"></a>
+3. 数组与指针的关系
+</h2><p>在许多表达式中，数组名会转换为首元素指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">;</span>
+</span></span></code></pre></div><p>此时：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span></span></code></pre></div><p>等价于：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="o">*</span><span class="p">(</span><span class="n">numbers</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+</span></span></code></pre></div><p>但是数组和指针不是同一种对象：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">);</span> <span class="c1">// 整个数组大小
+</span></span></span><span class="line"><span class="cl"><span class="k">sizeof</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span> <span class="c1">// 指针变量大小
+</span></span></span></code></pre></div><h2 id="4-数组作为参数">
+<a class="header-anchor" href="#4-%e6%95%b0%e7%bb%84%e4%bd%9c%e4%b8%ba%e5%8f%82%e6%95%b0"></a>
+4. 数组作为参数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_array</span><span class="p">(</span><span class="k">const</span> <span class="kt">int</span> <span class="n">values</span><span class="p">[],</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>参数中的 <code>int values[]</code> 会被调整为 <code>int *values</code>，函数无法仅靠它恢复原数组长度，所以需要单独传入 <code>count</code>。</p>
+<h2 id="5-二维数组">
+<a class="header-anchor" href="#5-%e4%ba%8c%e7%bb%b4%e6%95%b0%e7%bb%84"></a>
+5. 二维数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>内存中通常按行连续存储：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 2 3 4 5 6
+</span></span></code></pre></div><p>传入函数时需要让编译器知道后续维度：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_matrix</span><span class="p">(</span><span class="kt">int</span> <span class="n">matrix</span><span class="p">[][</span><span class="mi">3</span><span class="p">],</span> <span class="kt">size_t</span> <span class="n">rows</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">rows</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d &#34;</span><span class="p">,</span> <span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="6-c-字符串的本质">
+<a class="header-anchor" href="#6-c-%e5%ad%97%e7%ac%a6%e4%b8%b2%e7%9a%84%e6%9c%ac%e8%b4%a8"></a>
+6. C 字符串的本质
+</h2><p>C 字符串是以空字符 <code>\0</code> 结尾的字符数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>实际内容为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;h&#39; &#39;e&#39; &#39;l&#39; &#39;l&#39; &#39;o&#39; &#39;\0&#39;
+</span></span></code></pre></div><p>十六进制表示：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">68 65 6c 6c 6f 00
+</span></span></code></pre></div><p>字符串有 5 个可见字符，但数组需要 6 个字节。</p>
+<h2 id="7-0-与字符-0">
+<a class="header-anchor" href="#7-0-%e4%b8%8e%e5%ad%97%e7%ac%a6-0"></a>
+7. <code>\0</code> 与字符 <code>0</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;\0&#39; = 0x00
+</span></span><span class="line"><span class="cl">&#39;0&#39;  = 0x30
+</span></span></code></pre></div><p>前者是字符串结束标志，后者是可见字符零。</p>
+<h2 id="8-字符数组与字符串字面量">
+<a class="header-anchor" href="#8-%e5%ad%97%e7%ac%a6%e6%95%b0%e7%bb%84%e4%b8%8e%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%ad%97%e9%9d%a2%e9%87%8f"></a>
+8. 字符数组与字符串字面量
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">text</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;H&#39;</span><span class="p">;</span>
+</span></span></code></pre></div><p>这里创建了可修改数组。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">text</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>这里让指针指向字符串字面量，不应尝试修改字面量内容。</p>
+<h2 id="9-常用字符串与内存函数">
+<a class="header-anchor" href="#9-%e5%b8%b8%e7%94%a8%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%86%85%e5%ad%98%e5%87%bd%e6%95%b0"></a>
+9. 常用字符串与内存函数
+</h2><p>需要：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span></code></pre></div><h3 id="strlen">
+<a class="header-anchor" href="#strlen"></a>
+<code>strlen</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">length</span> <span class="o">=</span> <span class="nf">strlen</span><span class="p">(</span><span class="s">&#34;hello&#34;</span><span class="p">);</span> <span class="c1">// 5
+</span></span></span></code></pre></div><p>不计算结尾 <code>\0</code>。</p>
+<h3 id="strcmp">
+<a class="header-anchor" href="#strcmp"></a>
+<code>strcmp</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;equal</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>left == right</code> 通常比较地址，而不是字符串内容。</p>
+<h3 id="memcpy">
+<a class="header-anchor" href="#memcpy"></a>
+<code>memcpy</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memcpy</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span></code></pre></div><p>按指定字节数复制。</p>
+<h3 id="memcmp">
+<a class="header-anchor" href="#memcmp"></a>
+<code>memcmp</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memcmp</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span></code></pre></div><p>按指定字节数比较。</p>
+<h3 id="memset">
+<a class="header-anchor" href="#memset"></a>
+<code>memset</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memset</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+</span></span></code></pre></div><p>按字节设置。下面不会把每个 <code>int</code> 设置为数值 <code>1</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="nf">memset</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">values</span><span class="p">));</span>
+</span></span></code></pre></div><p>它会把每个字节设置成 <code>0x01</code>。</p>
+<h2 id="10-字符串与原始字节">
+<a class="header-anchor" href="#10-%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%8e%9f%e5%a7%8b%e5%ad%97%e8%8a%82"></a>
+10. 字符串与原始字节
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;ABC&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>是以 <code>\0</code> 结尾的字符串。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">data</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x41</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x42</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">};</span>
+</span></span></code></pre></div><p>是原始字节数组，不一定能作为字符串处理。处理二进制数据时应同时保存地址和长度。</p>
+<h2 id="11-大小端序">
+<a class="header-anchor" href="#11-%e5%a4%a7%e5%b0%8f%e7%ab%af%e5%ba%8f"></a>
+11. 大小端序
+</h2><p>假设：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">value</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
+</span></span></code></pre></div><p>在常见 x86-64 小端环境中，内存顺序是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">78 56 34 12
+</span></span></code></pre></div><p>低有效字节放在低地址。</p>
+<p>大端序则是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">12 34 56 78
+</span></span></code></pre></div><p>逐字节验证：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">value</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">bytes</span> <span class="o">=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">value</span><span class="p">);</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%02x &#34;</span><span class="p">,</span> <span class="n">bytes</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>字节序描述的是多字节数据在内存中的排列，而不是数值打印时的书写顺序。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>使用下标和指针两种方式遍历数组。</li>
+<li>手写 <code>string_length</code> 计算字符串长度。</li>
+<li>手写字符串比较函数。</li>
+<li>逐字节打印 <code>0x12345678</code>。</li>
+<li>比较字符数组、字符串字面量指针及其 <code>sizeof</code>。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>数组保存连续的同类型对象；</li>
+<li>数组名会在很多表达式中转换成首元素指针；</li>
+<li>数组与指针并不完全相同；</li>
+<li>C 字符串以 <code>\0</code> 结尾；</li>
+<li>原始字节不等于字符串；</li>
+<li>x86-64 通常使用小端序。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇学习结构体、联合体、枚举、成员偏移和内存对齐。</p>
+
+        
+        <hr><p>本文2026-09-11首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-11</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
     
       
     

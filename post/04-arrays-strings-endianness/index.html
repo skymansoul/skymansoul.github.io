@@ -8,7 +8,7 @@
   name="viewport"
   content="width=device-width, initial-scale=1, shrink-to-fit=no"
 /><title>
-  从零安装WSL2--Ubuntu | M15tak3
+  Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序 | M15tak3
 </title>
 <meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
 <script data-pjax>
@@ -56,20 +56,20 @@
     type="font/woff2"
     crossorigin="anonymous"
   /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
-  <meta property="og:title" content="从零安装WSL2--Ubuntu | M15tak3" />
+  <meta property="og:title" content="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序 | M15tak3" />
   <meta
     property="og:description"
     content="挖不出漏洞的菜鸡pwn_ctfer"
   />
-  <meta property="og:url" content="https://blog.m15tak3.com/post/wsl1/" />
+  <meta property="og:url" content="https://blog.m15tak3.com/post/04-arrays-strings-endianness/" />
   <meta
     property="og:site_name"
     content="M15tak3のBlog"
   />
-  <meta property="og:image" content="https://blog.m15tak3.com/images/wsl.jpg" />
+  <meta property="og:image" content="https://blog.m15tak3.com/images/C.webp" />
   <meta property="article:author" content="M15tak3" />
-  <meta property="article:published_time" content="2026-05-06T09:00:00&#43;08:00" />
-  <meta property="article:modified_time" content="2026-05-06T09:00:00&#43;08:00" /><meta property="article:tag" content="wsl, 教程" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/wsl.jpg" />
+  <meta property="article:published_time" content="2026-09-11T14:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-09-11T14:00:00&#43;08:00" /><meta property="article:tag" content="C&#43;&#43;, CTF, PWN" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/C.webp" />
 <link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.aa23953727ef01755afabce27a2bdd482733a8013a1f84f3d5442c54ffe1fa82.css" /><link
     rel="preload"
     as="style"
@@ -164,7 +164,7 @@
           <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
           <span id="selected-lang">简体中文</span>
         </div>
-        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" class="selected" aria-selected="true" >简体中文</li><li data-value="en" role="option" aria-selected="false" >English</li></ul>
+        <ul class="select-items" id="select-items" role="listbox" aria-label="Languages"><li data-value="zh-cn" role="option" class="selected" aria-selected="true" >简体中文</li></ul>
       </div>
       <script>
         var selectSelected = document.getElementById("select-selected");
@@ -180,7 +180,7 @@
 
         selectOptions.forEach((item) => {
           item.addEventListener("click", () => {
-            const langMap = {};langMap['en'] = '\/en\/post\/wsl1\/';selectedLang.textContent = item.textContent;
+            const langMap = {};selectedLang.textContent = item.textContent;
             selectItems.classList.remove("show");
             selectOptions.forEach((option) => {
               option.classList.remove("selected");
@@ -209,9 +209,9 @@
       </script>
     </nav></div>
 <header id="header" aria-label="Site header"><picture></picture>
-    <img crossorigin="anonymous" fetchpriority="high" src="https://n.sinaimg.cn/sinacn10103/63/w1635h828/20190826/d697-icuacrz3982471.jpg" alt="从零安装WSL2--Ubuntu"><div id="header-outer">
+    <img crossorigin="anonymous" fetchpriority="high" src="/images/C_banner.webp" alt="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"><div id="header-outer">
     <div id="header-title"><span id="logo">
-            <h1 data-aos="slide-up">从零安装WSL2--Ubuntu</h1>
+            <h1 data-aos="slide-up">Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序</h1>
           </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
   </div>
 </header><div id="content"
@@ -225,14 +225,28 @@
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#写在前面">写在前面</a></li>
-    <li><a href="#wsl的安装">wsl的安装</a>
+    <li><a href="#1-一维数组">1. 一维数组</a></li>
+    <li><a href="#2-计算数组长度">2. 计算数组长度</a></li>
+    <li><a href="#3-数组与指针的关系">3. 数组与指针的关系</a></li>
+    <li><a href="#4-数组作为参数">4. 数组作为参数</a></li>
+    <li><a href="#5-二维数组">5. 二维数组</a></li>
+    <li><a href="#6-c-字符串的本质">6. C 字符串的本质</a></li>
+    <li><a href="#7-0-与字符-0">7. <code>\0</code> 与字符 <code>0</code></a></li>
+    <li><a href="#8-字符数组与字符串字面量">8. 字符数组与字符串字面量</a></li>
+    <li><a href="#9-常用字符串与内存函数">9. 常用字符串与内存函数</a>
       <ul>
-        <li><a href="#环境配置与安装">环境配置与安装</a></li>
+        <li><a href="#strlen"><code>strlen</code></a></li>
+        <li><a href="#strcmp"><code>strcmp</code></a></li>
+        <li><a href="#memcpy"><code>memcpy</code></a></li>
+        <li><a href="#memcmp"><code>memcmp</code></a></li>
+        <li><a href="#memset"><code>memset</code></a></li>
       </ul>
     </li>
-    <li><a href="#安装wsl-ubuntu">安装WSL-Ubuntu</a></li>
-    <li><a href="#将子系统转移到其他位置">将子系统转移到其他位置</a></li>
+    <li><a href="#10-字符串与原始字节">10. 字符串与原始字节</a></li>
+    <li><a href="#11-大小端序">11. 大小端序</a></li>
+    <li><a href="#本篇练习">本篇练习</a></li>
+    <li><a href="#本篇小结">本篇小结</a></li>
+    <li><a href="#下一篇">下一篇</a></li>
   </ul>
 </nav>
 </div></div>
@@ -334,11 +348,11 @@
     class="article-date-link icon-calendar"
     data-aos="zoom-in"
   >
-    <time datetime="2026-05-06 09:00:00 &#43;0800 CST" itemprop="datePublished"
-      >2026-05-06</time
+    <time datetime="2026-09-11 14:00:00 &#43;0800 CST" itemprop="datePublished"
+      >2026-09-11</time
     >
     <time style="display: none;" id="post-update-time"
-      >2026-05-06</time
+      >2026-09-11</time
     >
   </span></div>
 </div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
@@ -348,51 +362,195 @@
         >
           <p class="alert-heading">WARNING</p>
           <p></p>
-        </blockquote><h1 id="从零安装wsl2ubuntu">
-<a class="header-anchor" href="#%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85wsl2ubuntu"></a>
-从零安装WSL2&ndash;Ubuntu
-</h1><h2 id="写在前面">
-<a class="header-anchor" href="#%e5%86%99%e5%9c%a8%e5%89%8d%e9%9d%a2"></a>
-写在前面
-</h2><p>​	wsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。
-<strong>注意</strong>：在安装完子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。</p>
-<h2 id="wsl的安装">
-<a class="header-anchor" href="#wsl%e7%9a%84%e5%ae%89%e8%a3%85"></a>
-wsl的安装
-</h2><h3 id="环境配置与安装">
-<a class="header-anchor" href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae%e4%b8%8e%e5%ae%89%e8%a3%85"></a>
-环境配置与安装
-</h3><p>​	打开windows设置-系统-可选功能-更多Windows功能</p>
-<p><img src="/images/wsl/image-20260506091424950.png" alt="image-20260506091424950"></p>
-<p>​	将适用于Linux的Windows子系统、虚拟机平台功能打开，然后选择确定。系统将安装功能，后续会让你重启电脑，重启即可。<img src="/images/wsl/image-20260506091524142.png" alt="image-20260506091524142"></p>
-<h2 id="安装wsl-ubuntu">
-<a class="header-anchor" href="#%e5%ae%89%e8%a3%85wsl-ubuntu"></a>
-安装WSL-Ubuntu
-</h2><p>​	打开命令行终端，输入指令</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-install</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
-</span></span></code></pre></div><p>​	系统会自动拉取Ubuntu24.04，我们等待进度条结束即可</p>
-<p><img src="/images/wsl/image-20260506092344701.png" alt="image-20260506092344701"></p>
-<p>​	安装完成后，会自动打开该子系统，进行用户名的设置。不同的linux系统对于用户名的要求略有不同，所以如果发现提示用户名不合法，大家按要求修改即可。
-<img src="/images/wsl/image-20260506092455924.png" alt="image-20260506092455924"></p>
-<h2 id="将子系统转移到其他位置">
-<a class="header-anchor" href="#%e5%b0%86%e5%ad%90%e7%b3%bb%e7%bb%9f%e8%bd%ac%e7%a7%bb%e5%88%b0%e5%85%b6%e4%bb%96%e4%bd%8d%e7%bd%ae"></a>
-将子系统转移到其他位置
-</h2><p>​	WSL自行拉取的linux系统会自动安装在C盘，有因此我们需要将它转移。我们在命令行中输入<code>exit</code>退出系统。</p>
-<p>接着输入下方命令，关闭所有虚拟机。接着我们先导出刚才安装好的Ubuntu22.04,<code>export</code>命令是用来导出子系统的，可用于备份。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-shutdown</span>
-</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-export</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
-</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093742003.png" alt="image-20260506093742003"></p>
-<p>​	最后的路径大家可自行选择但文件名字结尾必须为.tar结尾</p>
-<p>​	然后我们注销掉当前的子系统，并导入刚才我们导出的文件，引导它安装到我们想让他安装的位置。同样的路径可自行选择。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-unregister</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
-</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="p">-</span><span class="n">-import</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">Ubuntu2204</span> <span class="n">E:</span><span class="p">\</span><span class="n">WSL</span><span class="p">\</span><span class="n">ubuntu2204</span><span class="p">.</span><span class="py">tar</span>
-</span></span><span class="line"><span class="cl"><span class="n">wsl</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="mf">22.04</span>
-</span></span></code></pre></div><p><img src="/images/wsl/image-20260506093901064.png" alt="image-20260506093901064"></p>
-<p>我们可以看到之前安装好的子系统的位置更换，且里面的文件也和原先一样。</p>
+        </blockquote><h1 id="pwn-基础之cc四数组字符串与字节序">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e5%9b%9b%e6%95%b0%e7%bb%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e5%ba%8f"></a>
+Pwn 基础之C/C++（四）：数组、字符串与字节序
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解连续内存、数组与指针的关系、C 字符串及大小端序。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-一维数组">
+<a class="header-anchor" href="#1-%e4%b8%80%e7%bb%b4%e6%95%b0%e7%bb%84"></a>
+1. 一维数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">};</span>
+</span></span></code></pre></div><p>数组包含固定数量的同类型对象，并通常连续排列：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">numbers[0]  numbers[1]  numbers[2]  numbers[3]
+</span></span><span class="line"><span class="cl">    10          20          30          40
+</span></span></code></pre></div><p>下标从 <code>0</code> 开始：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+</span></span></code></pre></div><h2 id="2-计算数组长度">
+<a class="header-anchor" href="#2-%e8%ae%a1%e7%ae%97%e6%95%b0%e7%bb%84%e9%95%bf%e5%ba%a6"></a>
+2. 计算数组长度
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">count</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">/</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span></code></pre></div><ul>
+<li><code>sizeof(numbers)</code> 是整个数组的字节数；</li>
+<li><code>sizeof(numbers[0])</code> 是一个元素的字节数。</li>
+</ul>
+<p>这种方法只适用于当前表达式中仍是真正数组的情况。</p>
+<h2 id="3-数组与指针的关系">
+<a class="header-anchor" href="#3-%e6%95%b0%e7%bb%84%e4%b8%8e%e6%8c%87%e9%92%88%e7%9a%84%e5%85%b3%e7%b3%bb"></a>
+3. 数组与指针的关系
+</h2><p>在许多表达式中，数组名会转换为首元素指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">;</span>
+</span></span></code></pre></div><p>此时：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span></span></code></pre></div><p>等价于：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="o">*</span><span class="p">(</span><span class="n">numbers</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+</span></span></code></pre></div><p>但是数组和指针不是同一种对象：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">sizeof</span><span class="p">(</span><span class="n">numbers</span><span class="p">);</span> <span class="c1">// 整个数组大小
+</span></span></span><span class="line"><span class="cl"><span class="k">sizeof</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span> <span class="c1">// 指针变量大小
+</span></span></span></code></pre></div><h2 id="4-数组作为参数">
+<a class="header-anchor" href="#4-%e6%95%b0%e7%bb%84%e4%bd%9c%e4%b8%ba%e5%8f%82%e6%95%b0"></a>
+4. 数组作为参数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_array</span><span class="p">(</span><span class="k">const</span> <span class="kt">int</span> <span class="n">values</span><span class="p">[],</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>参数中的 <code>int values[]</code> 会被调整为 <code>int *values</code>，函数无法仅靠它恢复原数组长度，所以需要单独传入 <code>count</code>。</p>
+<h2 id="5-二维数组">
+<a class="header-anchor" href="#5-%e4%ba%8c%e7%bb%b4%e6%95%b0%e7%bb%84"></a>
+5. 二维数组
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>内存中通常按行连续存储：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 2 3 4 5 6
+</span></span></code></pre></div><p>传入函数时需要让编译器知道后续维度：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_matrix</span><span class="p">(</span><span class="kt">int</span> <span class="n">matrix</span><span class="p">[][</span><span class="mi">3</span><span class="p">],</span> <span class="kt">size_t</span> <span class="n">rows</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">rows</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d &#34;</span><span class="p">,</span> <span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="6-c-字符串的本质">
+<a class="header-anchor" href="#6-c-%e5%ad%97%e7%ac%a6%e4%b8%b2%e7%9a%84%e6%9c%ac%e8%b4%a8"></a>
+6. C 字符串的本质
+</h2><p>C 字符串是以空字符 <code>\0</code> 结尾的字符数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>实际内容为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;h&#39; &#39;e&#39; &#39;l&#39; &#39;l&#39; &#39;o&#39; &#39;\0&#39;
+</span></span></code></pre></div><p>十六进制表示：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">68 65 6c 6c 6f 00
+</span></span></code></pre></div><p>字符串有 5 个可见字符，但数组需要 6 个字节。</p>
+<h2 id="7-0-与字符-0">
+<a class="header-anchor" href="#7-0-%e4%b8%8e%e5%ad%97%e7%ac%a6-0"></a>
+7. <code>\0</code> 与字符 <code>0</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;\0&#39; = 0x00
+</span></span><span class="line"><span class="cl">&#39;0&#39;  = 0x30
+</span></span></code></pre></div><p>前者是字符串结束标志，后者是可见字符零。</p>
+<h2 id="8-字符数组与字符串字面量">
+<a class="header-anchor" href="#8-%e5%ad%97%e7%ac%a6%e6%95%b0%e7%bb%84%e4%b8%8e%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%ad%97%e9%9d%a2%e9%87%8f"></a>
+8. 字符数组与字符串字面量
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">text</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;H&#39;</span><span class="p">;</span>
+</span></span></code></pre></div><p>这里创建了可修改数组。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">text</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>这里让指针指向字符串字面量，不应尝试修改字面量内容。</p>
+<h2 id="9-常用字符串与内存函数">
+<a class="header-anchor" href="#9-%e5%b8%b8%e7%94%a8%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%86%85%e5%ad%98%e5%87%bd%e6%95%b0"></a>
+9. 常用字符串与内存函数
+</h2><p>需要：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span></code></pre></div><h3 id="strlen">
+<a class="header-anchor" href="#strlen"></a>
+<code>strlen</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">length</span> <span class="o">=</span> <span class="nf">strlen</span><span class="p">(</span><span class="s">&#34;hello&#34;</span><span class="p">);</span> <span class="c1">// 5
+</span></span></span></code></pre></div><p>不计算结尾 <code>\0</code>。</p>
+<h3 id="strcmp">
+<a class="header-anchor" href="#strcmp"></a>
+<code>strcmp</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;equal</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>left == right</code> 通常比较地址，而不是字符串内容。</p>
+<h3 id="memcpy">
+<a class="header-anchor" href="#memcpy"></a>
+<code>memcpy</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memcpy</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span></code></pre></div><p>按指定字节数复制。</p>
+<h3 id="memcmp">
+<a class="header-anchor" href="#memcmp"></a>
+<code>memcmp</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memcmp</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+</span></span></code></pre></div><p>按指定字节数比较。</p>
+<h3 id="memset">
+<a class="header-anchor" href="#memset"></a>
+<code>memset</code>
+</h3><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">memset</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+</span></span></code></pre></div><p>按字节设置。下面不会把每个 <code>int</code> 设置为数值 <code>1</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="nf">memset</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">values</span><span class="p">));</span>
+</span></span></code></pre></div><p>它会把每个字节设置成 <code>0x01</code>。</p>
+<h2 id="10-字符串与原始字节">
+<a class="header-anchor" href="#10-%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%8e%9f%e5%a7%8b%e5%ad%97%e8%8a%82"></a>
+10. 字符串与原始字节
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;ABC&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>是以 <code>\0</code> 结尾的字符串。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">data</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x41</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x42</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">};</span>
+</span></span></code></pre></div><p>是原始字节数组，不一定能作为字符串处理。处理二进制数据时应同时保存地址和长度。</p>
+<h2 id="11-大小端序">
+<a class="header-anchor" href="#11-%e5%a4%a7%e5%b0%8f%e7%ab%af%e5%ba%8f"></a>
+11. 大小端序
+</h2><p>假设：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">value</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
+</span></span></code></pre></div><p>在常见 x86-64 小端环境中，内存顺序是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">78 56 34 12
+</span></span></code></pre></div><p>低有效字节放在低地址。</p>
+<p>大端序则是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">12 34 56 78
+</span></span></code></pre></div><p>逐字节验证：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">value</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">bytes</span> <span class="o">=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">value</span><span class="p">);</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%02x &#34;</span><span class="p">,</span> <span class="n">bytes</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>字节序描述的是多字节数据在内存中的排列，而不是数值打印时的书写顺序。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>使用下标和指针两种方式遍历数组。</li>
+<li>手写 <code>string_length</code> 计算字符串长度。</li>
+<li>手写字符串比较函数。</li>
+<li>逐字节打印 <code>0x12345678</code>。</li>
+<li>比较字符数组、字符串字面量指针及其 <code>sizeof</code>。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>数组保存连续的同类型对象；</li>
+<li>数组名会在很多表达式中转换成首元素指针；</li>
+<li>数组与指针并不完全相同；</li>
+<li>C 字符串以 <code>\0</code> 结尾；</li>
+<li>原始字节不等于字符串；</li>
+<li>x86-64 通常使用小端序。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇学习结构体、联合体、枚举、成员偏移和内存对齐。</p>
 </div>
     <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>本文作者：</strong>M15tak3</p><p>
-      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/wsl1/">https://blog.m15tak3.com/post/wsl1/</a>
-    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>从零安装WSL2--Ubuntu</p><p>
+      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/04-arrays-strings-endianness/">https://blog.m15tak3.com/post/04-arrays-strings-endianness/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序</p><p>
       
       <strong><span class="icon-copyright icon"></span>本文版权：</strong>
       本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -402,9 +560,9 @@ wsl的安装
   <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">赞助</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">请作者喝杯咖啡吧</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
           <img src="/images/wechat.jpg" alt="微信" width="200" />
           <p class="sponsor-qr-name">微信</p>
-        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/wsl1/&amp;title=%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85WSL2--Ubuntu&amp;desc=%20%e4%bb%8e%e9%9b%b6%e5%ae%89%e8%a3%85WSL2&amp;ndash;Ubuntu%20%e5%86%99%e5%9c%a8%e5%89%8d%e9%9d%a2%20%e2%80%8b%09wsl%e6%9c%ac%e8%b4%a8%e5%8f%af%e4%bb%a5%e7%90%86%e8%a7%a3%e4%b8%ba%e8%99%9a%e6%8b%9f%e6%9c%ba%ef%bc%8c%e5%9c%a8windows%e7%8e%af%e5%a2%83%e4%b8%8b%e6%8f%90%e4%be%9b%e4%ba%86%e6%af%94vmware%e6%9b%b4%e5%a5%bd%e7%9a%84%e6%9c%ac%e5%9c%b0%e6%96%87%e4%bb%b6%e4%ba%a4%e4%ba%92%e3%80%82%20%e6%b3%a8%e6%84%8f%ef%bc%9a%e5%9c%a8%e5%ae%89%e8%a3%85%e5%ae%8c%e5%ad%90%e7%b3%bb%e7%bb%9f%e5%90%8e%ef%bc%8c%e5%a6%82%e6%9e%9c%e5%b0%86windows%e4%bb%8e%e5%ae%b6%e5%ba%ad%e7%89%88%e5%8d%87%e7%ba%a7%e5%88%b0%e4%b8%93%e4%b8%9a%e7%89%88%ef%bc%8c%e5%8f%af%e8%83%bd%e4%bc%9a%e5%87%ba%e7%8e%b0%e5%ad%90%e7%b3%bb%e7%bb%9f%e6%96%87%e4%bb%b6%e6%8d%9f%e5%9d%8f%e7%9a%84%e5%8f%af%e8%83%bd%ef%bc%8c%e8%af%b7%e5%a4%a7%e5%ae%b6%e5%81%9a%e5%a5%bd%e5%a4%87%e4%bb%bd%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="从零安装WSL2--Ubuntu">
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/04-arrays-strings-endianness/&amp;title=Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e5%9b%9b%ef%bc%89%ef%bc%9a%e6%95%b0%e7%bb%84%e3%80%81%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e5%ba%8f&amp;desc=%20Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e5%9b%9b%ef%bc%89%ef%bc%9a%e6%95%b0%e7%bb%84%e3%80%81%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e5%ba%8f%20%e6%9c%ac%e7%af%87%e7%9b%ae%e6%a0%87%ef%bc%9a%e7%90%86%e8%a7%a3%e8%bf%9e%e7%bb%ad%e5%86%85%e5%ad%98%e3%80%81%e6%95%b0%e7%bb%84%e4%b8%8e%e6%8c%87%e9%92%88%e7%9a%84%e5%85%b3%e7%b3%bb%e3%80%81C%20%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%8f%8a%e5%a4%a7%e5%b0%8f%e7%ab%af%e5%ba%8f%e3%80%82%0a%e9%a2%84%e8%ae%a1%e9%98%85%e8%af%bb%e6%97%b6%e9%97%b4%ef%bc%9a20%ef%bd%9e25%20%e5%88%86%e9%92%9f%e3%80%82%0a1.%20%e4%b8%80%e7%bb%b4%e6%95%b0%e7%bb%84%20int%20numbers[4]%20=%20%7b10,%2020,%2030,%2040%7d;%20%e6%95%b0%e7%bb%84%e5%8c%85%e5%90%ab%e5%9b%ba%e5%ae%9a%e6%95%b0%e9%87%8f%e7%9a%84%e5%90%8c%e7%b1%bb%e5%9e%8b%e5%af%b9%e8%b1%a1%ef%bc%8c%e5%b9%b6%e9%80%9a%e5%b8%b8%e8%bf%9e%e7%bb%ad%e6%8e%92%e5%88%97%ef%bc%9a%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序">
       <div class="share-icon icon icon-qq"></div>
-    </a><a href="javascript:;"  title="从零安装WSL2--Ubuntu">
+    </a><a href="javascript:;"  title="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序">
       <div class="share-icon icon icon-weixin"><div id="share-weixin">
             <div class="share-weixin-dom">
               <div class="share-weixin-content">
@@ -424,12 +582,12 @@ wsl的安装
           </div></div>
     </a></div><a
           data-aos="zoom-in"
-          href="/post/wsl1/#comments"
+          href="/post/04-arrays-strings-endianness/#comments"
           class="article-comment-link"
         >
           <span
             class="post-comments-count waline-comment-count"
-            data-path="/post/wsl1/"
+            data-path="/post/04-arrays-strings-endianness/"
             itemprop="commentCount"
           ></span>
           留言
@@ -439,38 +597,45 @@ wsl的安装
         >
           <span
             class="waline-pageview-count"
-            data-path="/post/wsl1/"
+            data-path="/post/04-arrays-strings-endianness/"
             >0</span
           >
           <em class="post-meta-item-text">阅读量</em>
         </span><ul class="article-category-list"><li class="article-tag-list-item" data-aos="zoom-in">
     <a
       class="article-category-link"
-      href="/categories/%e6%8a%80%e6%9c%af"
+      href="/categories/ctf"
       data-aos="zoom-in"
-      >技术</a
+      >CTF</a
     >
     </li><li class="article-tag-list-item" data-aos="zoom-in">
     <a
       class="article-category-link"
-      href="/categories/ctf"
+      href="/categories/%e6%8a%80%e6%9c%af"
       data-aos="zoom-in"
-      >CTF</a
+      >技术</a
     >
     </li></ul>
 <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in">
       <a
         class="article-tag-list-link"
-        href="/tags/wsl"
+        href="/tags/c&#43;&#43;"
         rel="tag"
-        >wsl</a
+        >C&#43;&#43;</a
       >
     </li><li class="article-tag-list-item" data-aos="zoom-in">
       <a
         class="article-tag-list-link"
-        href="/tags/%e6%95%99%e7%a8%8b"
+        href="/tags/ctf"
         rel="tag"
-        >教程</a
+        >CTF</a
+      >
+    </li><li class="article-tag-list-item" data-aos="zoom-in">
+      <a
+        class="article-tag-list-link"
+        href="/tags/pwn"
+        rel="tag"
+        >PWN</a
       >
     </li></ul>
 </footer>
@@ -478,18 +643,30 @@ wsl的安装
     id="article-nav"
     aria-label="Article navigation"
     data-aos="fade-up"
-  ><div class="article-nav-link-wrap right"><img
-            data-src="https://images.ctfassets.net/iuhngnmppwjh/2VrwRqKkQP2TFnrWsxi3aM/a0c8a659be24ea63afea463e0dd1f7d9/pyenv.drawio.png"
+  ><div class="article-nav-link-wrap left"><img
+            data-src="/images/C.webp"
             data-sizes="auto"
-            alt="linux-python管理（pyenv的安装与使用）"
+            alt="Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
             class="lazyload"
           /><a
-          href="/post/pyenv/"
-          aria-label="后一篇:linux-python管理（pyenv的安装与使用）"
-          title="后一篇:linux-python管理（pyenv的安装与使用）"
+          href="/post/03-pointers/"
+          aria-label="前一篇:Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
+          title="前一篇:Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针"
+        ></a>
+        <div class="article-nav-caption">前一篇</div>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（三）：一篇文章理解 C 指针</h3>
+      </div><div class="article-nav-link-wrap right"><img
+            data-src="/images/C.webp"
+            data-sizes="auto"
+            alt="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐"
+            class="lazyload"
+          /><a
+          href="/post/05-struct-union-alignment/"
+          aria-label="后一篇:Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐"
+          title="后一篇:Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐"
         ></a>
         <div class="article-nav-caption">后一篇</div>
-        <h3 class="article-nav-title">linux-python管理（pyenv的安装与使用）</h3>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</h3>
       </div></nav></article><section id="comments" data-aos="fade-up">
 <div class="comment-header"><h2 class="comment-title">说些什么吧！</h2>
   <div class="comment-selector">
@@ -566,14 +743,28 @@ wsl的安装
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#写在前面">写在前面</a></li>
-    <li><a href="#wsl的安装">wsl的安装</a>
+    <li><a href="#1-一维数组">1. 一维数组</a></li>
+    <li><a href="#2-计算数组长度">2. 计算数组长度</a></li>
+    <li><a href="#3-数组与指针的关系">3. 数组与指针的关系</a></li>
+    <li><a href="#4-数组作为参数">4. 数组作为参数</a></li>
+    <li><a href="#5-二维数组">5. 二维数组</a></li>
+    <li><a href="#6-c-字符串的本质">6. C 字符串的本质</a></li>
+    <li><a href="#7-0-与字符-0">7. <code>\0</code> 与字符 <code>0</code></a></li>
+    <li><a href="#8-字符数组与字符串字面量">8. 字符数组与字符串字面量</a></li>
+    <li><a href="#9-常用字符串与内存函数">9. 常用字符串与内存函数</a>
       <ul>
-        <li><a href="#环境配置与安装">环境配置与安装</a></li>
+        <li><a href="#strlen"><code>strlen</code></a></li>
+        <li><a href="#strcmp"><code>strcmp</code></a></li>
+        <li><a href="#memcpy"><code>memcpy</code></a></li>
+        <li><a href="#memcmp"><code>memcmp</code></a></li>
+        <li><a href="#memset"><code>memset</code></a></li>
       </ul>
     </li>
-    <li><a href="#安装wsl-ubuntu">安装WSL-Ubuntu</a></li>
-    <li><a href="#将子系统转移到其他位置">将子系统转移到其他位置</a></li>
+    <li><a href="#10-字符串与原始字节">10. 字符串与原始字节</a></li>
+    <li><a href="#11-大小端序">11. 大小端序</a></li>
+    <li><a href="#本篇练习">本篇练习</a></li>
+    <li><a href="#本篇小结">本篇小结</a></li>
+    <li><a href="#下一篇">下一篇</a></li>
   </ul>
 </nav>
 </div></div>
@@ -777,10 +968,10 @@ wsl的安装
   <div><script data-pjax>
         window.REIMU_POST = {
           author: "M15tak3",
-          title: "从零安装WSL2--Ubuntu",
-          url: "https:\/\/blog.m15tak3.com\/post\/wsl1\/",
-          description: " 从零安装WSL2\u0026ndash;Ubuntu 写在前面 ​\twsl本质可以理解为虚拟机，在windows环境下提供了比vmware更好的本地文件交互。 注意：在安装完子系统后，如果将windows从家庭版升级到专业版，可能会出现子系统文件损坏的可能，请大家做好备份。\n",
-          cover: "https:\/\/blog.m15tak3.com\/images\/wsl.jpg",
+          title: "Pwn 基础之C\/C\u002b\u002b（四）：数组、字符串与字节序",
+          url: "https:\/\/blog.m15tak3.com\/post\/04-arrays-strings-endianness\/",
+          description: " Pwn 基础之C\/C\u002b\u002b（四）：数组、字符串与字节序 本篇目标：理解连续内存、数组与指针的关系、C 字符串及大小端序。\n预计阅读时间：20～25 分钟。\n1. 一维数组 int numbers[4] = {10, 20, 30, 40}; 数组包含固定数量的同类型对象，并通常连续排列：\n",
+          cover: "https:\/\/blog.m15tak3.com\/images\/C.webp",
         };
       </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
           if (_$$(`${gallery} ${children}`).length > 0) {

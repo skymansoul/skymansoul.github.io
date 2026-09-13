@@ -18,12 +18,12 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/tags/c&#43;&#43;/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/categories/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
@@ -38,7 +38,7 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/categories/ctf/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
@@ -53,7 +53,7 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/tags/ctf/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
@@ -68,7 +68,7 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
@@ -83,17 +83,17 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/tags/pwn/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url><url>
-    <loc>https://blog.m15tak3.com/post/03-pointers/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <loc>https://blog.m15tak3.com/post/06-memory-lifetime-dynamic-allocation/</loc>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/tags/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
     <xhtml:link
@@ -108,8 +108,23 @@
                 />
   </url><url>
     <loc>https://blog.m15tak3.com/categories/%E6%8A%80%E6%9C%AF/</loc>
-    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <lastmod>2026-09-13T14:00:00+08:00</lastmod>
     <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url><url>
+    <loc>https://blog.m15tak3.com/post/05-struct-union-alignment/</loc>
+    <lastmod>2026-09-12T14:00:00+08:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url><url>
+    <loc>https://blog.m15tak3.com/post/04-arrays-strings-endianness/</loc>
+    <lastmod>2026-09-11T14:00:00+08:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url><url>
+    <loc>https://blog.m15tak3.com/post/03-pointers/</loc>
+    <lastmod>2026-09-10T14:00:00+08:00</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url><url>
     <loc>https://blog.m15tak3.com/post/02-control-flow-functions/</loc>
