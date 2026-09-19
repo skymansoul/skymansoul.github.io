@@ -12,12 +12,1190 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Sun, 13 Sep 2026 14:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 18 Sep 2026 14:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/tags/c&#43;&#43;/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础</title>
+      <link>https://blog.m15tak3.com/post/10-cpp-model-decompile-roadmap/</link>
+      <pubDate>Fri, 18 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/10-cpp-model-decompile-roadmap/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（十）：C++ 对象模型与反编译阅读基础</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc十c-对象模型与反编译阅读基础">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e5%8d%81c-%e5%af%b9%e8%b1%a1%e6%a8%a1%e5%9e%8b%e4%b8%8e%e5%8f%8d%e7%bc%96%e8%af%91%e9%98%85%e8%af%bb%e5%9f%ba%e7%a1%80"></a>
+Pwn 基础之C/C++（十）：C++ 对象模型与反编译阅读基础
+</h1><blockquote>
+<p><strong>本篇目标</strong>：掌握继承、虚函数、对象复制与常用标准库，并建立阅读反编译代码的基础模型。</p>
+<p><strong>预计阅读时间</strong>：25～30 分钟。</p>
+</blockquote>
+<h2 id="1-继承">
+<a class="header-anchor" href="#1-%e7%bb%a7%e6%89%bf"></a>
+1. 继承
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Animal</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">eat</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;eat</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Dog</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Animal</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">bark</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;bark</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p><code>Dog</code> 继承 <code>Animal</code> 的可访问成员：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">Dog</span> <span class="n">dog</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">dog</span><span class="p">.</span><span class="n">eat</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">dog</span><span class="p">.</span><span class="n">bark</span><span class="p">();</span>
+</span></span></code></pre></div><p>派生类对象通常包含基类子对象，但具体布局由 ABI、编译器和继承方式决定。</p>
+<h2 id="2-虚函数与动态多态">
+<a class="header-anchor" href="#2-%e8%99%9a%e5%87%bd%e6%95%b0%e4%b8%8e%e5%8a%a8%e6%80%81%e5%a4%9a%e6%80%81"></a>
+2. 虚函数与动态多态
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Animal</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">speak</span><span class="p">()</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;animal</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">virtual</span> <span class="o">~</span><span class="n">Animal</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Dog</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Animal</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">speak</span><span class="p">()</span> <span class="k">const</span> <span class="k">override</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;dog</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">Dog</span> <span class="n">dog</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">Animal</span> <span class="o">*</span><span class="n">animal</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">dog</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">animal</span><span class="o">-&gt;</span><span class="n">speak</span><span class="p">();</span>
+</span></span></code></pre></div><p>输出 <code>dog</code>。程序根据对象的动态类型选择函数实现，这叫动态多态。</p>
+<h2 id="3-虚表的概念模型">
+<a class="header-anchor" href="#3-%e8%99%9a%e8%a1%a8%e7%9a%84%e6%a6%82%e5%bf%b5%e6%a8%a1%e5%9e%8b"></a>
+3. 虚表的概念模型
+</h2><p>C++ 标准规定多态行为，但不强制唯一底层实现。主流编译器通常使用虚表和虚表指针。</p>
+<p>概念上：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">对象
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| 虚表指针          |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| 普通成员          |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">虚表
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| speak 对应入口    |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span><span class="line"><span class="cl">| 析构函数相关入口  |
+</span></span><span class="line"><span class="cl">+------------------+
+</span></span></code></pre></div><p>实际布局需要结合：</p>
+<ul>
+<li>编译器；</li>
+<li>ABI；</li>
+<li>单继承或多继承；</li>
+<li>虚继承；</li>
+<li>优化选项；</li>
+<li>目标平台。</li>
+</ul>
+<h2 id="4-虚析构函数">
+<a class="header-anchor" href="#4-%e8%99%9a%e6%9e%90%e6%9e%84%e5%87%bd%e6%95%b0"></a>
+4. 虚析构函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">Animal</span> <span class="o">*</span><span class="n">animal</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Dog</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">delete</span> <span class="n">animal</span><span class="p">;</span>
+</span></span></code></pre></div><p>如果基类被用于多态删除，应提供虚析构函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">virtual</span> <span class="o">~</span><span class="n">Animal</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+</span></span></code></pre></div><p>这样析构过程才能根据动态类型正确执行。</p>
+<h2 id="5-复制构造">
+<a class="header-anchor" href="#5-%e5%a4%8d%e5%88%b6%e6%9e%84%e9%80%a0"></a>
+5. 复制构造
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">Point</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">Point</span> <span class="n">first</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="n">Point</span> <span class="n">second</span> <span class="o">=</span> <span class="n">first</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>second</code> 是新的对象，其成员由 <code>first</code> 复制而来。</p>
+<h2 id="6-浅复制与深复制">
+<a class="header-anchor" href="#6-%e6%b5%85%e5%a4%8d%e5%88%b6%e4%b8%8e%e6%b7%b1%e5%a4%8d%e5%88%b6"></a>
+6. 浅复制与深复制
+</h2><p>若对象只含数值成员，逐成员复制通常足够。</p>
+<p>若对象直接拥有动态资源，简单复制裸指针只会复制地址：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">对象 A ──→ 同一资源
+</span></span><span class="line"><span class="cl">对象 B ──┘
+</span></span></code></pre></div><p>此时必须明确：</p>
+<ul>
+<li>是否允许复制；</li>
+<li>是否创建独立副本；</li>
+<li>是否共享资源；</li>
+<li>谁负责最终释放。</li>
+</ul>
+<p>优先使用 <code>std::string</code>、<code>std::vector</code> 和智能指针表达资源语义。</p>
+<h2 id="7-rule-of-zero">
+<a class="header-anchor" href="#7-rule-of-zero"></a>
+7. Rule of Zero
+</h2><p>如果所有资源都由标准库成员管理，尽量不手写特殊成员函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">scores_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>通常无需手写析构、复制和移动逻辑，编译器生成的默认行为即可正确组合成员行为。</p>
+<h2 id="8-stdstring">
+<a class="header-anchor" href="#8-stdstring"></a>
+8. <code>std::string</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">text</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">text</span> <span class="o">+=</span> <span class="s">&#34; world&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">text</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">text</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span></code></pre></div><p>需要 C 字符串接口时：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">raw</span> <span class="o">=</span> <span class="n">text</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span>
+</span></span></code></pre></div><p>该指针的有效性与字符串对象及后续修改有关，不应脱离生命周期长期保存。</p>
+<h2 id="9-stdvector">
+<a class="header-anchor" href="#9-stdvector"></a>
+9. <code>std::vector</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">40</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">number</span> <span class="p">:</span> <span class="n">numbers</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">number</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>常用操作：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">numbers</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+</span></span></code></pre></div><ul>
+<li><code>numbers[index]</code>：普通下标访问；</li>
+<li><code>numbers.at(index)</code>：越界时抛出异常。</li>
+</ul>
+<p>容器扩容时，原元素地址、指针和迭代器可能失效，具体规则需要查看对应容器接口。</p>
+<h2 id="10-stdarray-与-stdmap">
+<a class="header-anchor" href="#10-stdarray-%e4%b8%8e-stdmap"></a>
+10. <code>std::array</code> 与 <code>std::map</code>
+</h2><p>固定长度数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">};</span>
+</span></span></code></pre></div><p>键值映射：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">scores</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">scores</span><span class="p">[</span><span class="s">&#34;Alice&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span></code></pre></div><p>查找：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">iterator</span> <span class="o">=</span> <span class="n">scores</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#34;Alice&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">iterator</span> <span class="o">!=</span> <span class="n">scores</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">iterator</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="11-auto-与范围-for">
+<a class="header-anchor" href="#11-auto-%e4%b8%8e%e8%8c%83%e5%9b%b4-for"></a>
+11. <code>auto</code> 与范围 <code>for</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">text</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&#34;hello&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>auto</code> 不表示没有类型，而是让编译器推导类型。</p>
+<p>只读遍历较大对象：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="o">&amp;</span><span class="nl">item</span> <span class="p">:</span> <span class="n">items</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 使用 item
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>修改元素：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span><span class="nl">item</span> <span class="p">:</span> <span class="n">items</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 修改 item
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="12-模板基础">
+<a class="header-anchor" href="#12-%e6%a8%a1%e6%9d%bf%e5%9f%ba%e7%a1%80"></a>
+12. 模板基础
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">T</span> <span class="n">maximum</span><span class="p">(</span><span class="n">T</span> <span class="n">a</span><span class="p">,</span> <span class="n">T</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span> <span class="o">?</span> <span class="nl">a</span> <span class="p">:</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="n">maximum</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">b</span> <span class="o">=</span> <span class="n">maximum</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">);</span>
+</span></span></code></pre></div><p>标准库中的 <code>std::vector&lt;int&gt;</code>、<code>std::array&lt;int, 4&gt;</code>、<code>std::unique_ptr&lt;User&gt;</code> 都建立在模板之上。</p>
+<h2 id="13-反编译器常见类型">
+<a class="header-anchor" href="#13-%e5%8f%8d%e7%bc%96%e8%af%91%e5%99%a8%e5%b8%b8%e8%a7%81%e7%b1%bb%e5%9e%8b"></a>
+13. 反编译器常见类型
+</h2><p>反编译工具可能生成：</p>
+<table>
+  <thead>
+      <tr>
+          <th>类型名</th>
+          <th style="text-align: right">常见含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>_BYTE</code></td>
+          <td style="text-align: right">1 字节</td>
+      </tr>
+      <tr>
+          <td><code>_WORD</code></td>
+          <td style="text-align: right">2 字节</td>
+      </tr>
+      <tr>
+          <td><code>_DWORD</code></td>
+          <td style="text-align: right">4 字节</td>
+      </tr>
+      <tr>
+          <td><code>_QWORD</code></td>
+          <td style="text-align: right">8 字节</td>
+      </tr>
+  </tbody>
+</table>
+<p>这些通常是工具生成的辅助类型，不一定等于原源码中的类型名。</p>
+<p>也可能看到：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kr">__int8</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kr">__int16</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kr">__int32</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kr">__int64</span>
+</span></span></code></pre></div><p>可以先按对应位宽理解，再结合访问方式验证符号属性和真实语义。</p>
+<h2 id="14-阅读地址计算">
+<a class="header-anchor" href="#14-%e9%98%85%e8%af%bb%e5%9c%b0%e5%9d%80%e8%ae%a1%e7%ae%97"></a>
+14. 阅读地址计算
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)(</span><span class="n">base</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">index</span><span class="p">)</span>
+</span></span></code></pre></div><p>分解：</p>
+<ol>
+<li><code>base</code> 是起始地址；</li>
+<li><code>4 * index</code> 是字节偏移；</li>
+<li>相加得到目标地址；</li>
+<li>转成 <code>int *</code>；</li>
+<li>解引用读取一个 <code>int</code>。</li>
+</ol>
+<p>如果 <code>base</code> 指向整数数组，它可能等价于：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="p">((</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">base</span><span class="p">)[</span><span class="n">index</span><span class="p">]</span>
+</span></span></code></pre></div><h2 id="15-恢复结构体字段">
+<a class="header-anchor" href="#15-%e6%81%a2%e5%a4%8d%e7%bb%93%e6%9e%84%e4%bd%93%e5%ad%97%e6%ae%b5"></a>
+15. 恢复结构体字段
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)(</span><span class="n">object</span> <span class="o">+</span> <span class="mi">8</span><span class="p">)</span>
+</span></span></code></pre></div><p>可能表示从对象起始地址偏移 8 字节处读取一个 <code>int</code>。</p>
+<p>可以暂时建立模型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Object</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">unknown</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">field</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>但这是推测，必须结合：</p>
+<ul>
+<li>多处访问的固定偏移；</li>
+<li>读写宽度；</li>
+<li>字段使用方式；</li>
+<li>函数调用关系；</li>
+<li>构造与析构行为。</li>
+</ul>
+<h2 id="16-综合练习路线">
+<a class="header-anchor" href="#16-%e7%bb%bc%e5%90%88%e7%bb%83%e4%b9%a0%e8%b7%af%e7%ba%bf"></a>
+16. 综合练习路线
+</h2><h3 id="c-基础">
+<a class="header-anchor" href="#c-%e5%9f%ba%e7%a1%80"></a>
+C 基础
+</h3><ol>
+<li>四则运算程序；</li>
+<li>质数判断；</li>
+<li>数组最大值；</li>
+<li>手写字符串长度；</li>
+<li>指针交换；</li>
+<li>结构体学生管理；</li>
+<li>动态数组扩容；</li>
+<li>文件保存与读取。</li>
+</ol>
+<h3 id="c-基础-1">
+<a class="header-anchor" href="#c-%e5%9f%ba%e7%a1%80-1"></a>
+C++ 基础
+</h3><ol>
+<li>使用 <code>class Student</code> 重写学生管理；</li>
+<li>用 <code>std::string</code> 管理姓名；</li>
+<li>用 <code>std::vector</code> 管理学生列表；</li>
+<li>用构造函数建立有效对象；</li>
+<li>使用 RAII 管理文件或动态资源；</li>
+<li>建立简单基类和派生类，观察虚函数调用。</li>
+</ol>
+<h3 id="工具链">
+<a class="header-anchor" href="#%e5%b7%a5%e5%85%b7%e9%93%be"></a>
+工具链
+</h3><ol>
+<li>查看预处理结果；</li>
+<li>生成汇编文件；</li>
+<li>使用 GDB 查看变量和内存；</li>
+<li>对照 <code>-O0</code> 与 <code>-O2</code>；</li>
+<li>使用 Sanitizer 检查练习项目。</li>
+</ol>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>建立 <code>Animal/Dog/Cat</code> 多态示例并观察析构顺序。</li>
+<li>使用 GDB 打印带虚函数对象的大小和原始字节。</li>
+<li>用 <code>std::vector</code> 实现通讯录。</li>
+<li>编写函数模板求两个值中的较大者。</li>
+<li>将一段数组访问代码手动改写为“基址 + 偏移”的形式。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>继承建立类型间的扩展关系；</li>
+<li>虚函数实现动态多态；</li>
+<li>主流 ABI 常通过虚表机制实现动态分派；</li>
+<li>对象复制必须考虑资源所有权；</li>
+<li>Rule of Zero 优先依赖标准库管理资源；</li>
+<li>阅读反编译代码时，要把类型、访问宽度、基址和偏移组合起来判断。</li>
+</ul>
+<h2 id="后续学习方向">
+<a class="header-anchor" href="#%e5%90%8e%e7%bb%ad%e5%ad%a6%e4%b9%a0%e6%96%b9%e5%90%91"></a>
+后续学习方向
+</h2><p>完成本系列后，可以按以下路线正式进入二进制基础：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">x86-64 寄存器与汇编
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">函数调用约定与栈帧
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">ELF 文件结构
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">动态链接、PLT 与 GOT
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">GDB 调试与反汇编
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">常见程序保护机制
+</span></span><span class="line"><span class="cl">    ↓
+</span></span><span class="line"><span class="cl">在合法 CTF/靶场环境中学习 Pwn
+</span></span></code></pre></div><p>继续学习时，坚持把每个结论落到：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">源码 → 类型 → 字节 → 地址 → 指令 → 实际运行结果
+</span></span></code></pre></div>
+        
+        <hr><p>本文2026-09-18首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-18</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII</title>
+      <link>https://blog.m15tak3.com/post/09-cpp-objects-raii/</link>
+      <pubDate>Wed, 16 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/09-cpp-objects-raii/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（九）：从 C 到 C++——类、对象与 RAII</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc九从-c-到-c类对象与-raii">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%b9%9d%e4%bb%8e-c-%e5%88%b0-c%e7%b1%bb%e5%af%b9%e8%b1%a1%e4%b8%8e-raii"></a>
+Pwn 基础之C/C++（九）：从 C 到 C++——类、对象与 RAII
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解 C++ 引用、对象、构造析构和现代资源管理。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-第一个-c-程序">
+<a class="header-anchor" href="#1-%e7%ac%ac%e4%b8%80%e4%b8%aa-c-%e7%a8%8b%e5%ba%8f"></a>
+1. 第一个 C++ 程序
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Hello, C++!&#34;</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -std<span class="o">=</span>c++17 -Wall -Wextra -g -O0 program.cpp -o program
+</span></span></code></pre></div><p><code>std</code> 是标准库命名空间，<code>std::cout</code> 是其中的输出流对象。</p>
+<h2 id="2-引用">
+<a class="header-anchor" href="#2-%e5%bc%95%e7%94%a8"></a>
+2. 引用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">&amp;</span><span class="n">reference</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">reference</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>reference</code> 是 <code>value</code> 的另一个名称，修改引用就是修改原对象。</p>
+<p>引用声明后必须绑定到对象，普通引用不能再改为引用另一个对象。</p>
+<h2 id="3-按引用传递">
+<a class="header-anchor" href="#3-%e6%8c%89%e5%bc%95%e7%94%a8%e4%bc%a0%e9%80%92"></a>
+3. 按引用传递
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">change</span><span class="p">(</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p>C 中通常需要使用指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">change</span><span class="p">(</span><span class="o">&amp;</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p>C++ 引用提供了另一种表达“操作原对象”的方式。</p>
+<h2 id="4-常量引用">
+<a class="header-anchor" href="#4-%e5%b8%b8%e9%87%8f%e5%bc%95%e7%94%a8"></a>
+4. 常量引用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_name</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>const T &amp;</code>：</p>
+<ul>
+<li>避免复制较大对象；</li>
+<li>不允许函数通过该引用修改对象；</li>
+<li>常用于只读参数。</li>
+</ul>
+<h2 id="5-函数重载">
+<a class="header-anchor" href="#5-%e5%87%bd%e6%95%b0%e9%87%8d%e8%bd%bd"></a>
+5. 函数重载
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="nf">add</span><span class="p">(</span><span class="kt">double</span> <span class="n">a</span><span class="p">,</span> <span class="kt">double</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>C++ 可以根据参数类型选择同名函数。编译后需要通过名称修饰区分不同签名。</p>
+<h2 id="6-类与对象">
+<a class="header-anchor" href="#6-%e7%b1%bb%e4%b8%8e%e5%af%b9%e8%b1%a1"></a>
+6. 类与对象
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">set_id</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">id_</span> <span class="o">=</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="nf">get_id</span><span class="p">()</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">set_name</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">name_</span> <span class="o">=</span> <span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">print</span><span class="p">()</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">id_</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;: &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">name_</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">user</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">set_id</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">set_name</span><span class="p">(</span><span class="s">&#34;Alice&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">print</span><span class="p">();</span>
+</span></span></code></pre></div><p>类把数据和操作这些数据的函数组合在一起。</p>
+<h2 id="7-class-与-struct">
+<a class="header-anchor" href="#7-class-%e4%b8%8e-struct"></a>
+7. <code>class</code> 与 <code>struct</code>
+</h2><p>C++ 中两者都能拥有成员变量、成员函数、构造函数、析构函数和继承。</p>
+<p>主要默认区别：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">class  默认 private
+</span></span><span class="line"><span class="cl">struct 默认 public
+</span></span></code></pre></div><h2 id="8-访问控制">
+<a class="header-anchor" href="#8-%e8%ae%bf%e9%97%ae%e6%8e%a7%e5%88%b6"></a>
+8. 访问控制
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Example</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">public_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">protected</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">protected_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">private_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>访问控制是编译期语言规则。<code>private</code> 成员仍然是对象状态的一部分。</p>
+<h2 id="9-this-指针">
+<a class="header-anchor" href="#9-this-%e6%8c%87%e9%92%88"></a>
+9. <code>this</code> 指针
+</h2><p>成员函数需要知道正在操作哪个对象，内部存在隐含的 <code>this</code> 指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">set_id</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="o">-&gt;</span><span class="n">id_</span> <span class="o">=</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>this</code> 指向当前对象。</p>
+<h2 id="10-构造函数">
+<a class="header-anchor" href="#10-%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0"></a>
+10. 构造函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">User</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="o">:</span> <span class="n">id_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">explicit</span> <span class="nf">User</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="o">:</span> <span class="n">id_</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">first</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="nf">second</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span></code></pre></div><p>成员初始化列表直接初始化成员。<code>explicit</code> 可以阻止不希望发生的单参数隐式转换。</p>
+<h2 id="11-析构函数">
+<a class="header-anchor" href="#11-%e6%9e%90%e6%9e%84%e5%87%bd%e6%95%b0"></a>
+11. 析构函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Resource</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Resource</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;created</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">~</span><span class="n">Resource</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;destroyed</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>局部对象离开作用域时会自动调用析构函数。</p>
+<h2 id="12-raii">
+<a class="header-anchor" href="#12-raii"></a>
+12. RAII
+</h2><p>RAII：Resource Acquisition Is Initialization。</p>
+<p>核心思想：</p>
+<blockquote>
+<p>资源的生命周期绑定到对象生命周期。</p>
+</blockquote>
+<p>构造时获取资源，析构时释放资源。资源可以是内存、文件、锁、连接或系统句柄。</p>
+<h2 id="13-new-与-delete">
+<a class="header-anchor" href="#13-new-%e4%b8%8e-delete"></a>
+13. <code>new</code> 与 <code>delete</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">delete</span> <span class="n">pointer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pointer</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span></code></pre></div><p>数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="k">delete</span><span class="p">[]</span> <span class="n">numbers</span><span class="p">;</span>
+</span></span></code></pre></div><p>对应关系：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">malloc ↔ free
+</span></span><span class="line"><span class="cl">new ↔ delete
+</span></span><span class="line"><span class="cl">new[] ↔ delete[]
+</span></span></code></pre></div><p><code>new</code> 创建对象并调用构造函数，<code>delete</code> 调用析构函数并释放存储。</p>
+<h2 id="14-智能指针">
+<a class="header-anchor" href="#14-%e6%99%ba%e8%83%bd%e6%8c%87%e9%92%88"></a>
+14. 智能指针
+</h2><p>现代 C++ 更推荐让对象自动管理动态资源：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">pointer</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span></code></pre></div><p>离开作用域后自动释放。</p>
+<ul>
+<li><code>std::unique_ptr</code>：唯一所有权；</li>
+<li><code>std::shared_ptr</code>：共享所有权；</li>
+<li><code>std::weak_ptr</code>：观察共享对象但不增加强引用计数。</li>
+</ul>
+<p>只有一个所有者时优先使用 <code>unique_ptr</code>。</p>
+<h2 id="15-标准容器优先">
+<a class="header-anchor" href="#15-%e6%a0%87%e5%87%86%e5%ae%b9%e5%99%a8%e4%bc%98%e5%85%88"></a>
+15. 标准容器优先
+</h2><p>手动动态数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span></code></pre></div><p>多数普通业务代码中更适合：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;vector&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">numbers</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span></code></pre></div><p>字符串也优先考虑：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&#34;Alice&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>标准类型会负责其内部资源生命周期。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>用引用实现整数交换。</li>
+<li>创建 <code>Student</code> 类，包含构造函数和打印函数。</li>
+<li>创建对象并观察构造、析构顺序。</li>
+<li>用 <code>std::vector</code> 重写 C 动态数组练习。</li>
+<li>用 <code>std::unique_ptr</code> 管理一个自定义对象。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>引用是对象的别名；</li>
+<li>类组合数据和成员函数；</li>
+<li><code>this</code> 指向当前对象；</li>
+<li>构造函数初始化对象，析构函数完成清理；</li>
+<li>RAII 将资源和对象生命周期绑定；</li>
+<li>现代 C++ 优先使用容器和智能指针。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>最后一篇学习继承、虚函数、复制移动、标准容器、模板和反编译代码阅读基础。</p>
+
+        
+        <hr><p>本文2026-09-16首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-16</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试</title>
+      <link>https://blog.m15tak3.com/post/08-build-link-gdb/</link>
+      <pubDate>Tue, 15 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/08-build-link-gdb/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（八）：编译、链接与 GDB 调试</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc八编译链接与-gdb-调试">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e5%85%ab%e7%bc%96%e8%af%91%e9%93%be%e6%8e%a5%e4%b8%8e-gdb-%e8%b0%83%e8%af%95"></a>
+Pwn 基础之C/C++（八）：编译、链接与 GDB 调试
+</h1><blockquote>
+<p><strong>本篇目标</strong>：理解 C 程序如何变成二进制，并能使用 GDB 和 Sanitizer 验证内存模型。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
+</blockquote>
+<h2 id="1-预处理器">
+<a class="header-anchor" href="#1-%e9%a2%84%e5%a4%84%e7%90%86%e5%99%a8"></a>
+1. 预处理器
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define MAX_COUNT 100
+</span></span></span></code></pre></div><p>预处理器在正式编译前处理：</p>
+<ul>
+<li><code>#include</code>；</li>
+<li><code>#define</code>；</li>
+<li>条件编译。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifdef DEBUG
+</span></span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;debug information</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span></code></pre></div><p>编译时定义：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -DDEBUG program.c -o program
+</span></span></code></pre></div><h2 id="2-宏与内联函数">
+<a class="header-anchor" href="#2-%e5%ae%8f%e4%b8%8e%e5%86%85%e8%81%94%e5%87%bd%e6%95%b0"></a>
+2. 宏与内联函数
+</h2><p>带参数宏：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define SQUARE(x) ((x) * (x))
+</span></span></span></code></pre></div><p>必须谨慎加括号。简单函数逻辑通常更适合：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">int</span> <span class="nf">square</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>函数具有类型检查，也避免宏参数重复求值等问题。</p>
+<h2 id="3-头文件保护">
+<a class="header-anchor" href="#3-%e5%a4%b4%e6%96%87%e4%bb%b6%e4%bf%9d%e6%8a%a4"></a>
+3. 头文件保护
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifndef MATH_UTILS_H
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define MATH_UTILS_H
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span></code></pre></div><p>它防止头文件内容在同一翻译单元中被重复包含。</p>
+<h2 id="4-多文件项目">
+<a class="header-anchor" href="#4-%e5%a4%9a%e6%96%87%e4%bb%b6%e9%a1%b9%e7%9b%ae"></a>
+4. 多文件项目
+</h2><p><code>math_utils.h</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifndef MATH_UTILS_H
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define MATH_UTILS_H
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span></code></pre></div><p><code>math_utils.c</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;math_utils.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>main.c</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;math_utils.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">add</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc main.c math_utils.c -o program
+</span></span></code></pre></div><h2 id="5-声明与定义">
+<a class="header-anchor" href="#5-%e5%a3%b0%e6%98%8e%e4%b8%8e%e5%ae%9a%e4%b9%89"></a>
+5. 声明与定义
+</h2><p>声明说明名字及其类型存在：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">extern</span> <span class="kt">int</span> <span class="n">global_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span></code></pre></div><p>定义真正创建对象或提供函数体：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">global_value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="6-四阶段构建过程">
+<a class="header-anchor" href="#6-%e5%9b%9b%e9%98%b6%e6%ae%b5%e6%9e%84%e5%bb%ba%e8%bf%87%e7%a8%8b"></a>
+6. 四阶段构建过程
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">预处理 → 编译 → 汇编 → 链接
+</span></span></code></pre></div><p>预处理：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -E program.c -o program.i
+</span></span></code></pre></div><p>生成汇编：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -S program.c -o program.s
+</span></span></code></pre></div><p>生成目标文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -c program.c -o program.o
+</span></span></code></pre></div><p>链接：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc program.o -o program
+</span></span></code></pre></div><p>目标文件已经包含机器代码和符号信息，但通常还需要链接才能形成最终可执行程序。</p>
+<h2 id="7-调试编译选项">
+<a class="header-anchor" href="#7-%e8%b0%83%e8%af%95%e7%bc%96%e8%af%91%e9%80%89%e9%a1%b9"></a>
+7. 调试编译选项
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -std<span class="o">=</span>c17 -Wall -Wextra -Wpedantic -g -O0 program.c -o program
+</span></span></code></pre></div><ul>
+<li><code>-Wall -Wextra -Wpedantic</code>：开启警告；</li>
+<li><code>-g</code>：加入调试信息；</li>
+<li><code>-O0</code>：关闭大部分优化，便于观察源码关系。</li>
+</ul>
+<p>优化编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -O2 program.c -o program
+</span></span></code></pre></div><p>优化后变量可能进入寄存器、函数可能被内联、无用代码可能消失。源码和汇编不再保证逐行对应。</p>
+<h2 id="8-未定义行为">
+<a class="header-anchor" href="#8-%e6%9c%aa%e5%ae%9a%e4%b9%89%e8%a1%8c%e4%b8%ba"></a>
+8. 未定义行为
+</h2><p>未定义行为表示 C/C++ 标准不再保证程序结果。常见来源：</p>
+<ul>
+<li>使用未初始化值；</li>
+<li>解引用无效指针；</li>
+<li>访问数组范围之外；</li>
+<li>使用生命周期已经结束的对象；</li>
+<li>错误管理动态内存；</li>
+<li>有符号整数溢出；</li>
+<li>格式说明符与参数类型不匹配。</li>
+</ul>
+<p>未定义行为不等于“一定崩溃”。它可能暂时看似正常，也可能在优化、平台或输入变化后表现不同。</p>
+<h2 id="9-gdb-基础">
+<a class="header-anchor" href="#9-gdb-%e5%9f%ba%e7%a1%80"></a>
+9. GDB 基础
+</h2><p>示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">result</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -g -O0 example.c -o example
+</span></span></code></pre></div><p>启动：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gdb ./example
+</span></span></code></pre></div><h2 id="10-断点与单步">
+<a class="header-anchor" href="#10-%e6%96%ad%e7%82%b9%e4%b8%8e%e5%8d%95%e6%ad%a5"></a>
+10. 断点与单步
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">break main
+</span></span><span class="line"><span class="cl">break add
+</span></span><span class="line"><span class="cl">run
+</span></span><span class="line"><span class="cl">next
+</span></span><span class="line"><span class="cl">step
+</span></span><span class="line"><span class="cl">continue
+</span></span></code></pre></div><ul>
+<li><code>next</code>：执行下一行，不进入普通函数调用；</li>
+<li><code>step</code>：执行下一行并进入函数；</li>
+<li><code>continue</code>：继续到下一个断点或程序结束。</li>
+</ul>
+<h2 id="11-查看变量类型和地址">
+<a class="header-anchor" href="#11-%e6%9f%a5%e7%9c%8b%e5%8f%98%e9%87%8f%e7%b1%bb%e5%9e%8b%e5%92%8c%e5%9c%b0%e5%9d%80"></a>
+11. 查看变量、类型和地址
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">print x
+</span></span><span class="line"><span class="cl">print &amp;x
+</span></span><span class="line"><span class="cl">ptype x
+</span></span><span class="line"><span class="cl">info locals
+</span></span></code></pre></div><p>查看调用栈：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">backtrace
+</span></span></code></pre></div><h2 id="12-查看内存">
+<a class="header-anchor" href="#12-%e6%9f%a5%e7%9c%8b%e5%86%85%e5%ad%98"></a>
+12. 查看内存
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">x/4xb &amp;x
+</span></span></code></pre></div><p>解释：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">x   examine
+</span></span><span class="line"><span class="cl">4   查看 4 个单位
+</span></span><span class="line"><span class="cl">x   十六进制
+</span></span><span class="line"><span class="cl">b   每单位 1 字节
+</span></span></code></pre></div><p>单位：</p>
+<table>
+  <thead>
+      <tr>
+          <th>字母</th>
+          <th style="text-align: right">大小</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>b</code></td>
+          <td style="text-align: right">1 字节</td>
+      </tr>
+      <tr>
+          <td><code>h</code></td>
+          <td style="text-align: right">2 字节</td>
+      </tr>
+      <tr>
+          <td><code>w</code></td>
+          <td style="text-align: right">4 字节</td>
+      </tr>
+      <tr>
+          <td><code>g</code></td>
+          <td style="text-align: right">8 字节</td>
+      </tr>
+  </tbody>
+</table>
+<p>查看字符串：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">x/s pointer
+</span></span></code></pre></div><h2 id="13-寄存器和反汇编">
+<a class="header-anchor" href="#13-%e5%af%84%e5%ad%98%e5%99%a8%e5%92%8c%e5%8f%8d%e6%b1%87%e7%bc%96"></a>
+13. 寄存器和反汇编
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">info registers
+</span></span><span class="line"><span class="cl">disassemble main
+</span></span></code></pre></div><p>Intel 语法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">set disassembly-flavor intel
+</span></span></code></pre></div><p>源码与汇编布局：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">layout split
+</span></span></code></pre></div><p>学习时用 GDB 验证，而不是只背结论。</p>
+<h2 id="14-sanitizer">
+<a class="header-anchor" href="#14-sanitizer"></a>
+14. Sanitizer
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -g <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -O1 <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -fsanitize<span class="o">=</span>address,undefined <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -fno-omit-frame-pointer <span class="se">\
+</span></span></span><span class="line"><span class="cl">  program.c <span class="se">\
+</span></span></span><span class="line"><span class="cl">  -o program
+</span></span></code></pre></div><p>AddressSanitizer 和 UndefinedBehaviorSanitizer 可以辅助发现部分错误，但不能代替语言规则和人工推理。</p>
+<h2 id="15-推荐编译命令">
+<a class="header-anchor" href="#15-%e6%8e%a8%e8%8d%90%e7%bc%96%e8%af%91%e5%91%bd%e4%bb%a4"></a>
+15. 推荐编译命令
+</h2><p>C：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -std<span class="o">=</span>c17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -g -O0 program.c -o program
+</span></span></code></pre></div><p>C++：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -std<span class="o">=</span>c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -g -O0 program.cpp -o program
+</span></span></code></pre></div><h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>分别生成 <code>.i</code>、<code>.s</code>、<code>.o</code> 和可执行文件。</li>
+<li>建立一个包含头文件和两个源文件的小项目。</li>
+<li>在 GDB 中查看整数的逐字节表示。</li>
+<li>对比 <code>-O0</code> 和 <code>-O2</code> 的反汇编结果。</li>
+<li>使用 Sanitizer 检查自己的数组和动态内存练习。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>C 源码经过预处理、编译、汇编和链接；</li>
+<li>头文件主要放声明，源文件提供定义；</li>
+<li>优化会显著改变生成代码；</li>
+<li>未定义行为不能用“本机正常”证明正确；</li>
+<li>GDB 能验证变量、地址、内存、寄存器和汇编之间的关系。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇从 C 进入 C++，学习引用、类、对象、构造析构和 RAII。</p>
+
+        
+        <hr><p>本文2026-09-15首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-15</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
+    
+      
+    
+
+    <item>
+      <title>Pwn 基础之C/C&#43;&#43;（七）：输入输出、类型转换与函数指针</title>
+      <link>https://blog.m15tak3.com/post/07-io-conversion-function-pointers/</link>
+      <pubDate>Mon, 14 Sep 2026 14:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/07-io-conversion-function-pointers/</guid>
+      <description>
+        <![CDATA[<h1>Pwn 基础之C/C++（七）：输入输出、类型转换与函数指针</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="pwn-基础之cc七输入输出类型转换与函数指针">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%b8%83%e8%be%93%e5%85%a5%e8%be%93%e5%87%ba%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2%e4%b8%8e%e5%87%bd%e6%95%b0%e6%8c%87%e9%92%88"></a>
+Pwn 基础之C/C++（七）：输入输出、类型转换与函数指针
+</h1><blockquote>
+<p><strong>本篇目标</strong>：掌握常用 I/O，理解 C 的类型转换规则，并学会阅读函数指针。</p>
+<p><strong>预计阅读时间</strong>：20 分钟。</p>
+</blockquote>
+<h2 id="1-printf-格式输出">
+<a class="header-anchor" href="#1-printf-%e6%a0%bc%e5%bc%8f%e8%be%93%e5%87%ba"></a>
+1. <code>printf</code> 格式输出
+</h2><p>常见格式：</p>
+<table>
+  <thead>
+      <tr>
+          <th>格式</th>
+          <th>对应类型或用途</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>%d</code></td>
+          <td><code>int</code> 十进制</td>
+      </tr>
+      <tr>
+          <td><code>%u</code></td>
+          <td><code>unsigned int</code></td>
+      </tr>
+      <tr>
+          <td><code>%x</code></td>
+          <td>无符号十六进制</td>
+      </tr>
+      <tr>
+          <td><code>%c</code></td>
+          <td>字符</td>
+      </tr>
+      <tr>
+          <td><code>%s</code></td>
+          <td>C 字符串</td>
+      </tr>
+      <tr>
+          <td><code>%p</code></td>
+          <td>指针</td>
+      </tr>
+      <tr>
+          <td><code>%zu</code></td>
+          <td><code>size_t</code></td>
+      </tr>
+      <tr>
+          <td><code>%ld</code></td>
+          <td><code>long</code></td>
+      </tr>
+      <tr>
+          <td><code>%lld</code></td>
+          <td><code>long long</code></td>
+      </tr>
+      <tr>
+          <td><code>%f</code></td>
+          <td>浮点输出</td>
+      </tr>
+  </tbody>
+</table>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">text</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&#34;hello&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;number = %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;hex = 0x%x</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;text = %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">text</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;address = %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p>格式说明符必须与实际参数类型匹配。</p>
+<h2 id="2-scanf">
+<a class="header-anchor" href="#2-scanf"></a>
+2. <code>scanf</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Input: &#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">scanf</span><span class="p">(</span><span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;value = %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>必须传 <code>&amp;value</code>，因为 <code>scanf</code> 需要知道目标变量地址才能写入结果。</p>
+<p>返回值表示成功完成了多少项转换，应检查它，而不是默认输入永远有效。</p>
+<h2 id="3-getchar-与-putchar">
+<a class="header-anchor" href="#3-getchar-%e4%b8%8e-putchar"></a>
+3. <code>getchar</code> 与 <code>putchar</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">ch</span> <span class="o">=</span> <span class="nf">getchar</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">ch</span> <span class="o">!=</span> <span class="n">EOF</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">putchar</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>getchar</code> 返回 <code>int</code>，因为除了所有 <code>unsigned char</code> 值之外，还需要表示特殊值 <code>EOF</code>。</p>
+<h2 id="4-使用-fgets-读取一行">
+<a class="header-anchor" href="#4-%e4%bd%bf%e7%94%a8-fgets-%e8%af%bb%e5%8f%96%e4%b8%80%e8%a1%8c"></a>
+4. 使用 <code>fgets</code> 读取一行
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span> <span class="n">stdin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;input: %s&#34;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>fgets</code> 最多读取容量减一的字符，并补上字符串结束符。读取到的换行符通常会保留。</p>
+<p>移除换行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">buffer</span><span class="p">[</span><span class="nf">strcspn</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">)]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+</span></span></code></pre></div><h2 id="5-文件操作">
+<a class="header-anchor" href="#5-%e6%96%87%e4%bb%b6%e6%93%8d%e4%bd%9c"></a>
+5. 文件操作
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">FILE</span> <span class="o">*</span><span class="n">file</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;data.txt&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">file</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">perror</span><span class="p">(</span><span class="s">&#34;fopen&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="p">(</span><span class="nf">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span> <span class="n">file</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s&#34;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">fclose</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+</span></span></code></pre></div><p>常见模式：</p>
+<table>
+  <thead>
+      <tr>
+          <th>模式</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>r</code></td>
+          <td>只读</td>
+      </tr>
+      <tr>
+          <td><code>w</code></td>
+          <td>写入并覆盖原内容</td>
+      </tr>
+      <tr>
+          <td><code>a</code></td>
+          <td>追加</td>
+      </tr>
+      <tr>
+          <td><code>rb</code></td>
+          <td>二进制只读</td>
+      </tr>
+      <tr>
+          <td><code>wb</code></td>
+          <td>二进制写入</td>
+      </tr>
+  </tbody>
+</table>
+<p>成功打开后要在合适的路径调用 <code>fclose</code>。</p>
+<h2 id="6-隐式与显式转换">
+<a class="header-anchor" href="#6-%e9%9a%90%e5%bc%8f%e4%b8%8e%e6%98%be%e5%bc%8f%e8%bd%ac%e6%8d%a2"></a>
+6. 隐式与显式转换
+</h2><p>隐式转换：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">result</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+</span></span></code></pre></div><p>显式转换：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">value</span> <span class="o">=</span> <span class="mf">3.14</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">integer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">value</span><span class="p">;</span>
+</span></span></code></pre></div><p>转换为整数后小数部分被舍弃。</p>
+<h2 id="7-整数提升">
+<a class="header-anchor" href="#7-%e6%95%b4%e6%95%b0%e6%8f%90%e5%8d%87"></a>
+7. 整数提升
+</h2><p>比 <code>int</code> 小的整数类型参与算术运算时，通常先提升：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span></code></pre></div><p>表达式不是简单地始终按原来的 <code>char</code> 类型计算。</p>
+<h2 id="8-有符号与无符号混合">
+<a class="header-anchor" href="#8-%e6%9c%89%e7%ac%a6%e5%8f%b7%e4%b8%8e%e6%97%a0%e7%ac%a6%e5%8f%b7%e6%b7%b7%e5%90%88"></a>
+8. 有符号与无符号混合
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">signed_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">unsigned_value</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span></code></pre></div><p>比较或运算前会进行通常算术转换，负的有符号值可能被转换成很大的无符号值。</p>
+<p>阅读表达式时按顺序确认：</p>
+<ol>
+<li>操作数原始类型；</li>
+<li>整数提升后的类型；</li>
+<li>两侧统一后的类型；</li>
+<li>最终位模式如何解释。</li>
+</ol>
+<p>建议开启警告：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc -Wall -Wextra -Wconversion program.c -o program
+</span></span></code></pre></div><h2 id="9-指针类型转换">
+<a class="header-anchor" href="#9-%e6%8c%87%e9%92%88%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2"></a>
+9. 指针类型转换
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="n">raw</span> <span class="o">=</span> <span class="n">pointer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">number</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">raw</span><span class="p">;</span>
+</span></span></code></pre></div><p>转换不会改变地址中的字节，只会改变编译器对目标的解释。使用前仍要保证地址、类型、大小和对齐都符合要求。</p>
+<h2 id="10-函数指针">
+<a class="header-anchor" href="#10-%e5%87%bd%e6%95%b0%e6%8c%87%e9%92%88"></a>
+10. 函数指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">multiply</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>声明：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">operation</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
+</span></span></code></pre></div><p>含义是：<code>operation</code> 指向一个接收两个 <code>int</code>、返回 <code>int</code> 的函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">operation</span> <span class="o">=</span> <span class="n">add</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">operation</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">operation</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">operation</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">));</span>
+</span></span></code></pre></div><h2 id="11-用-typedef-简化函数指针">
+<a class="header-anchor" href="#11-%e7%94%a8-typedef-%e7%ae%80%e5%8c%96%e5%87%bd%e6%95%b0%e6%8c%87%e9%92%88"></a>
+11. 用 <code>typedef</code> 简化函数指针
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="nf">int</span> <span class="p">(</span><span class="o">*</span><span class="n">BinaryOperation</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">BinaryOperation</span> <span class="n">operation</span> <span class="o">=</span> <span class="n">add</span><span class="p">;</span>
+</span></span></code></pre></div><p>回调示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">calculate</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">,</span> <span class="n">BinaryOperation</span> <span class="n">operation</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">operation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>函数指针常用于回调、事件处理、状态机和通用算法。</p>
+<h2 id="本篇练习">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
+本篇练习
+</h2><ol>
+<li>用 <code>fgets</code> 读取一行并移除换行。</li>
+<li>读取文本文件并逐行输出。</li>
+<li>观察 <code>-1</code> 与无符号整数比较时的结果。</li>
+<li>编写加、减、乘三个函数，用函数指针选择操作。</li>
+<li>使用 <code>typedef</code> 定义比较函数类型。</li>
+</ol>
+<h2 id="本篇小结">
+<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
+本篇小结
+</h2><ul>
+<li>格式化 I/O 必须匹配真实类型；</li>
+<li>输入函数的返回值需要检查；</li>
+<li><code>fgets</code> 适合按容量读取一行；</li>
+<li>类型转换会改变数值的解释或表示；</li>
+<li>函数也有地址，函数指针可以保存和调用它。</li>
+</ul>
+<h2 id="下一篇">
+<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
+下一篇
+</h2><p>下一篇学习预处理、编译、链接、未定义行为与 GDB 调试。</p>
+
+        
+        <hr><p>本文2026-09-14首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-14</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category><category>技术</category>
+      
+    </item>
     
       
     

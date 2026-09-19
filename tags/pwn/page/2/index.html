@@ -8,7 +8,7 @@
   name="viewport"
   content="width=device-width, initial-scale=1, shrink-to-fit=no"
 /><title>
-  Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐 | M15tak3
+  PWN | M15tak3
 </title>
 <meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
 <script data-pjax>
@@ -56,20 +56,20 @@
     type="font/woff2"
     crossorigin="anonymous"
   /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
-  <meta property="og:title" content="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐 | M15tak3" />
+  <meta property="og:title" content="PWN | M15tak3" />
   <meta
     property="og:description"
     content="挖不出漏洞的菜鸡pwn_ctfer"
   />
-  <meta property="og:url" content="https://blog.m15tak3.com/post/05-struct-union-alignment/" />
+  <meta property="og:url" content="https://blog.m15tak3.com/tags/pwn/" />
   <meta
     property="og:site_name"
     content="M15tak3のBlog"
   />
-  <meta property="og:image" content="https://blog.m15tak3.com/images/C.webp" />
+  <meta property="og:image" content="https://blog.m15tak3.com/images/%E7%B4%AB%E7%BD%97%E5%85%B0.jpg" />
   <meta property="article:author" content="M15tak3" />
-  <meta property="article:published_time" content="2026-09-12T14:00:00&#43;08:00" />
-  <meta property="article:modified_time" content="2026-09-12T14:00:00&#43;08:00" /><meta property="article:tag" content="C&#43;&#43;, CTF, PWN" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/C.webp" />
+  <meta property="article:published_time" content="2026-09-18T14:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-09-18T14:00:00&#43;08:00" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/%E7%B4%AB%E7%BD%97%E5%85%B0.jpg" /><link rel="alternate" type="application/rss+xml" href="https://blog.m15tak3.com/tags/pwn/index.xml" title="M15tak3のBlog">
 <link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.aa23953727ef01755afabce27a2bdd482733a8013a1f84f3d5442c54ffe1fa82.css" /><link
     rel="preload"
     as="style"
@@ -158,7 +158,7 @@
       </a><a class="main-nav-link-wrap" href="/friend"><div class='main-nav-icon icon rotate'>&#xe62b;</div><span class="main-nav-link">友链</span>
       </a><a id="main-nav-toggle" class="nav-icon" aria-label="Toggle navigation" role="button"></a>
   </nav>
-  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-search-btn" class="nav-icon popup-trigger" title="搜索" aria-label="搜索"></a></nav><nav id="i18n-nav" aria-label="Language selection">
+  <nav id="sub-nav" aria-label="Secondary navigation"><a id="nav-rss-link" class="nav-icon" href="/tags/pwn/index.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank"></a><a id="nav-search-btn" class="nav-icon popup-trigger" title="搜索" aria-label="搜索"></a></nav><nav id="i18n-nav" aria-label="Language selection">
       <div class="custom-dropdown">
         <div class="select-selected" id="select-selected" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language menu">
           <span id="nav-language-btn" class="nav-icon" style="padding: 0 20px 0 0"></span>
@@ -208,40 +208,19 @@
         });
       </script>
     </nav></div>
-<header id="header" aria-label="Site header"><picture></picture>
-    <img crossorigin="anonymous" fetchpriority="high" src="/images/C_banner.webp" alt="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐"><div id="header-outer">
+<header id="header" aria-label="Site header"><picture></picture><img crossorigin="anonymous" fetchpriority="high" src="/images/%e7%b4%ab%e7%bd%97%e5%85%b0.jpg" alt="PWN"><div id="header-outer">
     <div id="header-title"><span id="logo">
-            <h1 data-aos="slide-up">Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</h1>
-          </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
+            <h1 data-aos="slide-up">标签</h1>
+          </span><h2 id="subtitle-wrap" data-aos="slide-down"><span id="subtitle">PWN</span></h2></div>
   </div>
 </header><div id="content"
           aria-label="Page content"
           class="sidebar-left"
-            ><aside id="sidebar" aria-label="Sidebar"><div class="sidebar-wrapper-container sticky"><div id="aplayer" theme="var(--color-link)" data-aos="fade-up"></div><div class="sidebar-wrapper">
+            ><aside id="sidebar" aria-label="Sidebar"><div class="sidebar-wrapper-container "><div id="aplayer" theme="var(--color-link)" data-aos="fade-up"></div><div class="sidebar-wrapper">
     <div
       class="sidebar-wrap"
       data-aos="fade-up"
-    ><div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
-<div class="sidebar-toc-wrapper toc-div-class">
-  <nav id="TableOfContents">
-  <ul>
-    <li><a href="#1-结构体">1. 结构体</a></li>
-    <li><a href="#2-结构体指针">2. 结构体指针</a></li>
-    <li><a href="#3-typedef">3. <code>typedef</code></a></li>
-    <li><a href="#4-枚举">4. 枚举</a></li>
-    <li><a href="#5-联合体">5. 联合体</a></li>
-    <li><a href="#6-为什么需要内存对齐">6. 为什么需要内存对齐</a></li>
-    <li><a href="#7-查看成员偏移">7. 查看成员偏移</a></li>
-    <li><a href="#8-成员顺序会影响大小">8. 成员顺序会影响大小</a></li>
-    <li><a href="#9-结构体数组">9. 结构体数组</a></li>
-    <li><a href="#10-结构体传参">10. 结构体传参</a></li>
-    <li><a href="#本篇练习">本篇练习</a></li>
-    <li><a href="#本篇小结">本篇小结</a></li>
-    <li><a href="#下一篇">下一篇</a></li>
-  </ul>
-</nav>
-</div></div>
-          <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+    ><div class="sidebar-author">
   <img
     data-src="/avatar/soul.jpg"
     data-sizes="auto"
@@ -320,349 +299,460 @@
         href="/friend"
         aria-label="友链"
       ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">友链</div>
-    </div></div></div><div class="sidebar-btn-wrapper" style="position:static">
-            <div class="sidebar-toc-btn current"></div>
-            <div class="sidebar-common-btn"></div>
-          </div></div>
-  </div><div class="sidebar-widget"></div></div></aside>
-<section id="main" aria-label="Main content"><article
-  class="h-entry article"
-  itemscope
-  itemtype="https://schema.org/BlogPosting"
->
+    </div></div></div>
+  </div><div class="sidebar-widget"><div class="widget-wrapper">
+    <div
+      class="widget-wrap"
+      data-aos="fade-up"
+    >
+      <div style="display: flex; justify-content: space-between;">
+        <h3 class="widget-title">分类</h3></div>
+      <div class="widget">
+        <ul class="category-list"><li class="category-list-item">
+                <a class="category-list-link" href="/categories/ctf/" 
+                  title="CTF"
+                  >CTF</a
+                >
+              </li><li class="category-list-item">
+                <a class="category-list-link" href="/categories/%E6%8A%80%E6%9C%AF/" 
+                  title="技术"
+                  >技术</a
+                >
+              </li><li class="category-list-item">
+                <a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/" 
+                  title="随笔"
+                  >随笔</a
+                >
+              </li></ul>
+      </div>
+    </div>
+  </div><div class="widget-wrapper">
+    <div
+      class="widget-wrap"
+      data-aos="fade-up"
+    >
+      <div style="display: flex; justify-content: space-between;">
+        <h3 class="widget-title">标签</h3><a class="widget-link" href="/tags/">查看更多</a></div>
+      <div class="widget">
+        <ul class="tag-list" itemprop="keywords"><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/ai/"
+                  aria-label="标签: AI"
+                  title="AI"
+                >
+                  AI
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/c&#43;&#43;/"
+                  aria-label="标签: C&#43;&#43;"
+                  title="C&#43;&#43;"
+                >
+                  C&#43;&#43;
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/crypto/"
+                  aria-label="标签: Crypto"
+                  title="Crypto"
+                >
+                  Crypto
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/csv/"
+                  aria-label="标签: CSV"
+                  title="CSV"
+                >
+                  CSV
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/ctf/"
+                  aria-label="标签: CTF"
+                  title="CTF"
+                >
+                  CTF
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/misc/"
+                  aria-label="标签: Misc"
+                  title="Misc"
+                >
+                  Misc
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/pcap/"
+                  aria-label="标签: PCAP"
+                  title="PCAP"
+                >
+                  PCAP
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/pwn/"
+                  aria-label="标签: PWN"
+                  title="PWN"
+                >
+                  PWN
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/pyenv/"
+                  aria-label="标签: Pyenv"
+                  title="Pyenv"
+                >
+                  Pyenv
+                </a>
+              </li><li class="tag-item">
+                <a
+                  class="tag-link"
+                  href="/tags/python/"
+                  aria-label="标签: Python"
+                  title="Python"
+                >
+                  Python
+                </a>
+              </li></ul>
+      </div>
+    </div>
+  </div><div class="widget-wrapper">
   <div
-    class="article-inner"
+    class="widget-wrap"
     data-aos="fade-up"
   >
-    <div class="article-meta"><div class="article-date">
-  <span
-    class="article-date-link icon-calendar"
-    data-aos="zoom-in"
-  >
-    <time datetime="2026-09-12 14:00:00 &#43;0800 CST" itemprop="datePublished"
-      >2026-09-12</time
+    <h3 class="widget-title">标签云</h3><div class="widget tagcloud"><a
+            style="font-size:10px"
+            href="/tags/ai/"
+            aria-label="标签: AI"
+            >AI</a
+          ><a
+            style="font-size:10px"
+            href="/tags/c&#43;&#43;/"
+            aria-label="标签: C&#43;&#43;"
+            >C&#43;&#43;</a
+          ><a
+            style="font-size:10px"
+            href="/tags/crypto/"
+            aria-label="标签: Crypto"
+            >Crypto</a
+          ><a
+            style="font-size:10px"
+            href="/tags/csv/"
+            aria-label="标签: CSV"
+            >CSV</a
+          ><a
+            style="font-size:10px"
+            href="/tags/ctf/"
+            aria-label="标签: CTF"
+            >CTF</a
+          ><a
+            style="font-size:10px"
+            href="/tags/misc/"
+            aria-label="标签: Misc"
+            >Misc</a
+          ><a
+            style="font-size:10px"
+            href="/tags/pcap/"
+            aria-label="标签: PCAP"
+            >PCAP</a
+          ><a
+            style="font-size:10px"
+            href="/tags/pwn/"
+            aria-label="标签: PWN"
+            >PWN</a
+          ><a
+            style="font-size:10px"
+            href="/tags/pyenv/"
+            aria-label="标签: Pyenv"
+            >Pyenv</a
+          ><a
+            style="font-size:10px"
+            href="/tags/python/"
+            aria-label="标签: Python"
+            >Python</a
+          ><a
+            style="font-size:10px"
+            href="/tags/reserver/"
+            aria-label="标签: Reserver"
+            >Reserver</a
+          ><a
+            style="font-size:10px"
+            href="/tags/steam/"
+            aria-label="标签: Steam"
+            >Steam</a
+          ><a
+            style="font-size:10px"
+            href="/tags/web/"
+            aria-label="标签: Web"
+            >Web</a
+          ><a
+            style="font-size:10px"
+            href="/tags/wireshark/"
+            aria-label="标签: Wireshark"
+            >Wireshark</a
+          ><a
+            style="font-size:10px"
+            href="/tags/wsl/"
+            aria-label="标签: Wsl"
+            >Wsl</a
+          ><a
+            style="font-size:10px"
+            href="/tags/%E6%80%9D%E8%80%83/"
+            aria-label="标签: 思考"
+            >思考</a
+          ><a
+            style="font-size:10px"
+            href="/tags/%E6%95%99%E7%A8%8B/"
+            aria-label="标签: 教程"
+            >教程</a
+          ><a
+            style="font-size:10px"
+            href="/tags/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"
+            aria-label="标签: 流量分析"
+            >流量分析</a
+          ><a
+            style="font-size:10px"
+            href="/tags/%E6%B8%B8%E6%88%8F%E5%AE%89%E5%85%A8/"
+            aria-label="标签: 游戏安全"
+            >游戏安全</a
+          ><a
+            style="font-size:10px"
+            href="/tags/%E8%84%9A%E6%9C%AC/"
+            aria-label="标签: 脚本"
+            >脚本</a
+          ></div>
+  </div>
+</div><div class="widget-wrapper">
+    <div
+      class="widget-wrap"
+      data-aos="fade-up"
     >
-    <time style="display: none;" id="post-update-time"
-      >2026-09-12</time
-    >
-  </span></div>
-</div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
-          class="alert-blockquote warning"
-          id="outdate-blockquote"
-          style="display: none;"
-        >
-          <p class="alert-heading">WARNING</p>
-          <p></p>
-        </blockquote><h1 id="pwn-基础之cc五结构体联合体与内存对齐">
-<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%ba%94%e7%bb%93%e6%9e%84%e4%bd%93%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
-Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
-</h1><blockquote>
-<p><strong>本篇目标</strong>：掌握复合类型，并能够从字节偏移角度理解结构体布局。</p>
-<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
-</blockquote>
-<h2 id="1-结构体">
-<a class="header-anchor" href="#1-%e7%bb%93%e6%9e%84%e4%bd%93"></a>
-1. 结构体
-</h2><p>结构体将多个相关字段组合为一个类型：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">level</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>创建和初始化：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#34;Alice&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">10</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>访问成员：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">id</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
-</span></span></code></pre></div><h2 id="2-结构体指针">
-<a class="header-anchor" href="#2-%e7%bb%93%e6%9e%84%e4%bd%93%e6%8c%87%e9%92%88"></a>
-2. 结构体指针
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
-</span></span></code></pre></div><p>访问成员：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">pointer</span><span class="o">-&gt;</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span></span></code></pre></div><p>等价于：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="p">(</span><span class="o">*</span><span class="n">pointer</span><span class="p">).</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span></span></code></pre></div><ul>
-<li><code>.</code> 用于结构体对象；</li>
-<li><code>-&gt;</code> 用于指向结构体的指针。</li>
-</ul>
-<h2 id="3-typedef">
-<a class="header-anchor" href="#3-typedef"></a>
-3. <code>typedef</code>
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">User</span><span class="p">;</span>
-</span></span></code></pre></div><p>之后可以直接写：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">user</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
-</span></span></code></pre></div><p><code>typedef</code> 创建类型别名，不会创建新变量。</p>
-<h2 id="4-枚举">
-<a class="header-anchor" href="#4-%e6%9e%9a%e4%b8%be"></a>
-4. 枚举
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_IDLE</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_RUNNING</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_STOPPED</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>默认值通常依次为 <code>0、1、2</code>。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="n">state</span> <span class="o">=</span> <span class="n">STATE_RUNNING</span><span class="p">;</span>
-</span></span></code></pre></div><p>也可以显式指定：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">Permission</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_READ</span>  <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_WRITE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_EXEC</span>  <span class="o">=</span> <span class="mi">4</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>这类值适合配合位运算表示多个状态。</p>
-<h2 id="5-联合体">
-<a class="header-anchor" href="#5-%e8%81%94%e5%90%88%e4%bd%93"></a>
-5. 联合体
-</h2><p>联合体的所有成员共享同一块存储：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">number</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">bytes</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="n">value</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="n">value</span><span class="p">.</span><span class="n">number</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
-</span></span></code></pre></div><p><code>number</code> 和 <code>bytes</code> 从同一地址开始。联合体大小通常满足最大成员的大小和对齐要求。</p>
-<p>结构体与联合体的区别：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">结构体：各成员通常拥有各自的存储位置
-</span></span><span class="line"><span class="cl">联合体：各成员共享同一块存储
-</span></span></code></pre></div><h2 id="6-为什么需要内存对齐">
-<a class="header-anchor" href="#6-%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
-6. 为什么需要内存对齐
-</h2><p>考虑：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>字段大小之和通常是：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 + 4 + 1 = 6
-</span></span></code></pre></div><p>但 <code>sizeof(struct Example)</code> 在常见环境中可能是 <code>12</code>。</p>
-<p>一种常见布局：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">偏移 0      a
-</span></span><span class="line"><span class="cl">偏移 1～3   填充
-</span></span><span class="line"><span class="cl">偏移 4～7   b
-</span></span><span class="line"><span class="cl">偏移 8      c
-</span></span><span class="line"><span class="cl">偏移 9～11  尾部填充
-</span></span></code></pre></div><p>填充字节称为 padding。它使成员地址满足平台和 ABI 的对齐要求，也保证结构体数组中的每个元素都正确对齐。</p>
-<h2 id="7-查看成员偏移">
-<a class="header-anchor" href="#7-%e6%9f%a5%e7%9c%8b%e6%88%90%e5%91%98%e5%81%8f%e7%a7%bb"></a>
-7. 查看成员偏移
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;sizeof: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;a: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">a</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;b: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">b</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;c: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">c</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>不要用“字段大小简单相加”猜测最终布局，应通过目标环境验证。</p>
-<h2 id="8-成员顺序会影响大小">
-<a class="header-anchor" href="#8-%e6%88%90%e5%91%98%e9%a1%ba%e5%ba%8f%e4%bc%9a%e5%bd%b1%e5%93%8d%e5%a4%a7%e5%b0%8f"></a>
-8. 成员顺序会影响大小
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>两个结构体拥有相同类型的字段，但布局和最终大小可能不同。将对齐要求相近的成员放在一起，通常可以减少填充。</p>
-<h2 id="9-结构体数组">
-<a class="header-anchor" href="#9-%e7%bb%93%e6%9e%84%e4%bd%93%e6%95%b0%e7%bb%84"></a>
-9. 结构体数组
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">users</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-</span></span></code></pre></div><p>每个元素占 <code>sizeof(User)</code> 字节：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;users[1] - &amp;users[0]
-</span></span></code></pre></div><p>按字节理解就是一个完整结构体大小。尾部填充保证下一个元素的成员仍满足对齐要求。</p>
-<h2 id="10-结构体传参">
-<a class="header-anchor" href="#10-%e7%bb%93%e6%9e%84%e4%bd%93%e4%bc%a0%e5%8f%82"></a>
-10. 结构体传参
-</h2><p>按值传递会复制整个结构体：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="n">User</span> <span class="n">user</span><span class="p">);</span>
-</span></span></code></pre></div><p>只读时可以传指针：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="k">const</span> <span class="n">User</span> <span class="o">*</span><span class="n">user</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>这避免复制完整对象，并通过 <code>const</code> 表明函数不打算修改它。</p>
-<h2 id="本篇练习">
-<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
-本篇练习
-</h2><ol>
-<li>定义 <code>Student</code> 结构体并创建数组。</li>
-<li>打印结构体每个成员的地址和偏移。</li>
-<li>调整字段顺序，比较 <code>sizeof</code>。</li>
-<li>使用联合体逐字节观察 <code>uint32_t</code>。</li>
-<li>使用枚举实现一个简单状态机。</li>
-</ol>
-<h2 id="本篇小结">
-<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
-本篇小结
-</h2><ul>
-<li>结构体组合多个字段；</li>
-<li><code>.</code> 访问对象成员，<code>-&gt;</code> 访问指针所指对象的成员；</li>
-<li>联合体让多个成员共享存储；</li>
-<li>枚举为状态值提供可读名称；</li>
-<li>padding 会使结构体大小大于字段大小之和；</li>
-<li><code>offsetof</code> 可以查看实际成员偏移。</li>
-</ul>
-<h2 id="下一篇">
-<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
-下一篇
-</h2><p>下一篇进入程序内存模型，学习栈、堆、生命周期及动态内存管理。</p>
-</div>
-    <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>本文作者：</strong>M15tak3</p><p>
-      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/05-struct-union-alignment/">https://blog.m15tak3.com/post/05-struct-union-alignment/</a>
-    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</p><p>
-      
-      <strong><span class="icon-copyright icon"></span>本文版权：</strong>
-      本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> 许可协议。转载请注明出处！
-    </p>
-    <span class="icon-creative-commons article-copyright-bg"></span></blockquote>
-<div class="sponsor-wrapper">
-  <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">赞助</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">请作者喝杯咖啡吧</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
-          <img src="/images/wechat.jpg" alt="微信" width="200" />
-          <p class="sponsor-qr-name">微信</p>
-        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/05-struct-union-alignment/&amp;title=Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%94%ef%bc%89%ef%bc%9a%e7%bb%93%e6%9e%84%e4%bd%93%e3%80%81%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90&amp;desc=%20Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%94%ef%bc%89%ef%bc%9a%e7%bb%93%e6%9e%84%e4%bd%93%e3%80%81%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90%20%e6%9c%ac%e7%af%87%e7%9b%ae%e6%a0%87%ef%bc%9a%e6%8e%8c%e6%8f%a1%e5%a4%8d%e5%90%88%e7%b1%bb%e5%9e%8b%ef%bc%8c%e5%b9%b6%e8%83%bd%e5%a4%9f%e4%bb%8e%e5%ad%97%e8%8a%82%e5%81%8f%e7%a7%bb%e8%a7%92%e5%ba%a6%e7%90%86%e8%a7%a3%e7%bb%93%e6%9e%84%e4%bd%93%e5%b8%83%e5%b1%80%e3%80%82%0a%e9%a2%84%e8%ae%a1%e9%98%85%e8%af%bb%e6%97%b6%e9%97%b4%ef%bc%9a15%ef%bd%9e20%20%e5%88%86%e9%92%9f%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐">
-      <div class="share-icon icon icon-qq"></div>
-    </a><a href="javascript:;"  title="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐">
-      <div class="share-icon icon icon-weixin"><div id="share-weixin">
-            <div class="share-weixin-dom">
-              <div class="share-weixin-content">
-                <img id="share-weixin-banner"> 
-                <div id="share-weixin-title"></div>
-                <div id="share-weixin-desc"></div>
-              </div>
-              <div class="share-weixin-qrcode">
-                <div class="share-weixin-info">
-                  <div id="share-weixin-author"></div>
-                  <div id="share-weixin-theme">Powered By hugo-theme-reimu</div>
-                </div>
-                <img id="share-weixin-qr" >
-              </div>
-            </div>
-            <div class="share-weixin-canvas"></div>
-          </div></div>
-    </a></div><a
-          data-aos="zoom-in"
-          href="/post/05-struct-union-alignment/#comments"
-          class="article-comment-link"
-        >
-          <span
-            class="post-comments-count waline-comment-count"
-            data-path="/post/05-struct-union-alignment/"
-            itemprop="commentCount"
-          ></span>
-          留言
-        </a><span
-          data-aos="zoom-in"
-          class="article-visitor-link"
-        >
-          <span
-            class="waline-pageview-count"
-            data-path="/post/05-struct-union-alignment/"
-            >0</span
-          >
-          <em class="post-meta-item-text">阅读量</em>
-        </span><ul class="article-category-list"><li class="article-tag-list-item" data-aos="zoom-in">
-    <a
-      class="article-category-link"
-      href="/categories/ctf"
+      <h3 class="widget-title">最新文章</h3>
+      <div class="widget">
+        <ul><li>
+              <a href="/post/%E5%BD%93ai%E5%BC%80%E5%A7%8B%E6%9B%BF%E6%88%91%E4%BB%AC%E9%9D%A0%E8%BF%91%E4%BC%8A%E8%90%A8%E5%8D%A1/" title="当AI开始替我们靠近伊萨卡...">当AI开始替我们靠近伊萨卡...</a>
+            </li><li>
+              <a href="/post/10-cpp-model-decompile-roadmap/" title="Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础">Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础</a>
+            </li><li>
+              <a href="/post/09-cpp-objects-raii/" title="Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII">Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII</a>
+            </li><li>
+              <a href="/post/08-build-link-gdb/" title="Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试">Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试</a>
+            </li><li>
+              <a href="/post/07-io-conversion-function-pointers/" title="Pwn 基础之C/C&#43;&#43;（七）：输入输出、类型转换与函数指针">Pwn 基础之C/C&#43;&#43;（七）：输入输出、类型转换与函数指针</a>
+            </li></ul>
+      </div>
+    </div>
+  </div></div></div></aside>
+<section id="main" aria-label="Main content"><div
+    class="archives-outer-wrap"
+    data-aos="fade-up"
+  ><div class="tag-wrap"><div
+      class="archives-tag-list-item"
       data-aos="zoom-in"
-      >CTF</a
     >
-    </li><li class="article-tag-list-item" data-aos="zoom-in">
-    <a
-      class="article-category-link"
-      href="/categories/%e6%8a%80%e6%9c%af"
+      <a class="archives-tag-list-link" href="/tags/ai/"
+        >AI</a
+      >
+    </div><div
+      class="archives-tag-list-item"
       data-aos="zoom-in"
-      >技术</a
     >
-    </li></ul>
-<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in">
-      <a
-        class="article-tag-list-link"
-        href="/tags/c&#43;&#43;"
-        rel="tag"
+      <a class="archives-tag-list-link" href="/tags/c&#43;&#43;/"
         >C&#43;&#43;</a
       >
-    </li><li class="article-tag-list-item" data-aos="zoom-in">
-      <a
-        class="article-tag-list-link"
-        href="/tags/ctf"
-        rel="tag"
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/crypto/"
+        >Crypto</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/csv/"
+        >CSV</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/ctf/"
         >CTF</a
       >
-    </li><li class="article-tag-list-item" data-aos="zoom-in">
-      <a
-        class="article-tag-list-link"
-        href="/tags/pwn"
-        rel="tag"
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/misc/"
+        >Misc</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/pcap/"
+        >PCAP</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/pwn/"
         >PWN</a
       >
-    </li></ul>
-</footer>
-  </div><nav
-    id="article-nav"
-    aria-label="Article navigation"
-    data-aos="fade-up"
-  ><div class="article-nav-link-wrap left"><img
-            data-src="/images/C.webp"
-            data-sizes="auto"
-            alt="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
-            class="lazyload"
-          /><a
-          href="/post/04-arrays-strings-endianness/"
-          aria-label="前一篇:Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
-          title="前一篇:Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
-        ></a>
-        <div class="article-nav-caption">前一篇</div>
-        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序</h3>
-      </div><div class="article-nav-link-wrap right"><img
-            data-src="/images/C.webp"
-            data-sizes="auto"
-            alt="Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
-            class="lazyload"
-          /><a
-          href="/post/06-memory-lifetime-dynamic-allocation/"
-          aria-label="后一篇:Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
-          title="后一篇:Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
-        ></a>
-        <div class="article-nav-caption">后一篇</div>
-        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存</h3>
-      </div></nav></article><section id="comments" data-aos="fade-up">
-<div class="comment-header"><h2 class="comment-title">说些什么吧！</h2>
-  <div class="comment-selector">
-    <div class="comment-selector-wrap"><div class="selector-item" data-selector="waline">
-          <span>Waline</span>
-        </div></div>
-  </div>
-</div>
-
-<div class="comment-content"><div class="comment waline-comment" data-aos="fade-up"
-     >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/pyenv/"
+        >Pyenv</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/python/"
+        >Python</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/reserver/"
+        >Reserver</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/steam/"
+        >Steam</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/web/"
+        >Web</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/wireshark/"
+        >Wireshark</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/wsl/"
+        >Wsl</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/%E6%80%9D%E8%80%83/"
+        >思考</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/%E6%95%99%E7%A8%8B/"
+        >教程</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"
+        >流量分析</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/%E6%B8%B8%E6%88%8F%E5%AE%89%E5%85%A8/"
+        >游戏安全</a
+      >
+    </div><div
+      class="archives-tag-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-tag-list-link" href="/tags/%E8%84%9A%E6%9C%AC/"
+        >脚本</a
+      >
     </div></div>
-</section></section>
+<div class="category-wrap"><div
+      class="archives-category-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-category-list-link" href="/categories/ctf/"
+        >CTF</a
+      >
+    </div><div
+      class="archives-category-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-category-list-link" href="/categories/%E6%8A%80%E6%9C%AF/"
+        >技术</a
+      >
+    </div><div
+      class="archives-category-list-item"
+      data-aos="zoom-in"
+    >
+      <a class="archives-category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/"
+        >随笔</a
+      >
+    </div></div><section class="archives-wrap" data-aos="fade-up">
+    <div class="archive-year-wrap">
+      <span class="archive-year">2026</span>
+    </div>
+    <ul><li class="archive-article">
+          <div class="archive-article-date">
+            <span>
+              <time
+                class="dt-published"
+                datetime="2026-07-02 16:00:00 &#43;0800 CST"
+                itemprop="datePublished"
+                >2026-07</time
+              >
+            </span>
+          </div><a class="archive-article-title" href="/post/pwn%E5%89%8D%E7%BD%AE%E4%B8%80/"
+              >PWN前置一[PWN是什么]</a
+            ></li><li class="archive-article">
+          <div class="archive-article-date">
+            <span>
+              <time
+                class="dt-published"
+                datetime="2026-05-24 17:00:00 &#43;0800 CST"
+                itemprop="datePublished"
+                >2026-05</time
+              >
+            </span>
+          </div><a class="archive-article-title" href="/post/2026-01cuzwp/"
+              >2026cuz第一次校赛wp</a
+            ></li></ul>
+  </section></div><nav id="page-nav" aria-label="Pagination navigation" data-aos="fade-up"><a class="extend prev" rel="prev" href="/tags/pwn/">
+      &laquo;
+      上一页</a><a class="page-number" href="/tags/pwn/">1</a><span class="page-number current">2</span></nav>
+</section>
         </div><footer id="footer" aria-label="Site footer">
   <div style="width: 100%; overflow: hidden">
     <div class="footer-line"></div>
@@ -722,27 +812,7 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
             <div class="arrow-up"></div>
           </div><div id="mask" class="hide"></div>
       </div><nav id="mobile-nav" aria-label="Mobile navigation">
-  <div class="sidebar-wrap"><div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
-<div class="sidebar-toc-wrapper toc-div-class">
-  <nav id="TableOfContents">
-  <ul>
-    <li><a href="#1-结构体">1. 结构体</a></li>
-    <li><a href="#2-结构体指针">2. 结构体指针</a></li>
-    <li><a href="#3-typedef">3. <code>typedef</code></a></li>
-    <li><a href="#4-枚举">4. 枚举</a></li>
-    <li><a href="#5-联合体">5. 联合体</a></li>
-    <li><a href="#6-为什么需要内存对齐">6. 为什么需要内存对齐</a></li>
-    <li><a href="#7-查看成员偏移">7. 查看成员偏移</a></li>
-    <li><a href="#8-成员顺序会影响大小">8. 成员顺序会影响大小</a></li>
-    <li><a href="#9-结构体数组">9. 结构体数组</a></li>
-    <li><a href="#10-结构体传参">10. 结构体传参</a></li>
-    <li><a href="#本篇练习">本篇练习</a></li>
-    <li><a href="#本篇小结">本篇小结</a></li>
-    <li><a href="#下一篇">下一篇</a></li>
-  </ul>
-</nav>
-</div></div>
-        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <div class="sidebar-wrap"><div class="sidebar-author">
   <img
     data-src="/avatar/soul.jpg"
     data-sizes="auto"
@@ -821,10 +891,7 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
         href="/friend"
         aria-label="友链"
       ></a><div class='sidebar-menu-icon icon rotate'>&#xe62b;</div><div class="sidebar-menu-link">友链</div>
-    </div></div></div></div><div class="sidebar-btn-wrapper">
-        <div class="sidebar-toc-btn current"></div>
-        <div class="sidebar-common-btn"></div>
-      </div></nav>
+    </div></div></div></nav>
 </div><div class="site-search">
         <div class="reimu-popup popup">
           <div class="reimu-search">
@@ -942,10 +1009,10 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
   <div><script data-pjax>
         window.REIMU_POST = {
           author: "M15tak3",
-          title: "Pwn 基础之C\/C\u002b\u002b（五）：结构体、联合体与内存对齐",
-          url: "https:\/\/blog.m15tak3.com\/post\/05-struct-union-alignment\/",
-          description: " Pwn 基础之C\/C\u002b\u002b（五）：结构体、联合体与内存对齐 本篇目标：掌握复合类型，并能够从字节偏移角度理解结构体布局。\n预计阅读时间：15～20 分钟。\n",
-          cover: "https:\/\/blog.m15tak3.com\/images\/C.webp",
+          title: "PWN",
+          url: "https:\/\/blog.m15tak3.com\/tags\/pwn\/",
+          description: "",
+          cover: "https:\/\/blog.m15tak3.com\/images\/%E7%B4%AB%E7%BD%97%E5%85%B0.jpg",
         };
       </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
           if (_$$(`${gallery} ${children}`).length > 0) {

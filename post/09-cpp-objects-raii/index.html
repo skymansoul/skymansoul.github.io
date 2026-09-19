@@ -8,7 +8,7 @@
   name="viewport"
   content="width=device-width, initial-scale=1, shrink-to-fit=no"
 /><title>
-  Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐 | M15tak3
+  Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII | M15tak3
 </title>
 <meta name="description" content="挖不出漏洞的菜鸡pwn_ctfer"/><script async src="https://hm.baidu.com/hm.js?true"></script>
 <script data-pjax>
@@ -56,20 +56,20 @@
     type="font/woff2"
     crossorigin="anonymous"
   /><link rel="stylesheet" href="/css/loader.min.e32026b7b85528377255860000b1fbacf08144d0b1e00af52886f16e6f35ea93.css" /><meta property="og:type" content="website" />
-  <meta property="og:title" content="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐 | M15tak3" />
+  <meta property="og:title" content="Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII | M15tak3" />
   <meta
     property="og:description"
     content="挖不出漏洞的菜鸡pwn_ctfer"
   />
-  <meta property="og:url" content="https://blog.m15tak3.com/post/05-struct-union-alignment/" />
+  <meta property="og:url" content="https://blog.m15tak3.com/post/09-cpp-objects-raii/" />
   <meta
     property="og:site_name"
     content="M15tak3のBlog"
   />
   <meta property="og:image" content="https://blog.m15tak3.com/images/C.webp" />
   <meta property="article:author" content="M15tak3" />
-  <meta property="article:published_time" content="2026-09-12T14:00:00&#43;08:00" />
-  <meta property="article:modified_time" content="2026-09-12T14:00:00&#43;08:00" /><meta property="article:tag" content="C&#43;&#43;, CTF, PWN" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/C.webp" />
+  <meta property="article:published_time" content="2026-09-16T14:00:00&#43;08:00" />
+  <meta property="article:modified_time" content="2026-09-16T14:00:00&#43;08:00" /><meta property="article:tag" content="C&#43;&#43;, CTF, PWN" /><meta name="twitter:card" content="summary" /><meta name="twitter:image" content="https://blog.m15tak3.com/images/C.webp" />
 <link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/main.min.aa23953727ef01755afabce27a2bdd482733a8013a1f84f3d5442c54ffe1fa82.css" /><link
     rel="preload"
     as="style"
@@ -209,9 +209,9 @@
       </script>
     </nav></div>
 <header id="header" aria-label="Site header"><picture></picture>
-    <img crossorigin="anonymous" fetchpriority="high" src="/images/C_banner.webp" alt="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐"><div id="header-outer">
+    <img crossorigin="anonymous" fetchpriority="high" src="/images/C_banner.webp" alt="Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII"><div id="header-outer">
     <div id="header-title"><span id="logo">
-            <h1 data-aos="slide-up">Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</h1>
+            <h1 data-aos="slide-up">Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII</h1>
           </span><h2 id="subtitle-wrap" data-aos="slide-down"></h2></div>
   </div>
 </header><div id="content"
@@ -225,16 +225,21 @@
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#1-结构体">1. 结构体</a></li>
-    <li><a href="#2-结构体指针">2. 结构体指针</a></li>
-    <li><a href="#3-typedef">3. <code>typedef</code></a></li>
-    <li><a href="#4-枚举">4. 枚举</a></li>
-    <li><a href="#5-联合体">5. 联合体</a></li>
-    <li><a href="#6-为什么需要内存对齐">6. 为什么需要内存对齐</a></li>
-    <li><a href="#7-查看成员偏移">7. 查看成员偏移</a></li>
-    <li><a href="#8-成员顺序会影响大小">8. 成员顺序会影响大小</a></li>
-    <li><a href="#9-结构体数组">9. 结构体数组</a></li>
-    <li><a href="#10-结构体传参">10. 结构体传参</a></li>
+    <li><a href="#1-第一个-c-程序">1. 第一个 C++ 程序</a></li>
+    <li><a href="#2-引用">2. 引用</a></li>
+    <li><a href="#3-按引用传递">3. 按引用传递</a></li>
+    <li><a href="#4-常量引用">4. 常量引用</a></li>
+    <li><a href="#5-函数重载">5. 函数重载</a></li>
+    <li><a href="#6-类与对象">6. 类与对象</a></li>
+    <li><a href="#7-class-与-struct">7. <code>class</code> 与 <code>struct</code></a></li>
+    <li><a href="#8-访问控制">8. 访问控制</a></li>
+    <li><a href="#9-this-指针">9. <code>this</code> 指针</a></li>
+    <li><a href="#10-构造函数">10. 构造函数</a></li>
+    <li><a href="#11-析构函数">11. 析构函数</a></li>
+    <li><a href="#12-raii">12. RAII</a></li>
+    <li><a href="#13-new-与-delete">13. <code>new</code> 与 <code>delete</code></a></li>
+    <li><a href="#14-智能指针">14. 智能指针</a></li>
+    <li><a href="#15-标准容器优先">15. 标准容器优先</a></li>
     <li><a href="#本篇练习">本篇练习</a></li>
     <li><a href="#本篇小结">本篇小结</a></li>
     <li><a href="#下一篇">下一篇</a></li>
@@ -339,11 +344,11 @@
     class="article-date-link icon-calendar"
     data-aos="zoom-in"
   >
-    <time datetime="2026-09-12 14:00:00 &#43;0800 CST" itemprop="datePublished"
-      >2026-09-12</time
+    <time datetime="2026-09-16 14:00:00 &#43;0800 CST" itemprop="datePublished"
+      >2026-09-16</time
     >
     <time style="display: none;" id="post-update-time"
-      >2026-09-12</time
+      >2026-09-16</time
     >
   </span></div>
 </div><div class="hr-line"></div><div class="e-content article-entry" itemprop="articleBody"><blockquote
@@ -353,187 +358,258 @@
         >
           <p class="alert-heading">WARNING</p>
           <p></p>
-        </blockquote><h1 id="pwn-基础之cc五结构体联合体与内存对齐">
-<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%ba%94%e7%bb%93%e6%9e%84%e4%bd%93%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
-Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
+        </blockquote><h1 id="pwn-基础之cc九从-c-到-c类对象与-raii">
+<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%b9%9d%e4%bb%8e-c-%e5%88%b0-c%e7%b1%bb%e5%af%b9%e8%b1%a1%e4%b8%8e-raii"></a>
+Pwn 基础之C/C++（九）：从 C 到 C++——类、对象与 RAII
 </h1><blockquote>
-<p><strong>本篇目标</strong>：掌握复合类型，并能够从字节偏移角度理解结构体布局。</p>
-<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
+<p><strong>本篇目标</strong>：理解 C++ 引用、对象、构造析构和现代资源管理。</p>
+<p><strong>预计阅读时间</strong>：20～25 分钟。</p>
 </blockquote>
-<h2 id="1-结构体">
-<a class="header-anchor" href="#1-%e7%bb%93%e6%9e%84%e4%bd%93"></a>
-1. 结构体
-</h2><p>结构体将多个相关字段组合为一个类型：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">level</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>创建和初始化：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#34;Alice&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">10</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>访问成员：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">id</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
-</span></span></code></pre></div><h2 id="2-结构体指针">
-<a class="header-anchor" href="#2-%e7%bb%93%e6%9e%84%e4%bd%93%e6%8c%87%e9%92%88"></a>
-2. 结构体指针
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
-</span></span></code></pre></div><p>访问成员：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">pointer</span><span class="o">-&gt;</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span></span></code></pre></div><p>等价于：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="p">(</span><span class="o">*</span><span class="n">pointer</span><span class="p">).</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span></span></code></pre></div><ul>
-<li><code>.</code> 用于结构体对象；</li>
-<li><code>-&gt;</code> 用于指向结构体的指针。</li>
-</ul>
-<h2 id="3-typedef">
-<a class="header-anchor" href="#3-typedef"></a>
-3. <code>typedef</code>
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">User</span><span class="p">;</span>
-</span></span></code></pre></div><p>之后可以直接写：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">user</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user</span><span class="p">;</span>
-</span></span></code></pre></div><p><code>typedef</code> 创建类型别名，不会创建新变量。</p>
-<h2 id="4-枚举">
-<a class="header-anchor" href="#4-%e6%9e%9a%e4%b8%be"></a>
-4. 枚举
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_IDLE</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_RUNNING</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">STATE_STOPPED</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>默认值通常依次为 <code>0、1、2</code>。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">State</span> <span class="n">state</span> <span class="o">=</span> <span class="n">STATE_RUNNING</span><span class="p">;</span>
-</span></span></code></pre></div><p>也可以显式指定：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">enum</span> <span class="n">Permission</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_READ</span>  <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_WRITE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PERMISSION_EXEC</span>  <span class="o">=</span> <span class="mi">4</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>这类值适合配合位运算表示多个状态。</p>
-<h2 id="5-联合体">
-<a class="header-anchor" href="#5-%e8%81%94%e5%90%88%e4%bd%93"></a>
-5. 联合体
-</h2><p>联合体的所有成员共享同一块存储：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">number</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">bytes</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">union</span> <span class="n">Value</span> <span class="n">value</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="n">value</span><span class="p">.</span><span class="n">number</span> <span class="o">=</span> <span class="mh">0x12345678</span><span class="p">;</span>
-</span></span></code></pre></div><p><code>number</code> 和 <code>bytes</code> 从同一地址开始。联合体大小通常满足最大成员的大小和对齐要求。</p>
-<p>结构体与联合体的区别：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">结构体：各成员通常拥有各自的存储位置
-</span></span><span class="line"><span class="cl">联合体：各成员共享同一块存储
-</span></span></code></pre></div><h2 id="6-为什么需要内存对齐">
-<a class="header-anchor" href="#6-%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90"></a>
-6. 为什么需要内存对齐
-</h2><p>考虑：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>字段大小之和通常是：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 + 4 + 1 = 6
-</span></span></code></pre></div><p>但 <code>sizeof(struct Example)</code> 在常见环境中可能是 <code>12</code>。</p>
-<p>一种常见布局：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">偏移 0      a
-</span></span><span class="line"><span class="cl">偏移 1～3   填充
-</span></span><span class="line"><span class="cl">偏移 4～7   b
-</span></span><span class="line"><span class="cl">偏移 8      c
-</span></span><span class="line"><span class="cl">偏移 9～11  尾部填充
-</span></span></code></pre></div><p>填充字节称为 padding。它使成员地址满足平台和 ABI 的对齐要求，也保证结构体数组中的每个元素都正确对齐。</p>
-<h2 id="7-查看成员偏移">
-<a class="header-anchor" href="#7-%e6%9f%a5%e7%9c%8b%e6%88%90%e5%91%98%e5%81%8f%e7%a7%bb"></a>
-7. 查看成员偏移
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+<h2 id="1-第一个-c-程序">
+<a class="header-anchor" href="#1-%e7%ac%ac%e4%b8%80%e4%b8%aa-c-%e7%a8%8b%e5%ba%8f"></a>
+1. 第一个 C++ 程序
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">Example</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 </span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;sizeof: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;a: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">a</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;b: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">b</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;c: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="nf">offsetof</span><span class="p">(</span><span class="k">struct</span> <span class="n">Example</span><span class="p">,</span> <span class="n">c</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Hello, C++!&#34;</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>不要用“字段大小简单相加”猜测最终布局，应通过目标环境验证。</p>
-<h2 id="8-成员顺序会影响大小">
-<a class="header-anchor" href="#8-%e6%88%90%e5%91%98%e9%a1%ba%e5%ba%8f%e4%bc%9a%e5%bd%b1%e5%93%8d%e5%a4%a7%e5%b0%8f"></a>
-8. 成员顺序会影响大小
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">g++ -std<span class="o">=</span>c++17 -Wall -Wextra -g -O0 program.cpp -o program
+</span></span></code></pre></div><p><code>std</code> 是标准库命名空间，<code>std::cout</code> 是其中的输出流对象。</p>
+<h2 id="2-引用">
+<a class="header-anchor" href="#2-%e5%bc%95%e7%94%a8"></a>
+2. 引用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">&amp;</span><span class="n">reference</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span></code></pre></div><p>两个结构体拥有相同类型的字段，但布局和最终大小可能不同。将对齐要求相近的成员放在一起，通常可以减少填充。</p>
-<h2 id="9-结构体数组">
-<a class="header-anchor" href="#9-%e7%bb%93%e6%9e%84%e4%bd%93%e6%95%b0%e7%bb%84"></a>
-9. 结构体数组
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">users</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-</span></span></code></pre></div><p>每个元素占 <code>sizeof(User)</code> 字节：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;users[1] - &amp;users[0]
-</span></span></code></pre></div><p>按字节理解就是一个完整结构体大小。尾部填充保证下一个元素的成员仍满足对齐要求。</p>
-<h2 id="10-结构体传参">
-<a class="header-anchor" href="#10-%e7%bb%93%e6%9e%84%e4%bd%93%e4%bc%a0%e5%8f%82"></a>
-10. 结构体传参
-</h2><p>按值传递会复制整个结构体：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="n">User</span> <span class="n">user</span><span class="p">);</span>
-</span></span></code></pre></div><p>只读时可以传指针：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_user</span><span class="p">(</span><span class="k">const</span> <span class="n">User</span> <span class="o">*</span><span class="n">user</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">reference</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>reference</code> 是 <code>value</code> 的另一个名称，修改引用就是修改原对象。</p>
+<p>引用声明后必须绑定到对象，普通引用不能再改为引用另一个对象。</p>
+<h2 id="3-按引用传递">
+<a class="header-anchor" href="#3-%e6%8c%89%e5%bc%95%e7%94%a8%e4%bc%a0%e9%80%92"></a>
+3. 按引用传递
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>这避免复制完整对象，并通过 <code>const</code> 表明函数不打算修改它。</p>
+</span></span></code></pre></div><p>调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">change</span><span class="p">(</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p>C 中通常需要使用指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">change</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">change</span><span class="p">(</span><span class="o">&amp;</span><span class="n">number</span><span class="p">);</span>
+</span></span></code></pre></div><p>C++ 引用提供了另一种表达“操作原对象”的方式。</p>
+<h2 id="4-常量引用">
+<a class="header-anchor" href="#4-%e5%b8%b8%e9%87%8f%e5%bc%95%e7%94%a8"></a>
+4. 常量引用
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print_name</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>const T &amp;</code>：</p>
+<ul>
+<li>避免复制较大对象；</li>
+<li>不允许函数通过该引用修改对象；</li>
+<li>常用于只读参数。</li>
+</ul>
+<h2 id="5-函数重载">
+<a class="header-anchor" href="#5-%e5%87%bd%e6%95%b0%e9%87%8d%e8%bd%bd"></a>
+5. 函数重载
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="nf">add</span><span class="p">(</span><span class="kt">double</span> <span class="n">a</span><span class="p">,</span> <span class="kt">double</span> <span class="n">b</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>C++ 可以根据参数类型选择同名函数。编译后需要通过名称修饰区分不同签名。</p>
+<h2 id="6-类与对象">
+<a class="header-anchor" href="#6-%e7%b1%bb%e4%b8%8e%e5%af%b9%e8%b1%a1"></a>
+6. 类与对象
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="n">set_id</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">id_</span> <span class="o">=</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="nf">get_id</span><span class="p">()</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">set_name</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">name_</span> <span class="o">=</span> <span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="nf">print</span><span class="p">()</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">id_</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;: &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">name_</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">user</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">set_id</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">set_name</span><span class="p">(</span><span class="s">&#34;Alice&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">user</span><span class="p">.</span><span class="n">print</span><span class="p">();</span>
+</span></span></code></pre></div><p>类把数据和操作这些数据的函数组合在一起。</p>
+<h2 id="7-class-与-struct">
+<a class="header-anchor" href="#7-class-%e4%b8%8e-struct"></a>
+7. <code>class</code> 与 <code>struct</code>
+</h2><p>C++ 中两者都能拥有成员变量、成员函数、构造函数、析构函数和继承。</p>
+<p>主要默认区别：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">class  默认 private
+</span></span><span class="line"><span class="cl">struct 默认 public
+</span></span></code></pre></div><h2 id="8-访问控制">
+<a class="header-anchor" href="#8-%e8%ae%bf%e9%97%ae%e6%8e%a7%e5%88%b6"></a>
+8. 访问控制
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Example</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">public_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">protected</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">protected_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">private_value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>访问控制是编译期语言规则。<code>private</code> 成员仍然是对象状态的一部分。</p>
+<h2 id="9-this-指针">
+<a class="header-anchor" href="#9-this-%e6%8c%87%e9%92%88"></a>
+9. <code>this</code> 指针
+</h2><p>成员函数需要知道正在操作哪个对象，内部存在隐含的 <code>this</code> 指针：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">set_id</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="o">-&gt;</span><span class="n">id_</span> <span class="o">=</span> <span class="n">id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>this</code> 指向当前对象。</p>
+<h2 id="10-构造函数">
+<a class="header-anchor" href="#10-%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0"></a>
+10. 构造函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">User</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">id_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">User</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="o">:</span> <span class="n">id_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">explicit</span> <span class="nf">User</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="o">:</span> <span class="n">id_</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">User</span> <span class="n">first</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="nf">second</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span></code></pre></div><p>成员初始化列表直接初始化成员。<code>explicit</code> 可以阻止不希望发生的单参数隐式转换。</p>
+<h2 id="11-析构函数">
+<a class="header-anchor" href="#11-%e6%9e%90%e6%9e%84%e5%87%bd%e6%95%b0"></a>
+11. 析构函数
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Resource</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Resource</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;created</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">~</span><span class="n">Resource</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;destroyed</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>局部对象离开作用域时会自动调用析构函数。</p>
+<h2 id="12-raii">
+<a class="header-anchor" href="#12-raii"></a>
+12. RAII
+</h2><p>RAII：Resource Acquisition Is Initialization。</p>
+<p>核心思想：</p>
+<blockquote>
+<p>资源的生命周期绑定到对象生命周期。</p>
+</blockquote>
+<p>构造时获取资源，析构时释放资源。资源可以是内存、文件、锁、连接或系统句柄。</p>
+<h2 id="13-new-与-delete">
+<a class="header-anchor" href="#13-new-%e4%b8%8e-delete"></a>
+13. <code>new</code> 与 <code>delete</code>
+</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">pointer</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">delete</span> <span class="n">pointer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">pointer</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span></code></pre></div><p>数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="k">delete</span><span class="p">[]</span> <span class="n">numbers</span><span class="p">;</span>
+</span></span></code></pre></div><p>对应关系：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">malloc ↔ free
+</span></span><span class="line"><span class="cl">new ↔ delete
+</span></span><span class="line"><span class="cl">new[] ↔ delete[]
+</span></span></code></pre></div><p><code>new</code> 创建对象并调用构造函数，<code>delete</code> 调用析构函数并释放存储。</p>
+<h2 id="14-智能指针">
+<a class="header-anchor" href="#14-%e6%99%ba%e8%83%bd%e6%8c%87%e9%92%88"></a>
+14. 智能指针
+</h2><p>现代 C++ 更推荐让对象自动管理动态资源：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">auto</span> <span class="n">pointer</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span></code></pre></div><p>离开作用域后自动释放。</p>
+<ul>
+<li><code>std::unique_ptr</code>：唯一所有权；</li>
+<li><code>std::shared_ptr</code>：共享所有权；</li>
+<li><code>std::weak_ptr</code>：观察共享对象但不增加强引用计数。</li>
+</ul>
+<p>只有一个所有者时优先使用 <code>unique_ptr</code>。</p>
+<h2 id="15-标准容器优先">
+<a class="header-anchor" href="#15-%e6%a0%87%e5%87%86%e5%ae%b9%e5%99%a8%e4%bc%98%e5%85%88"></a>
+15. 标准容器优先
+</h2><p>手动动态数组：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="o">*</span><span class="n">numbers</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span></code></pre></div><p>多数普通业务代码中更适合：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;vector&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">numbers</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span></code></pre></div><p>字符串也优先考虑：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&#34;Alice&#34;</span><span class="p">;</span>
+</span></span></code></pre></div><p>标准类型会负责其内部资源生命周期。</p>
 <h2 id="本篇练习">
 <a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
 本篇练习
 </h2><ol>
-<li>定义 <code>Student</code> 结构体并创建数组。</li>
-<li>打印结构体每个成员的地址和偏移。</li>
-<li>调整字段顺序，比较 <code>sizeof</code>。</li>
-<li>使用联合体逐字节观察 <code>uint32_t</code>。</li>
-<li>使用枚举实现一个简单状态机。</li>
+<li>用引用实现整数交换。</li>
+<li>创建 <code>Student</code> 类，包含构造函数和打印函数。</li>
+<li>创建对象并观察构造、析构顺序。</li>
+<li>用 <code>std::vector</code> 重写 C 动态数组练习。</li>
+<li>用 <code>std::unique_ptr</code> 管理一个自定义对象。</li>
 </ol>
 <h2 id="本篇小结">
 <a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
 本篇小结
 </h2><ul>
-<li>结构体组合多个字段；</li>
-<li><code>.</code> 访问对象成员，<code>-&gt;</code> 访问指针所指对象的成员；</li>
-<li>联合体让多个成员共享存储；</li>
-<li>枚举为状态值提供可读名称；</li>
-<li>padding 会使结构体大小大于字段大小之和；</li>
-<li><code>offsetof</code> 可以查看实际成员偏移。</li>
+<li>引用是对象的别名；</li>
+<li>类组合数据和成员函数；</li>
+<li><code>this</code> 指向当前对象；</li>
+<li>构造函数初始化对象，析构函数完成清理；</li>
+<li>RAII 将资源和对象生命周期绑定；</li>
+<li>现代 C++ 优先使用容器和智能指针。</li>
 </ul>
 <h2 id="下一篇">
 <a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
 下一篇
-</h2><p>下一篇进入程序内存模型，学习栈、堆、生命周期及动态内存管理。</p>
+</h2><p>最后一篇学习继承、虚函数、复制移动、标准容器、模板和反编译代码阅读基础。</p>
 </div>
     <footer class="article-footer"><blockquote class="article-copyright"><p><strong><span class="icon-user icon"></span>本文作者：</strong>M15tak3</p><p>
-      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/05-struct-union-alignment/">https://blog.m15tak3.com/post/05-struct-union-alignment/</a>
-    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐</p><p>
+      <strong><span class="icon-link icon"></span>本文链接：</strong><a href="https://blog.m15tak3.com/post/09-cpp-objects-raii/">https://blog.m15tak3.com/post/09-cpp-objects-raii/</a>
+    </p><p><strong><span class="icon-pencil icon"></span>本文标题：</strong>Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII</p><p>
       
       <strong><span class="icon-copyright icon"></span>本文版权：</strong>
       本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener nofollow noreferrer" target="_blank"><span class="icon-creative-commons"></span>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -543,9 +619,9 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
   <div class="sponsor-button"><div class="sponsor-icon rotate"></div><div class="sponsor-title">赞助</div><div class="sponsor-icon rotate"></div></div><div class="sponsor-tip">请作者喝杯咖啡吧</div><div class="sponsor-qr"><div class="sponsor-qr-image-wrapper">
           <img src="/images/wechat.jpg" alt="微信" width="200" />
           <p class="sponsor-qr-name">微信</p>
-        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/05-struct-union-alignment/&amp;title=Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%94%ef%bc%89%ef%bc%9a%e7%bb%93%e6%9e%84%e4%bd%93%e3%80%81%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90&amp;desc=%20Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%ba%94%ef%bc%89%ef%bc%9a%e7%bb%93%e6%9e%84%e4%bd%93%e3%80%81%e8%81%94%e5%90%88%e4%bd%93%e4%b8%8e%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90%20%e6%9c%ac%e7%af%87%e7%9b%ae%e6%a0%87%ef%bc%9a%e6%8e%8c%e6%8f%a1%e5%a4%8d%e5%90%88%e7%b1%bb%e5%9e%8b%ef%bc%8c%e5%b9%b6%e8%83%bd%e5%a4%9f%e4%bb%8e%e5%ad%97%e8%8a%82%e5%81%8f%e7%a7%bb%e8%a7%92%e5%ba%a6%e7%90%86%e8%a7%a3%e7%bb%93%e6%9e%84%e4%bd%93%e5%b8%83%e5%b1%80%e3%80%82%0a%e9%a2%84%e8%ae%a1%e9%98%85%e8%af%bb%e6%97%b6%e9%97%b4%ef%bc%9a15%ef%bd%9e20%20%e5%88%86%e9%92%9f%e3%80%82%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐">
+        </div></div></div><div class="share-wrapper"><a href="https://connect.qq.com/widget/shareqq/index.html?url=https://blog.m15tak3.com/post/09-cpp-objects-raii/&amp;title=Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%b9%9d%ef%bc%89%ef%bc%9a%e4%bb%8e%20C%20%e5%88%b0%20C&#43;&#43;%e2%80%94%e2%80%94%e7%b1%bb%e3%80%81%e5%af%b9%e8%b1%a1%e4%b8%8e%20RAII&amp;desc=%20Pwn%20%e5%9f%ba%e7%a1%80%e4%b9%8bC/C&#43;&#43;%ef%bc%88%e4%b9%9d%ef%bc%89%ef%bc%9a%e4%bb%8e%20C%20%e5%88%b0%20C&#43;&#43;%e2%80%94%e2%80%94%e7%b1%bb%e3%80%81%e5%af%b9%e8%b1%a1%e4%b8%8e%20RAII%20%e6%9c%ac%e7%af%87%e7%9b%ae%e6%a0%87%ef%bc%9a%e7%90%86%e8%a7%a3%20C&#43;&#43;%20%e5%bc%95%e7%94%a8%e3%80%81%e5%af%b9%e8%b1%a1%e3%80%81%e6%9e%84%e9%80%a0%e6%9e%90%e6%9e%84%e5%92%8c%e7%8e%b0%e4%bb%a3%e8%b5%84%e6%ba%90%e7%ae%a1%e7%90%86%e3%80%82%0a%e9%a2%84%e8%ae%a1%e9%98%85%e8%af%bb%e6%97%b6%e9%97%b4%ef%bc%9a20%ef%bd%9e25%20%e5%88%86%e9%92%9f%e3%80%82%0a1.%20%e7%ac%ac%e4%b8%80%e4%b8%aa%20C&#43;&#43;%20%e7%a8%8b%e5%ba%8f%20#include%20&amp;lt;iostream&amp;gt;%20int%20main%28%29%20%7b%20std::cout%20&amp;lt;&amp;lt;%20&amp;#34;Hello,%20C&#43;&#43;!&amp;#34;%20&amp;lt;&amp;lt;%20&amp;#39;%5cn&amp;#39;;%20return%200;%20%7d%20%e7%bc%96%e8%af%91%ef%bc%9a%0a&amp;source=https://blog.m15tak3.com/" target="_blank" rel="noopener noreferrer" title="Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII">
       <div class="share-icon icon icon-qq"></div>
-    </a><a href="javascript:;"  title="Pwn 基础之C/C&#43;&#43;（五）：结构体、联合体与内存对齐">
+    </a><a href="javascript:;"  title="Pwn 基础之C/C&#43;&#43;（九）：从 C 到 C&#43;&#43;——类、对象与 RAII">
       <div class="share-icon icon icon-weixin"><div id="share-weixin">
             <div class="share-weixin-dom">
               <div class="share-weixin-content">
@@ -565,12 +641,12 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
           </div></div>
     </a></div><a
           data-aos="zoom-in"
-          href="/post/05-struct-union-alignment/#comments"
+          href="/post/09-cpp-objects-raii/#comments"
           class="article-comment-link"
         >
           <span
             class="post-comments-count waline-comment-count"
-            data-path="/post/05-struct-union-alignment/"
+            data-path="/post/09-cpp-objects-raii/"
             itemprop="commentCount"
           ></span>
           留言
@@ -580,7 +656,7 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
         >
           <span
             class="waline-pageview-count"
-            data-path="/post/05-struct-union-alignment/"
+            data-path="/post/09-cpp-objects-raii/"
             >0</span
           >
           <em class="post-meta-item-text">阅读量</em>
@@ -629,27 +705,27 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
   ><div class="article-nav-link-wrap left"><img
             data-src="/images/C.webp"
             data-sizes="auto"
-            alt="Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
+            alt="Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试"
             class="lazyload"
           /><a
-          href="/post/04-arrays-strings-endianness/"
-          aria-label="前一篇:Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
-          title="前一篇:Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序"
+          href="/post/08-build-link-gdb/"
+          aria-label="前一篇:Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试"
+          title="前一篇:Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试"
         ></a>
         <div class="article-nav-caption">前一篇</div>
-        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（四）：数组、字符串与字节序</h3>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（八）：编译、链接与 GDB 调试</h3>
       </div><div class="article-nav-link-wrap right"><img
             data-src="/images/C.webp"
             data-sizes="auto"
-            alt="Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
+            alt="Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础"
             class="lazyload"
           /><a
-          href="/post/06-memory-lifetime-dynamic-allocation/"
-          aria-label="后一篇:Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
-          title="后一篇:Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存"
+          href="/post/10-cpp-model-decompile-roadmap/"
+          aria-label="后一篇:Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础"
+          title="后一篇:Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础"
         ></a>
         <div class="article-nav-caption">后一篇</div>
-        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（六）：栈、堆、生命周期与动态内存</h3>
+        <h3 class="article-nav-title">Pwn 基础之C/C&#43;&#43;（十）：C&#43;&#43; 对象模型与反编译阅读基础</h3>
       </div></nav></article><section id="comments" data-aos="fade-up">
 <div class="comment-header"><h2 class="comment-title">说些什么吧！</h2>
   <div class="comment-selector">
@@ -726,16 +802,21 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
 <div class="sidebar-toc-wrapper toc-div-class">
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#1-结构体">1. 结构体</a></li>
-    <li><a href="#2-结构体指针">2. 结构体指针</a></li>
-    <li><a href="#3-typedef">3. <code>typedef</code></a></li>
-    <li><a href="#4-枚举">4. 枚举</a></li>
-    <li><a href="#5-联合体">5. 联合体</a></li>
-    <li><a href="#6-为什么需要内存对齐">6. 为什么需要内存对齐</a></li>
-    <li><a href="#7-查看成员偏移">7. 查看成员偏移</a></li>
-    <li><a href="#8-成员顺序会影响大小">8. 成员顺序会影响大小</a></li>
-    <li><a href="#9-结构体数组">9. 结构体数组</a></li>
-    <li><a href="#10-结构体传参">10. 结构体传参</a></li>
+    <li><a href="#1-第一个-c-程序">1. 第一个 C++ 程序</a></li>
+    <li><a href="#2-引用">2. 引用</a></li>
+    <li><a href="#3-按引用传递">3. 按引用传递</a></li>
+    <li><a href="#4-常量引用">4. 常量引用</a></li>
+    <li><a href="#5-函数重载">5. 函数重载</a></li>
+    <li><a href="#6-类与对象">6. 类与对象</a></li>
+    <li><a href="#7-class-与-struct">7. <code>class</code> 与 <code>struct</code></a></li>
+    <li><a href="#8-访问控制">8. 访问控制</a></li>
+    <li><a href="#9-this-指针">9. <code>this</code> 指针</a></li>
+    <li><a href="#10-构造函数">10. 构造函数</a></li>
+    <li><a href="#11-析构函数">11. 析构函数</a></li>
+    <li><a href="#12-raii">12. RAII</a></li>
+    <li><a href="#13-new-与-delete">13. <code>new</code> 与 <code>delete</code></a></li>
+    <li><a href="#14-智能指针">14. 智能指针</a></li>
+    <li><a href="#15-标准容器优先">15. 标准容器优先</a></li>
     <li><a href="#本篇练习">本篇练习</a></li>
     <li><a href="#本篇小结">本篇小结</a></li>
     <li><a href="#下一篇">下一篇</a></li>
@@ -942,9 +1023,9 @@ Pwn 基础之C/C++（五）：结构体、联合体与内存对齐
   <div><script data-pjax>
         window.REIMU_POST = {
           author: "M15tak3",
-          title: "Pwn 基础之C\/C\u002b\u002b（五）：结构体、联合体与内存对齐",
-          url: "https:\/\/blog.m15tak3.com\/post\/05-struct-union-alignment\/",
-          description: " Pwn 基础之C\/C\u002b\u002b（五）：结构体、联合体与内存对齐 本篇目标：掌握复合类型，并能够从字节偏移角度理解结构体布局。\n预计阅读时间：15～20 分钟。\n",
+          title: "Pwn 基础之C\/C\u002b\u002b（九）：从 C 到 C\u002b\u002b——类、对象与 RAII",
+          url: "https:\/\/blog.m15tak3.com\/post\/09-cpp-objects-raii\/",
+          description: " Pwn 基础之C\/C\u002b\u002b（九）：从 C 到 C\u002b\u002b——类、对象与 RAII 本篇目标：理解 C\u002b\u002b 引用、对象、构造析构和现代资源管理。\n预计阅读时间：20～25 分钟。\n1. 第一个 C\u002b\u002b 程序 #include \u0026lt;iostream\u0026gt; int main() { std::cout \u0026lt;\u0026lt; \u0026#34;Hello, C\u002b\u002b!\u0026#34; \u0026lt;\u0026lt; \u0026#39;\\n\u0026#39;; return 0; } 编译：\n",
           cover: "https:\/\/blog.m15tak3.com\/images\/C.webp",
         };
       </script><script src="/js/insert_highlight.js" integrity="" crossorigin="anonymous" data-pjax ></script><script src="/js/tabs.js" integrity="" crossorigin="anonymous" data-pjax defer></script><script type="module" data-pjax>const PhotoSwipeLightbox = (await safeImport("https:\/\/npm.webcache.cn\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js", "sha384-DiL6M\/gG\u002bwmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF\/N6lrZi\/")).default;const initPswp = (gallery, children) => {
